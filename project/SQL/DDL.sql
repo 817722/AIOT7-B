@@ -41,6 +41,7 @@ CREATE TABLE `corps` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
     `bis_no` VARCHAR(20) NOT NULL COMMENT '사업자등록번호',
     `ceo_name` VARCHAR(100) NOT NULL COMMENT '대표자명',
+    `corp_name` VARCHAR(100) NOT NULL COMMENT '기업명',
     `opened_at` DATE NOT NULL COMMENT '개업일자',
     `phone` VARCHAR(30) DEFAULT NULL COMMENT '기업 전화번호',
     `email` VARCHAR(254) DEFAULT NULL COMMENT '기업 이메일',
@@ -81,7 +82,6 @@ CREATE TABLE `users` (
     `password` VARCHAR(255) NOT NULL COMMENT '비밀번호 해시',
     `name` VARCHAR(100) NOT NULL COMMENT '작업자명',
     `phone` VARCHAR(100) NOT NULL COMMENT '작업자 연락망',
-    `email` VARCHAR(254) DEFAULT NULL COMMENT '이메일',
     `enabled` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
 
     `created_at` TIMESTAMP 

@@ -32,14 +32,15 @@ public abstract class BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;                      // PK : 기본키, AUTO_INCREMENT
     
-    @Column(unique = true, length = 36)
+    @Column(unique = true, length = 64)
     private String id;                    // UK : 고유키, UUID
 
     @CreatedDate                          // 생성 시간 기록
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;      // 등록일자 
 
     @LastModifiedDate                     // 수정 시간 기록
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;      // 수정일자
 
     @PrePersist                           // INSERT 직전에 호출되는 메소드 지정

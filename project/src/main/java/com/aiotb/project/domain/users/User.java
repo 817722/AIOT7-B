@@ -40,14 +40,14 @@ public class User extends BaseEntity {
     private String name; // 이름
 
     @Column(length = 30)
-    private String phone; // 연락처
+    private String phone; // 연락망
 
     @Builder.Default
     @Column(nullable = false)
     private boolean enabled = true; // 계정 활성화 여부
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "corp_id", nullable = false)
+    @JoinColumn(name = "corp_no", nullable = false)
     private Corp corp; // 소속 기업
 
     // 회원 : 회원 권한 = 1 : N

@@ -9,7 +9,7 @@ import lombok.Data;
 public class UserJoinDto {
 
     @NotBlank(message = "아이디를 입력하세요.")
-    @Size(min = 4, max = 50, message = "아이디는 4~8자로 입력하세요.")
+    @Size(min = 4, max = 15, message = "아이디는 4~15자로 입력하세요.")
     private String username;
 
     @NotBlank(message = "비밀번호를 입력하세요.")

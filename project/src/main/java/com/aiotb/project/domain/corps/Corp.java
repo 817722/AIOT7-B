@@ -1,5 +1,7 @@
 package com.aiotb.project.domain.corps;
 
+import java.time.LocalDate;
+
 import com.aiotb.project.domain.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -18,23 +20,29 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "corp")
+@Table(name = "corps")
 public class Corp extends BaseEntity {
 
-    @Column(nullable = false, unique = true, length = 10)
-    private String businessNo; // 사업자등록번호
+    @Column(name = "bis_no", nullable = false, unique = true, length = 20)
+    private String bisNo; // 사업자등록번호
 
-    @Column(nullable = false, length = 50)
-    private String representativeName; // 대표자명
-
-    @Column(nullable = false, length = 8)
-    private String openDate; // 개업일자 (YYYYMMDD)
+    @Column(name = "ceo_name", nullable = false, length = 50)
+    private String ceoName; // 대표자명
 
     @Column(length = 100)
-    private String corpNickname; // 회사 별명
+    private String corpName; // 회사명
+
+    @Column(name = "opened_at", nullable = false)
+    private LocalDate openDate; // 개업일자 (YYYYMMDD)
+
+    @Column(length = 30)
+    private String phone; // 연락처
+
+    @Column(length = 254)
+    private String email; // 기업 이메일
 
     @Builder.Default
-    @Column(nullable = false)
+    @Column(name = "bis_verified", nullable = false)
     private boolean verified = false; // 기업 인증 여부
 
 }

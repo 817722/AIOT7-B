@@ -59,7 +59,6 @@ public class User extends BaseEntity {
     public void addAuth(String auth) {
         UserAuth role = UserAuth.builder()
                 .auth(auth)
-                .username(this.username)
                 .user(this)
                 .build();
         this.authList.add(role);

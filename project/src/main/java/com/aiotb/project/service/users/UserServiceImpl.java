@@ -3,8 +3,10 @@ package com.aiotb.project.service.users;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.aiotb.project.domain.corps.Corp;
 import com.aiotb.project.domain.users.User;
 import com.aiotb.project.dto.users.UserJoinDto;
+import com.aiotb.project.repository.corps.CorpRepository;
 import com.aiotb.project.repository.users.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final CorpRepository corpRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override

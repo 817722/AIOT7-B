@@ -17,12 +17,12 @@ import jakarta.persistence.PersistenceContext;
 @EnableJpaAuditing        // ⭐ JPA Auditing 기능 활성화 (등록일, 수정일 자동 기록)
 public class QuerydslConfig {
 
-  @PersistenceContext     // JPA EntityManager 의존성 주입
-  private EntityManager entityManager;
+  	@PersistenceContext     // JPA EntityManager 의존성 주입
+  	private EntityManager entityManager;
 
-  @Bean                   // 빈 등록
-  public JPAQueryFactory JPAQueryFactory() {
-    return new JPAQueryFactory(entityManager);
-  }
+  	@Bean                   // 빈 등록
+  	public JPAQueryFactory JPAQueryFactory() {
+  	  	return new JPAQueryFactory(entityManager);
+  	}
   
 }

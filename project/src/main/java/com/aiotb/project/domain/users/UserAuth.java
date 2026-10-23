@@ -31,9 +31,6 @@ public class UserAuth {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
-    @Column(nullable = false, length = 50)
-    private String username; // 회원 아이디
-
     @Column(nullable = false, length = 30)
     private String auth; // 회원 권한(SuperAdmin, Admin, User)
 

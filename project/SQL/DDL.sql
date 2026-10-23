@@ -48,7 +48,6 @@ CREATE TABLE `corps` (
     `bis_verified` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '기업 인증 완료 여부',
     `verified_at` DATETIME DEFAULT NULL COMMENT '기업 인증 일시',
     `email_verified` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '기업 이메일 인증 여부',
-
     `created_at` TIMESTAMP 
         NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일자',
     `updated_at` TIMESTAMP 
@@ -80,10 +79,9 @@ CREATE TABLE `users` (
     `corp_no` BIGINT NOT NULL COMMENT '소속 기업 번호',
     `username` VARCHAR(100) NOT NULL COMMENT '로그인 ID',
     `password` VARCHAR(255) NOT NULL COMMENT '비밀번호 해시',
-    `name` VARCHAR(100) NOT NULL COMMENT '작업자명',
-    `phone` VARCHAR(100) NOT NULL COMMENT '작업자 연락망',
+    `manager_name` VARCHAR(100) NOT NULL COMMENT '담당자명',
+    `phone` VARCHAR(100) NOT NULL COMMENT '담당자 연락망',
     `enabled` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
-
     `created_at` TIMESTAMP 
     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일자',
     `updated_at` TIMESTAMP 
@@ -207,7 +205,7 @@ CREATE TABLE `bridges` (
     `id` VARCHAR(64) NOT NULL COMMENT '시스템 고유 식별자',
     `source_data_date` DATE DEFAULT NULL COMMENT 'CSV 데이터 기준일자',
 
-    `name` VARCHAR(48) NOT NULL COMMENT '교량명',
+    `bridge_name` VARCHAR(48) NOT NULL COMMENT '교량명',
     `facility_type` ENUM('제1종', '제2종', '제3종') DEFAULT NULL COMMENT '시설물종별등급구분',
 
     `road_type` VARCHAR(14) DEFAULT NULL COMMENT '도로종류',

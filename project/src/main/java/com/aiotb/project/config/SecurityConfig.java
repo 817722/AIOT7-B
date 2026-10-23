@@ -43,18 +43,6 @@ public class SecurityConfig {
                 .requestMatchers("/cart/**", "/orders/**", "/mypage/**").authenticated()
                 .anyRequest().permitAll());
 
-<<<<<<< HEAD
-    // 폼 로그인
-    http.formLogin(login -> login
-          .loginPage("/login")
-          .loginProcessingUrl("/users/login")
-          .usernameParameter("username")
-          .passwordParameter("password")
-          .defaultSuccessUrl("/", true)
-          .failureUrl("/login?error=true")
-          .permitAll()
-    );
-=======
         // 폼 로그인
         http.formLogin(login -> login
                 .loginPage("/users/login")
@@ -64,7 +52,6 @@ public class SecurityConfig {
                 .defaultSuccessUrl("/", true)
                 .failureUrl("/users/login?error=true")
                 .permitAll());
->>>>>>> 31a9f5420464c5c1e02de15abb4774c5d908c549
 
         // TODO:사용자 정의 인증
 

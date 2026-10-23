@@ -1,0 +1,66 @@
+/* 교량 관리 전용 스타일. 기존 common.css를 덮어쓰지 않습니다. */
+.bridge-page .app-page-title { margin-bottom: 5px; }
+.bridge-page .app-page-description { margin-bottom: 16px; }
+.bridge-notice {
+    margin: 0 0 22px;
+    padding: 10px 14px;
+    border: 1px solid #c9dfdf;
+    border-left: 4px solid var(--app-primary);
+    border-radius: 5px;
+    color: #36555d;
+    background: #eff8f7;
+    font-size: 12px;
+}
+.bridge-stats { margin-bottom: 20px; }
+.bridge-stat { min-height: 112px; padding: 20px 24px; }
+.bridge-stat .app-stat-value { margin-top: 5px; }
+.bridge-stat__unit { margin-left: 3px; font-size: 16px; }
+.bridge-section { margin-bottom: 20px; }
+.bridge-section .app-card__title { margin-bottom: 14px; }
+.bridge-fieldset { margin: 0; padding: 0 0 19px; border: 0; min-width: 0; }
+.bridge-fieldset + .bridge-fieldset { border-top: 1px solid #e3eaee; padding-top: 19px; }
+.bridge-fieldset legend { float: left; width: 100%; margin-bottom: 13px; color: #173e46; font-size: 14px; font-weight: 700; }
+.bridge-fieldset legend + * { clear: both; }
+.bridge-step { color: var(--app-primary); font-weight: 800; margin-right: 5px; }
+.bridge-search-grid, .bridge-region-grid { display: grid; gap: 14px; }
+.bridge-search-grid { grid-template-columns: 1.6fr 1fr 1fr; }
+.bridge-region-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.bridge-field { min-width: 0; }
+.bridge-field label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #4a656f; }
+.bridge-field__hint { font-size: 11px; font-weight: 400; color: #7b8c96; }
+.bridge-field .app-field { height: 43px; min-height: 43px; }
+.bridge-field select { cursor: pointer; }
+.bridge-form-actions { display: flex; gap: 9px; align-items: center; margin-top: 2px; }
+.bridge-section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.bridge-section-head .app-card__title { margin-bottom: 4px; }
+.bridge-section-subtitle { margin: 0 0 18px; font-size: 12px; color: #556e78; }
+.bridge-result-summary { margin: 7px 0 12px; font-size: 12px; color: #6b7c84; }
+.bridge-result-summary strong { color: var(--app-primary); }
+.bridge-table { min-width: 760px; font-size: 12px; }
+.bridge-table th { background: #cfdee7; color: #3d5864; white-space: nowrap; }
+.bridge-table td { white-space: nowrap; }
+.bridge-table .bridge-name { color: #214c56; font-weight: 700; }
+.bridge-table tbody tr:hover { background: #edf8f7; }
+.bridge-status { display: inline-flex; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.bridge-status--progress { background: #e4f3ee; color: #187b60; }
+.bridge-status--complete { background: #e8eff6; color: #4d7189; }
+.bridge-empty { padding: 36px 16px; border: 1px dashed #b9cbd1; border-radius: 6px; text-align: center; }
+.bridge-empty strong { font-size: 14px; }
+.bridge-empty p { color: #768994; font-size: 12px; }
+.bridge-pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 18px; }
+.bridge-pagination__info { margin-right: 4px; color: #73868e; font-size: 12px; }
+.bridge-pagination .app-btn { min-height: 30px; padding: 5px 12px; font-size: 12px; }
+.bridge-page button:disabled { opacity: .5; cursor: not-allowed; }
+.bridge-next p:last-child { margin-bottom: 0; color: #67808a; font-size: 12px; }
+@media (max-width: 1080px) {
+    .bridge-region-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+    .bridge-search-grid, .bridge-region-grid { grid-template-columns: 1fr; }
+    .bridge-section-head { flex-direction: column; }
+    .bridge-section-tools { width: 100%; }
+    .bridge-section-tools .app-btn { width: 100%; }
+    .bridge-stat { min-height: auto; }
+}
+
+.bridge-table .bridge-name a { color: #087a83; font-weight: 700; text-underline-offset: 3px; }

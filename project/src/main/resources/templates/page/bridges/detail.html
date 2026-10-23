@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="|교량 상세 - ${bridge.name} · 교량점검 시스템|">교량 상세 | 교량점검 시스템</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/bridge.css}">
+    <link rel="stylesheet" th:href="@{/css/bridge-detail.css}">
+    <script th:src="@{/js/bridge-detail.js}" defer></script>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="app-layout" th:with="activeMenu='bridges'">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <main class="app-main bridge-page bridge-detail-page" id="main-content">
+        <div class="app-container">
+            <p class="app-breadcrumb">업무 관리 / 교량 관리 / 교량 상세</p>
+            <div class="bridge-detail-heading">
+                <div>
+                    <h1 class="app-page-title">교량 상세</h1>
+                    <p class="app-page-description">교량 기본정보와 점검·결함·유지보수 및 후속 조치 기록을 한곳에서 확인합니다.</p>
+                </div>
+                <div class="bridge-detail-heading__actions">
+                    <a class="app-btn app-btn--outline" th:href="@{/bridges}">목록으로</a>
+                    <a class="app-btn" th:href="@{/bridges/{no}/edit(no=${bridge.no})}">정보 수정</a>
+                </div>
+            </div>
+            <p class="bridge-notice" th:if="${demoMode}" role="status">
+                <strong>화면 테스트용 예시 데이터</strong>입니다. 교량 정보와 업무 기록은 실제 DB 또는 CSV에서 조회한 값이 아닙니다.
+            </p>
+
+            <div class="bridge-detail-identity">
+                <div>
+                    <strong th:text="${bridge.name}">가람교</strong>
+                    <span th:text="| · 예시 관리번호 ${bridge.displayCode}|"> · 예시 관리번호 BR-2026-001</span>
+                </div>
+                <p th:text="|${bridge.province} ${bridge.city} · ${bridge.facilityType}|">경기도 가평군 · 제1종</p>
+            </div>
+
+            <div class="bridge-detail-summary">
+                <section class="app-card bridge-detail-card" aria-labelledby="detail-image-title">
+                    <h2 class="app-card__title" id="detail-image-title">대표 이미지</h2>
+                    <p class="bridge-detail-subtitle"><span class="bridge-step">01</span> 교량 대표 이미지</p>
+                    <div class="bridge-detail-photo">
+                        <img th:if="${representativeImageUrl != null}" th:src="${representativeImageUrl}"
+                             th:alt="|${bridge.name} 대표 이미지|" class="bridge-detail-photo__img">
+                        <div th:unless="${representativeImageUrl != null}" class="bridge-detail-photo__placeholder">
+                            <svg viewBox="0 0 64 64" width="64" height="64" fill="none" aria-hidden="true">
+                                <rect x="8" y="14" width="48" height="36" rx="4" stroke="currentColor" stroke-width="2"/>
+                                <circle cx="21" cy="26" r="5" stroke="currentColor" stroke-width="2"/>
+                                <path d="M10 44L24 33L33 39L42 30L54 42" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            </svg>
+                            <strong>등록된 대표 이미지가 없습니다.</strong>
+                            <span>교량 정보 수정 화면에서 이미지를 선택할 수 있습니다.</span>
+                        </div>
+                    </div>
+                    <p class="bridge-detail-footnote">실제 이미지는 <code>media</code> 및 <code>bridge_media</code> API 연결 후 표시됩니다.</p>
+                </section>
+
+                <section class="app-card bridge-detail-card" aria-labelledby="detail-profile-title">
+                    <h2 class="app-card__title" id="detail-profile-title">교량 등록정보</h2>
+                    <dl class="bridge-detail-facts">
+                        <div class="bridge-detail-fact">
+                            <dt>교량 이름 / 예시 번호</dt>
+                            <dd th:text="|${bridge.name} / ${bridge.displayCode}|">가람교 / BR-2026-001</dd>
+                        </div>
+                        <div class="bridge-detail-fact">
+                            <dt>지역 / 시설물 종류</dt>
+                            <dd th:text="|${bridge.province} ${bridge.city} / ${bridge.facilityType}|">경기도 가평군 / 제1종</dd>
+                        </div>
+                        <div class="bridge-detail-fact">
+                            <dt>현재 담당자</dt>
+                            <dd th:text="${bridge.manager}">김가람</dd>
+                        </div>
+                        <div class="bridge-detail-fact">
+                            <dt>도로노선</dt>
+                            <dd th:text="${bridge.roadName}">국도 46호선</dd>
+                        </div>
+                        <div class="bridge-detail-fact bridge-detail-fact--wide">
+                            <dt>소재지</dt>
+                            <dd th:text="${bridge.address}">경기도 가평군</dd>
+                        </div>
+                        <div class="bridge-detail-fact bridge-detail-fact--wide">
+                            <dt>최근 점검일</dt>
+                            <dd th:text="${#temporals.format(bridge.lastInspectionDate, 'yyyy.MM.dd')}">2026.10.16</dd>
+                        </div>
+                    </dl>
+                    <h3 class="bridge-detail-subheading"><span class="bridge-step">02</span> 상태 · 관리자 검수 결과</h3>
+                    <div class="bridge-detail-states">
+                        <div>
+                            <span class="bridge-detail-label">점검 진행 상태 (시연 값)</span>
+                            <span class="bridge-status"
+                                  th:classappend="${bridge.inspectionStatus == '완료'} ? ' bridge-status--complete' : ' bridge-status--progress'"
+                                  th:text="${bridge.inspectionStatus}">진행 중</span>
+                        </div>
+                        <div>
+                            <span class="bridge-detail-label">관리자 검수 결과</span>
+                            <span class="bridge-detail-pill bridge-detail-pill--neutral">미연동</span>
+                        </div>
+                    </div>
+                    <p class="bridge-detail-footnote">관리자 검수 결과는 현 DDL에 독립된 상태 컬럼이 없어 임의로 판정하지 않았습니다.</p>
+                </section>
+            </div>
+
+            <section class="app-card bridge-detail-card bridge-detail-section" aria-labelledby="detail-work-title">
+                <h2 class="app-card__title" id="detail-work-title">연결 업무</h2>
+                <p class="bridge-detail-subtitle"><span class="bridge-step">03</span> 업무별 연결 기록 · 실제 상세 이동 기능은 팀원 API 개발 후 연결</p>
+                <div class="bridge-detail-tabs" role="tablist" aria-label="교량 업무 기록 종류">
+                    <button type="button" class="bridge-detail-tab is-active" role="tab" id="tab-inspections" aria-controls="panel-inspections" aria-selected="true" tabindex="0" data-detail-tab="inspections">
+                        점검 <span th:text="${inspectionCount}">2</span>
+                    </button>
+                    <button type="button" class="bridge-detail-tab" role="tab" id="tab-defects" aria-controls="panel-defects" aria-selected="false" tabindex="-1" data-detail-tab="defects">
+                        결함 <span th:text="${defectCount}">2</span>
+                    </button>
+                    <button type="button" class="bridge-detail-tab" role="tab" id="tab-maintenances" aria-controls="panel-maintenances" aria-selected="false" tabindex="-1" data-detail-tab="maintenances">
+                        유지보수 <span th:text="${maintenanceCount}">1</span>
+                    </button>
+                    <button type="button" class="bridge-detail-tab" role="tab" id="tab-actions" aria-controls="panel-actions" aria-selected="false" tabindex="-1" data-detail-tab="actions">
+                        후속 조치 <span th:text="${actionCount}">1</span>
+                    </button>
+                </div>
+
+                <div id="panel-inspections" class="bridge-detail-panel" role="tabpanel" aria-labelledby="tab-inspections" tabindex="0" data-detail-panel="inspections">
+                    <div th:if="${inspectionCount > 0}" class="app-table-wrap">
+                        <table class="app-table bridge-detail-table">
+                            <thead><tr><th scope="col">예시 기록번호</th><th scope="col">업무 유형</th><th scope="col">점검 날짜</th><th scope="col">담당자</th><th scope="col">진행 상태</th><th scope="col">결과 요약</th></tr></thead>
+                            <tbody><tr th:each="entry : ${inspections}">
+                                <td th:text="${entry.displayCode}">IN-2026-016</td>
+                                <td th:text="${entry.type}">정기 안전점검</td>
+                                <td th:text="${#temporals.format(entry.date, 'yyyy.MM.dd')}">2026.10.16</td>
+                                <td th:text="${entry.inspector}">김가람</td>
+                                <td><span class="bridge-detail-pill" th:classappend="${entry.status == '완료'} ? ' bridge-detail-pill--complete' : ' bridge-detail-pill--progress'" th:text="${entry.status}">진행 중</span></td>
+                                <td th:text="${entry.summary}">교량 상부 점검 중</td>
+                            </tr></tbody>
+                        </table>
+                    </div>
+                    <p class="bridge-detail-empty" th:if="${inspectionCount == 0}">연결된 시연용 점검 기록이 없습니다.</p>
+                </div>
+
+                <div id="panel-defects" class="bridge-detail-panel" role="tabpanel" aria-labelledby="tab-defects" tabindex="0" data-detail-panel="defects" hidden>
+                    <div th:if="${defectCount > 0}" class="app-table-wrap">
+                        <table class="app-table bridge-detail-table">
+                            <thead><tr><th scope="col">예시 기록번호</th><th scope="col">결함 유형</th><th scope="col">결함 위치</th><th scope="col">심각도</th><th scope="col">조치 상태</th></tr></thead>
+                            <tbody><tr th:each="entry : ${defects}">
+                                <td th:text="${entry.displayCode}">DF-2026-016</td>
+                                <td th:text="${entry.type}">균열</td>
+                                <td th:text="${entry.location}">교량 바닥판</td>
+                                <td th:text="${entry.severity}">높음</td>
+                                <td th:text="${entry.actionStatus}">조치 중</td>
+                            </tr></tbody>
+                        </table>
+                    </div>
+                    <p class="bridge-detail-empty" th:if="${defectCount == 0}">연결된 시연용 결함 기록이 없습니다.</p>
+                </div>
+
+                <div id="panel-maintenances" class="bridge-detail-panel" role="tabpanel" aria-labelledby="tab-maintenances" tabindex="0" data-detail-panel="maintenances" hidden>
+                    <div th:if="${maintenanceCount > 0}" class="app-table-wrap">
+                        <table class="app-table bridge-detail-table">
+                            <thead><tr><th scope="col">예시 기록번호</th><th scope="col">보수 유형</th><th scope="col">보수 날짜</th><th scope="col">담당자</th><th scope="col">진행 상태</th></tr></thead>
+                            <tbody><tr th:each="entry : ${maintenances}">
+                                <td th:text="${entry.displayCode}">MT-2026-008</td>
+                                <td th:text="${entry.type}">단면 복구</td>
+                                <td th:text="${#temporals.format(entry.date, 'yyyy.MM.dd')}">2026.10.09</td>
+                                <td th:text="${entry.manager}">김가람</td>
+                                <td th:text="${entry.status}">완료</td>
+                            </tr></tbody>
+                        </table>
+                    </div>
+                    <p class="bridge-detail-empty" th:if="${maintenanceCount == 0}">연결된 시연용 유지보수 기록이 없습니다.</p>
+                </div>
+
+                <div id="panel-actions" class="bridge-detail-panel" role="tabpanel" aria-labelledby="tab-actions" tabindex="0" data-detail-panel="actions" hidden>
+                    <div th:if="${actionCount > 0}" class="app-table-wrap">
+                        <table class="app-table bridge-detail-table">
+                            <thead><tr><th scope="col">예시 기록번호</th><th scope="col">조치 내용</th><th scope="col">조치 날짜</th><th scope="col">담당자</th><th scope="col">조치 상태</th></tr></thead>
+                            <tbody><tr th:each="entry : ${actions}">
+                                <td th:text="${entry.displayCode}">FL-2026-004</td>
+                                <td th:text="${entry.action}">균열 보수</td>
+                                <td th:text="${#temporals.format(entry.date, 'yyyy.MM.dd')}">2026.10.17</td>
+                                <td th:text="${entry.manager}">김가람</td>
+                                <td th:text="${entry.status}">조치 중</td>
+                            </tr></tbody>
+                        </table>
+                    </div>
+                    <p class="bridge-detail-empty" th:if="${actionCount == 0}">연결된 시연용 후속 조치 기록이 없습니다.</p>
+                </div>
+
+                <p class="bridge-detail-footnote">현재 목록의 예시 기록번호는 시연용 텍스트입니다. 점검·결함·유지보수의 실제 식별자는 각각의 DB PK/ID를 사용해야 합니다.</p>
+            </section>
+
+            <section class="app-card bridge-detail-card bridge-detail-section" aria-labelledby="recent-title">
+                <h2 class="app-card__title" id="recent-title">최근 연결 기록</h2>
+                <p class="bridge-detail-subtitle"><span class="bridge-step">04</span> 업무별 최근 정보</p>
+                <div class="app-table-wrap" th:if="${!recents.isEmpty()}">
+                    <table class="app-table bridge-detail-table bridge-detail-table--recent">
+                        <thead><tr><th scope="col">예시 기록번호</th><th scope="col">관련 업무</th><th scope="col">일자</th><th scope="col">요약</th><th scope="col">상태</th></tr></thead>
+                        <tbody><tr th:each="item : ${recents}">
+                            <td th:text="${item.displayCode}">FL-2026-004</td>
+                            <td th:text="${item.category}">후속 조치</td>
+                            <td th:text="${#temporals.format(item.date, 'yyyy.MM.dd')}">2026.10.17</td>
+                            <td th:text="${item.description}">교량 바닥판 균열 보수 진행</td>
+                            <td th:text="${item.status}">조치 중</td>
+                        </tr></tbody>
+                    </table>
+                </div>
+                <p class="bridge-detail-empty" th:if="${recents.isEmpty()}">연결된 시연용 최근 기록이 없습니다.</p>
+            </section>
+
+            <section class="app-card bridge-detail-card bridge-detail-bottom" aria-labelledby="detail-manage-title">
+                <div>
+                    <h2 class="app-card__title" id="detail-manage-title">관리 작업</h2>
+                    <p class="bridge-detail-subtitle"><span class="bridge-step">05</span> 정보 수정 · 목록으로 돌아가기</p>
+                </div>
+                <div class="bridge-detail-heading__actions">
+                    <a class="app-btn" th:href="@{/bridges/{no}/edit(no=${bridge.no})}">정보 수정</a>
+                    <a class="app-btn app-btn--outline" th:href="@{/bridges}">교량 목록</a>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>

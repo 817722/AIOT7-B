@@ -45,12 +45,12 @@ public class SecurityConfig {
 
     // 폼 로그인
     http.formLogin(login -> login
-          .loginPage("/users/login")
+          .loginPage("/login")
           .loginProcessingUrl("/users/login")
           .usernameParameter("username")
           .passwordParameter("password")
           .defaultSuccessUrl("/", true)
-          .failureUrl("/users/login?error=true")
+          .failureUrl("/login?error=true")
           .permitAll()
     );
 

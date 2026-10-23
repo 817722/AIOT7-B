@@ -1,0 +1,63 @@
+/* 3단계: 교량 신규 등록 및 정보 수정 화면 */
+.bridge-page [hidden] { display:none !important; }
+.bridge-editor-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+.bridge-editor-head .app-page-description { margin-bottom:18px; }
+.bridge-editor-tabs { display:flex; flex-wrap:wrap; align-items:center; gap:0; border-bottom:1px solid #b7cbd3; margin:0 0 19px; }
+.bridge-editor-tabs a { padding:12px 17px; text-decoration:none; color:#536c76; font-weight:700; border-bottom:3px solid transparent; }
+.bridge-editor-tabs a.is-active { color:var(--app-primary); border-bottom-color:var(--app-primary); }
+.bridge-editor-tabs__hint { margin-left:12px; font-size:12px; color:#738a94; }
+.bridge-editor-section { margin-bottom:18px; }
+.bridge-editor-section .app-card__title { margin:0 0 2px; }
+.bridge-editor-section .bridge-section-subtitle { margin:0 0 16px; }
+.bridge-editor-section__title { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.bridge-mode-label { font-size:11px; font-weight:700; color:#0b858c; background:#e6f4f3; padding:5px 10px; border-radius:99px; }
+.bridge-editor-search-row { display:flex; align-items:flex-end; gap:10px; margin-bottom:7px; }
+.bridge-editor-search-row .bridge-field { flex:1; }
+.bridge-editor-search-row > .app-btn { height:43px; }
+.bridge-editor-help { font-size:12px; line-height:1.65; color:#6b838e; }
+.bridge-csv-table { min-width:620px; font-size:12px; }
+.bridge-csv-table th { white-space:nowrap; color:#40616a; }
+.bridge-csv-table td { white-space:nowrap; }
+.bridge-csv-table input[type='radio'] { accent-color:var(--app-primary); width:16px; height:16px; cursor:pointer; }
+.bridge-csv-row { cursor:pointer; }
+.bridge-csv-row.is-selected { background:#e5f5f2 !important; }
+.bridge-csv-row[hidden], .bridge-editor-empty[hidden] { display:none; }
+.bridge-editor-empty { padding:14px; border:1px dashed #b8cfd4; text-align:center; font-size:12px; color:#617983; }
+.bridge-editor-select-actions { display:flex; align-items:center; flex-wrap:wrap; gap:11px; margin-top:16px; }
+.bridge-editor-grid { display:grid; grid-template-columns:minmax(0,1.65fr) minmax(280px,1fr); gap:16px; align-items:start; }
+.bridge-editor-left, .bridge-editor-right { min-width:0; }
+.bridge-editor-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.bridge-field--full { grid-column:1/-1; }
+.bridge-editor-required { color:#c23b43; }
+.bridge-editor-fields .app-field { min-height:45px; }
+.app-field--readonly { color:#67808c; background:#f5f8f9; }
+.bridge-editor-fields .app-field[aria-invalid='true'] { border-color:#ca424c; }
+.bridge-image-input { margin:10px 0 12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; font-size:12px; font-weight:700; color:#426771; }
+.bridge-image-input input { max-width:100%; font-size:12px; }
+.bridge-image-preview { background:#f3f8f9; border:1px dashed #c1d3d9; border-radius:6px; height:225px; padding:14px; display:flex; align-items:center; justify-content:center; overflow:hidden; color:#80939a; text-align:center; font-size:13px; }
+.bridge-image-preview img { width:100%; height:100%; object-fit:contain; }
+.bridge-image-preview img[hidden] { display:none; }
+#bridge-image-remove { margin-top:12px; }
+.bridge-history-placeholder { border:1px solid #dde7ea; background:#f5f9fa; border-radius:6px; margin-top:18px; padding:16px; }
+.bridge-history-placeholder strong { font-size:12px; }
+.bridge-history-placeholder p { color:#758a93; font-size:12px; margin-bottom:0; }
+.bridge-editor-primary { display:flex; width:100%; margin-bottom:10px; }
+.bridge-editor-right .app-card > .app-btn--outline { margin-bottom:5px; }
+.bridge-editor-divider { border:none; border-top:1px solid #dce6eb; margin:18px 0; }
+.bridge-editor-subheading { font-size:12px; margin:10px 0 8px; }
+.bridge-editor-danger { background:#fff; border:1px solid #d27b80; color:#c24349; }
+.bridge-editor-danger:hover { background:#fff4f4; }
+.bridge-editor-feedback { font-size:12px; font-weight:700; margin:12px 0 0; min-height:1em; color:#177e68; }
+.bridge-editor-feedback.is-error { color:#b53a40; }
+.bridge-editor-summary { display:grid; grid-template-columns:90px 1fr; gap:9px 12px; font-size:12px; overflow-wrap:anywhere; margin:12px 0; }
+.bridge-editor-summary dt { color:#718690; }
+.bridge-editor-summary dd { margin:0; color:#23414a; font-weight:700; }
+@media (max-width:1000px) { .bridge-editor-grid { grid-template-columns:1fr; } }
+@media (max-width:650px) {
+    .bridge-editor-head { flex-direction:column; }
+    .bridge-editor-search-row { flex-wrap:wrap; }
+    .bridge-editor-search-row .bridge-field { flex:1 0 100%; }
+    .bridge-editor-fields { grid-template-columns:1fr; }
+    .bridge-field--full { grid-column:auto; }
+    .bridge-editor-tabs__hint { margin:8px 0 10px; }
+}

@@ -407,7 +407,7 @@ CREATE TABLE `bridges` (
     --     REFERENCES `users` (`no`, `corp_no`)
     --     ON DELETE RESTRICT ON UPDATE CASCADE,
 -- =========================================================
-
+-- 방법 1 corp에 폐업여부를 표시하도록? 
 CREATE TABLE `media` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
     `id` VARCHAR(64) NOT NULL COMMENT '시스템 고유 식별자',
@@ -443,6 +443,7 @@ CREATE TABLE `media` (
         FOREIGN KEY (`uploaded_by`, `corp_no`)
         REFERENCES `users` (`no`, `corp_no`)
         ON DELETE RESTRICT ON UPDATE CASCADE,
+
 
     CONSTRAINT `chk_media_file_size`
         CHECK (`file_size` IS NULL OR `file_size` >= 0)
@@ -488,36 +489,26 @@ CREATE TABLE `media` (
     --     FOREIGN KEY (`bridge_no`, `corp_no`)
     --     REFERENCES `bridges` (`no`, `corp_no`)
     --     ON DELETE CASCADE ON UPDATE CASCADE,
+    -- CONSTRAINT `fk_bridge_media_media_corp`
+    --     FOREIGN KEY (`media_no`, `corp_no`)
+    --     REFERENCES `media` (`no`, `corp_no`)
+    --     ON DELETE RESTRICT ON UPDATE CASCADE,
 -- =========================================================
 
 CREATE TABLE `bridge_media` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
-    `bridge_no` BIGINT NOT NULL COMMENT '교량 번호',
-    `corp_no` BIGINT NOT NULL COMMENT '교량 소속 기업 번호',
+    -- `bridge_no` BIGINT NOT NULL COMMENT '교량 번호',
+    -- `corp_no` BIGINT NOT NULL COMMENT '교량 소속 기업 번호',
     `media_no` BIGINT NOT NULL COMMENT '이미지 미디어 번호',
     `is_main` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '대표 이미지 여부',
-
-    `main_bridge_no` BIGINT
-        GENERATED ALWAYS AS (
-            CASE
-                WHEN `is_main` = 1 THEN `bridge_no`
-                ELSE NULL
-            END
-        ) STORED COMMENT '대표 이미지 중복 방지용 교량 번호',
 
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일자',
 
     PRIMARY KEY (`no`),
 
-    UNIQUE KEY `uk_bridge_media` (`bridge_no`, `media_no`),
-
-    UNIQUE KEY `uk_bridge_media_single_main` (`main_bridge_no`),
-
-    KEY `idx_bridge_media_media_corp` (`media_no`, `corp_no`),
-
         CONSTRAINT `fk_bridge_media_media_corp`
-        FOREIGN KEY (`media_no`, `corp_no`)
-        REFERENCES `media` (`no`, `corp_no`)
+        FOREIGN KEY (`media_no`)
+        REFERENCES `media` (`no`)
         ON DELETE RESTRICT ON UPDATE CASCADE,
 
     CONSTRAINT `chk_bridge_media_main`
@@ -527,7 +518,9 @@ CREATE TABLE `bridge_media` (
   COLLATE=utf8mb4_unicode_ci
   COMMENT='교량 대표 이미지 연결';
 
-  SHOW CREATE TABLE project.bridges;
+
+
+
 
 -- =========================================================
 -- 8. 교량 점검 기록

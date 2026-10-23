@@ -1,4 +1,4 @@
--- Active: 1788828728652@@127.0.0.1@3306@project
+-- Active: 1788828726528@@127.0.0.1@3306@project
 -- =========================================================
 -- 드론 영상 기반 교량 점검 업무 지원 시스템
 -- MySQL 8.0.46 / 초기 구축용 DDL
@@ -327,8 +327,6 @@ CREATE TABLE `bridges` (
         FOREIGN KEY (`corp_no`) REFERENCES `corps` (`no`)
         ON DELETE RESTRICT ON UPDATE CASCADE,
 
-    -- 담당자/등록자/수정자: 사용자 존재만 FK로 검증(단일 FK),
-    -- 기업 소속 일치 검증은 애플리케이션에서 수행
     CONSTRAINT `fk_bridges_manager`
         FOREIGN KEY (`manager_no`) REFERENCES `users` (`no`)
         ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -383,6 +381,11 @@ CREATE TABLE `bridges` (
 -- is_main(대표 이미지)은 p_type = 'BRIDGE'인 경우에만 유효하며,
 -- 생성 컬럼(main_bridge_id)과 UNIQUE 제약으로 교량당 대표
 -- 이미지 1건만 허용합니다.
+--
+-- [MySQL 제약] ON UPDATE CASCADE/SET NULL이 걸린 컬럼은 CHECK 제약에
+-- 사용할 수 없습니다. corp_no는 chk_media_parent_corp에서 검사하므로
+-- fk_media_corp는 ON UPDATE RESTRICT로 둡니다
+-- (corps.no는 AUTO_INCREMENT PK라 사실상 변경되지 않음).
 -- =========================================================
 
 CREATE TABLE `media` (
@@ -390,10 +393,8 @@ CREATE TABLE `media` (
     `id` VARCHAR(64) NOT NULL COMMENT '시스템 고유 식별자',
     `corp_no` BIGINT DEFAULT NULL COMMENT '업로드 기업 번호(NULL=공통 미디어)',
 
-    `p_type` ENUM('BRIDGE', 'INSPECTION', 'MAINTENANCE')
-        DEFAULT NULL COMMENT '연결된 부모 테이블 구분(NULL=미연결 공통 파일)',
-    `p_id` BIGINT DEFAULT NULL COMMENT
-        '부모 레코드 PK(no). p_type에 따라 bridges.no/inspections.no/maintenance_records.no를 의미(다형 연결, DB FK 미적용)',
+    `p_type` ENUM('BRIDGE', 'INSPECTION', 'MAINTENANCE') DEFAULT NULL COMMENT '연결된 부모 테이블 구분(NULL=미연결 공통 파일)',
+    `p_id` BIGINT DEFAULT NULL COMMENT '부모 레코드 no. p_type에 따라 bridges.no/inspections.no/maintenance_records.no를 의미(다형 연결, DB FK 미적용)',
 
     `type` ENUM('IMAGE', 'VIDEO') NOT NULL COMMENT '미디어 유형',
     `is_main` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '대표 이미지 여부(p_type=BRIDGE 전용)',
@@ -424,7 +425,7 @@ CREATE TABLE `media` (
 
     CONSTRAINT `fk_media_corp`
         FOREIGN KEY (`corp_no`) REFERENCES `corps` (`no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
+        ON DELETE RESTRICT ON UPDATE RESTRICT,
 
     CONSTRAINT `fk_media_uploader`
         FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`no`)
@@ -453,15 +454,14 @@ CREATE TABLE `media` (
 
 -- =========================================================
 -- 7. 교량 점검 기록
--- 점검 기록과 기업의 일치 여부를 복합 FK로 검증
-    -- KEY `idx_inspections_bridge_corp` (`bridge_no`, `corp_no`),
-    -- KEY `idx_inspections_corp` (`corp_no`),
-    -- KEY `idx_inspections_status` (`status`),
-    -- KEY `idx_inspections_date` (`inspection_date`),
-    -- KEY `idx_inspections_inspector` (`inspector_no`),
-    -- KEY `idx_inspections_created_by` (`created_by`),
-    -- KEY `idx_inspections_updated_by` (`updated_by`),
-    -- KEY `idx_inspections_bridge_date` (`bridge_no`, `inspection_date`),
+-- 점검 기록과 기업의 일치 여부를 복합 FK로 검증합니다.
+--
+-- bridge_no + corp_no: "같은 기업의 교량"이라는 업무 규칙을
+-- 직접 강제하는 복합 FK이므로 유지합니다.
+-- corp_no 단독 FK는 두지 않습니다: 위 복합 FK가 bridges.corp_no(→corps.no)를
+-- 통해 corp_no 유효성을 이미 보장하므로 중복이기 때문입니다.
+-- 점검 담당자/등록자/수정자는 사용자 존재만 단일 FK로 검증하며,
+-- 기업 소속 일치 검증은 애플리케이션에서 수행합니다.
 -- =========================================================
 
 CREATE TABLE `inspections` (
@@ -508,18 +508,11 @@ CREATE TABLE `inspections` (
     KEY `idx_inspections_updated_by` (`updated_by`),
     KEY `idx_inspections_bridge_date` (`bridge_no`, `inspection_date`),
 
-    -- bridge_no + corp_no: "같은 기업의 교량"이라는 업무 규칙을
-    -- 직접 강제하는 복합 FK이므로 유지합니다.
     CONSTRAINT `fk_inspections_bridge_corp`
         FOREIGN KEY (`bridge_no`, `corp_no`)
         REFERENCES `bridges` (`no`, `corp_no`)
         ON DELETE RESTRICT ON UPDATE CASCADE,
 
-    -- corp_no 단독 FK는 제거: 위 복합 FK가 bridges.corp_no(→corps.no)를
-    -- 통해 corp_no 유효성을 이미 보장하므로 중복입니다.
-
-    -- 점검 담당자/등록자/수정자: 사용자 존재만 단일 FK로 검증,
-    -- 기업 소속 일치 검증은 애플리케이션에서 수행
     CONSTRAINT `fk_inspections_inspector`
         FOREIGN KEY (`inspector_no`) REFERENCES `users` (`no`)
         ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -543,6 +536,10 @@ CREATE TABLE `inspections` (
 
 -- =========================================================
 -- 8. 결함 정보
+-- inspection_no + corp_no: "같은 기업의 점검 기록"이라는 업무 규칙을
+-- 직접 강제하는 복합 FK이므로 유지합니다.
+-- 등록자/수정자는 사용자 존재만 단일 FK로 검증하며,
+-- 기업 소속 일치 검증은 애플리케이션에서 수행합니다.
 -- =========================================================
 CREATE TABLE `defects` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
@@ -573,15 +570,11 @@ CREATE TABLE `defects` (
     KEY `idx_defects_type` (`defect_type`),
     KEY `idx_defects_severity` (`severity`),
 
-    -- inspection_no + corp_no: "같은 기업의 점검 기록"이라는 업무 규칙을
-    -- 직접 강제하는 복합 FK이므로 유지합니다.
     CONSTRAINT `fk_defects_inspection_corp`
         FOREIGN KEY (`inspection_no`, `corp_no`)
         REFERENCES `inspections` (`no`, `corp_no`)
         ON DELETE RESTRICT ON UPDATE CASCADE,
 
-    -- 등록자/수정자: 사용자 존재만 단일 FK로 검증,
-    -- 기업 소속 일치 검증은 애플리케이션에서 수행
     CONSTRAINT `fk_defects_created_by`
         FOREIGN KEY (`created_by`) REFERENCES `users` (`no`)
         ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -601,6 +594,12 @@ CREATE TABLE `defects` (
 
 -- =========================================================
 -- 9. 유지보수 기록
+-- bridge_no + corp_no: "같은 기업의 교량"이라는 업무 규칙을
+-- 직접 강제하는 복합 FK이므로 유지합니다.
+-- corp_no 단독 FK는 두지 않습니다: 위 복합 FK가 bridges.corp_no(→corps.no)를
+-- 통해 corp_no 유효성을 이미 보장하므로 중복이기 때문입니다.
+-- 담당자/등록자/수정자는 사용자 존재만 단일 FK로 검증하며,
+-- 기업 소속 일치 검증은 애플리케이션에서 수행합니다.
 -- =========================================================
 CREATE TABLE `maintenance_records` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
@@ -639,18 +638,11 @@ CREATE TABLE `maintenance_records` (
     KEY `idx_maintenance_updated_by` (`updated_by`),
     KEY `idx_maintenance_bridge_date` (`bridge_no`, `maintenance_date`),
 
-    -- bridge_no + corp_no: "같은 기업의 교량"이라는 업무 규칙을
-    -- 직접 강제하는 복합 FK이므로 유지합니다.
     CONSTRAINT `fk_maintenance_bridge_corp`
         FOREIGN KEY (`bridge_no`, `corp_no`)
         REFERENCES `bridges` (`no`, `corp_no`)
         ON DELETE RESTRICT ON UPDATE CASCADE,
 
-    -- corp_no 단독 FK는 제거: 위 복합 FK가 bridges.corp_no(→corps.no)를
-    -- 통해 corp_no 유효성을 이미 보장하므로 중복입니다.
-
-    -- 담당자/등록자/수정자: 사용자 존재만 단일 FK로 검증,
-    -- 기업 소속 일치 검증은 애플리케이션에서 수행
     CONSTRAINT `fk_maintenance_manager`
         FOREIGN KEY (`manager_no`) REFERENCES `users` (`no`)
         ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -678,6 +670,11 @@ CREATE TABLE `maintenance_records` (
 -- 결함별로 조치 이력을 여러 건 저장할 수 있습니다.
 -- 상태값은 발견, 조치 필요, 조치 중, 조치 완료를 포함합니다.
 -- 후속 조치의 날짜, 담당자, 내용 및 결과를 관리합니다.
+--
+-- defect_no / maintenance_no + corp_no: 결함·유지보수 기록이
+-- "같은 기업" 소속인지 보장하는 업무 규칙이므로 복합 FK를 유지합니다.
+-- 조치 담당자/등록자/수정자는 사용자 존재만 단일 FK로 검증하며,
+-- 기업 소속 일치 검증은 애플리케이션에서 수행합니다.
 -- =========================================================
 
 CREATE TABLE `defect_actions` (
@@ -715,8 +712,6 @@ CREATE TABLE `defect_actions` (
     KEY `idx_defect_actions_date` (`action_date`),
     KEY `idx_defect_actions_manager` (`manager_no`),
 
-    -- defect_no / maintenance_no + corp_no: 결함·유지보수 기록이
-    -- "같은 기업" 소속인지 보장하는 업무 규칙이므로 복합 FK 유지
     CONSTRAINT `fk_defect_actions_defect_corp`
         FOREIGN KEY (`defect_no`, `corp_no`)
         REFERENCES `defects` (`no`, `corp_no`)
@@ -727,8 +722,6 @@ CREATE TABLE `defect_actions` (
         REFERENCES `maintenance_records` (`no`, `corp_no`)
         ON DELETE RESTRICT ON UPDATE CASCADE,
 
-    -- 조치 담당자/등록자/수정자: 사용자 존재만 단일 FK로 검증,
-    -- 기업 소속 일치 검증은 애플리케이션에서 수행
     CONSTRAINT `fk_defect_actions_manager`
         FOREIGN KEY (`manager_no`) REFERENCES `users` (`no`)
         ON DELETE RESTRICT ON UPDATE CASCADE,

@@ -1,14 +1,42 @@
 package com.aiotb.project.dto.bridges;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import com.aiotb.project.domain.bridges.Bridge;
+
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-
 public class BridgeDto {
+
+    // CSV 검색 결과에서 선택한 교량의 식별자만 등록 요청으로 전달
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    public static class CreateRequest {
+        @NotBlank(message = "CSV 검색 결과에서 교량을 선택해야 합니다.")
+        private String catalogId;
+        private Long createdBy;
+    }
+
+    // 기준 CSV의 검색 결과 응답
+    public record CatalogBridge(
+            String catalogId,
+            String name,
+            String facilityType,
+            String roadType,
+            String roadName,
+            String province,
+            String city,
+            String address,
+            BigDecimal bridgeLength,
+            BigDecimal bridgeWidth,
+            String managementAgency,
+            LocalDate sourceDataDate) {
+    }
 
     // 등록 및 수정 요청 DTO
     @Getter

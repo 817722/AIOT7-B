@@ -1,15 +1,17 @@
 package com.aiotb.project.service.bridges;
 
-import com.aiotb.project.domain.bridges.Bridge;
-import com.aiotb.project.dto.bridges.BridgeDto;
-import com.aiotb.project.repository.bridges.BridgeRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.aiotb.project.domain.bridges.Bridge;
+import com.aiotb.project.dto.bridges.BridgeDto;
+import com.aiotb.project.repository.bridges.BridgeRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -17,22 +19,28 @@ import java.util.stream.Collectors;
 public class BridgeService {
 
     private final BridgeRepository bridgeRepository;
+    private final BridgeCatalogService bridgeCatalogService;
 
     // 1. 교량 등록
     @Transactional
-    public String createBridge(BridgeDto.Request request) {
+    public String createBridge(BridgeDto.CreateRequest request) {
+        // 클라이언트가 교량 정보를 직접 작성하지 못하도록 CSV 식별자로만 조회합니다.
+        BridgeDto.CatalogBridge selected = bridgeCatalogService.getById(request.getCatalogId());
         String uuid = UUID.randomUUID().toString();
 
         Bridge bridge = Bridge.builder()
                 .id(uuid)
-                .name(request.getName())
-                .facilityType(request.getFacilityType())
-                .province(request.getProvince())
-                .city(request.getCity())
-                .address(request.getAddress())
-                .bridgeLength(request.getBridgeLength())
-                .bridgeWidth(request.getBridgeWidth())
-                .managementAgency(request.getManagementAgency())
+                .sourceDataDate(selected.sourceDataDate())
+                .name(selected.name())
+                .facilityType(selected.facilityType())
+                .roadType(selected.roadType())
+                .roadName(selected.roadName())
+                .province(selected.province())
+                .city(selected.city())
+                .address(selected.address())
+                .bridgeLength(selected.bridgeLength())
+                .bridgeWidth(selected.bridgeWidth())
+                .managementAgency(selected.managementAgency())
                 .createdBy(request.getCreatedBy() != null ? request.getCreatedBy() : 1L) // 기본값 설정
                 .build();
 
@@ -67,8 +75,7 @@ public class BridgeService {
                 request.getCity(),
                 request.getBridgeLength(),
                 request.getBridgeWidth(),
-                request.getManagementAgency()
-        );
+                request.getManagementAgency());
     }
 
     // 5. 교량 삭제

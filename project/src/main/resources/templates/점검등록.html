@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>점검등록</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <!-- 헤더 파티션 -->
+    <header>
+        <div class="logo">
+            <a th:href="@{/업무관리}"><img src="images/logo.png" alt="로고"></a>
+        </div>
+        <a th:href="@{/업무관리}">교량점검 시스템</a>
+    </header>
+
+    <div class="container">
+        <!-- 네이게이션 파티션 -->
+        <div class="outer">
+            <p>업무 관리</p>
+            <nav>
+                <ul class="main-menu">
+                    <li><a th:href="@{/교량관리}">교량 관리</a></li>
+                    <li><a th:href="@{/점검관리}">점검 관리</a></li>
+                    <!-- <li><a th:href="@{/점검관리}">결함 관리</a></li> -->
+                    <li><a th:href="@{/점검관리}">유지보수 관리</a></li>
+                    <!-- <li><a th:href="@{/점검관리}">후속 조치</a></li> -->
+                    <li><a th:href="@{/점검관리}">관리자 검수</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="inner">
+            <div class="sticky"><a href="#">업무 관리 | 점검 관리 | 점검 등록</a></div>
+            <!-- 첫 번째 섹션 -->
+            <div class="first">
+                <label for="#">점검 목록</label>
+                <p>현재 점검 중인 교량과 완료된 점검 기록을 구분해 조회합니다.</p>
+                <div id="window1">
+                    <div><p>진행중</p><a href="#">2건</a></div>
+                    <div><p>완료</p><a href="#">3건</a></div>
+                    <div><p>이번 달 점검</p><a href="#">5건</a></div>
+                </div>
+            </div>
+
+            <!-- 두 번째 섹션 -->
+            <div class="second">
+                <label>점검 조회</label>
+                <p>01 조회 조건</p>
+                <section id="window2">
+                    <div><input type="text" id="name" name="name"
+                    placeholder="교량명을 입력하세요." required>
+                    <br>
+                    <a href="#">전체 교량 *</a></div>
+                    <div><p>점검 날짜</p><a href="#">2026.10.01 ~ 2026.10.31</a></div>
+                    <div>
+                        <!-- 작업중이었음 -->
+                        <!-- <select th:field="*{type}">
+                            <option value="사용자 타입" disabled>사용자 타입</option>
+                            <option value="사용자">사용자</option>
+                            <option value="관리자">관리자</option>
+                        </select> -->
+                        <br>
+                        <a href="#">전체 *</a>
+                    </div>
+                </section>
+                <button id="btn1" th:onclick="location.href='@{#}'">조회</button>
+                <button id="btn2" th:onclick="location.href='@{#}'">초기화</button>
+            </div>
+
+                <!-- 세 번째 섹션 -->
+            <div class="third">
+                <label>점검 현황</label>
+                <p>02 진행 상태별 조회</p>
+                    
+                <!-- 탭 버튼 -->
+                <div class="tabs">
+                    <input id="all" type="radio" name="tab-item" checked>
+                    <label class="tab-item" for="all">전체 5</label>
+                    <input id="ing" type="radio" name="tab-item">
+                    <label class="tab-item" for="ing">진행 중 2</label>
+                    <input id="success" type="radio" name="tab-item">
+                    <label class="tab-item" for="success">완료 3</label>
+                    <div class="tab-item" id="space">
+                    </div>
+                    <br>
+
+                    <!-- 컨텐트 영역 -->
+                    <div class="tab_content" id="all_content">
+                        <p>03 점검 기록</p>
+                        <table class="status">
+                            <tr>
+                                <th><a href="#">점검 기록 ID</a></th>
+                                <th>교량명</th>
+                                <th>점검날짜</th>
+                                <th>담당자</th>
+                                <th>점검분류</th>
+                                <th>상태</th>
+                            </tr>
+                            <th:block th:each=" item, iterStat : ${items1}">
+                            <tr class="row" th:classappend="${ iterStat.odd ? 'odd' : 'even'}">
+                                <td><th:block th:text="${item}"></th:block></td>
+                                <td><th:block th:text="${iterStat.index}"></th:block></td>
+                                <td><th:block th:text="${iterStat.count}"></th:block></td>
+                                <td><th:block th:text="${iterStat.size}"></th:block></td>
+                                <td><th:block th:text="${iterStat.odd}"></th:block></td>
+                                <td><th:block th:text="${iterStat.even}"></th:block></td>
+                            </tr>
+                            </th:block>
+                        </table>
+                        <div class="next"><a href="#">이전 1 다음</a></div>
+                    </div>
+
+                    <div class="tab_content" id="ing_content">
+                        <p>03 점검 기록</p>
+                        <table class="status">
+                            <tr>
+                                <th><a href="#">점검 기록 ID</a></th>
+                                <th>교량명</th>
+                                <th>점검날짜</th>
+                                <th>담당자</th>
+                                <th>점검분류</th>
+                                <th>상태</th>
+                            </tr>
+                            <th:block th:each=" item, iterStat : ${items2}">
+                            <tr class="row" th:classappend="${ iterStat.odd ? 'odd' : 'even'}">
+                                <td><th:block th:text="${item}"></th:block></td>
+                                <td><th:block th:text="${iterStat.index}"></th:block></td>
+                                <td><th:block th:text="${iterStat.count}"></th:block></td>
+                                <td><th:block th:text="${iterStat.size}"></th:block></td>
+                                <td><th:block th:text="${iterStat.odd}"></th:block></td>
+                                <td><th:block th:text="${iterStat.even}"></th:block></td>
+                            </tr>
+                            </th:block>
+                        </table>
+                    </div>
+
+                    <div class="tab_content" id="success_content">
+                        <p>03 점검 기록</p>
+                        <table class="status">
+                            <tr>
+                                <th><a href="#">점검 기록 ID</a></th>
+                                <th>교량명</th>
+                                <th>점검날짜</th>
+                                <th>담당자</th>
+                                <th>점검분류</th>
+                                <th>상태</th>
+                            </tr>
+                            <th:block th:each=" item, iterStat : ${items3}">
+                            <tr class="row" th:classappend="${ iterStat.odd ? 'odd' : 'even'}">
+                                <td><th:block th:text="${item}"></th:block></td>
+                                <td><th:block th:text="${iterStat.index}"></th:block></td>
+                                <td><th:block th:text="${iterStat.count}"></th:block></td>
+                                <td><th:block th:text="${iterStat.size}"></th:block></td>
+                                <td><th:block th:text="${iterStat.odd}"></th:block></td>
+                                <td><th:block th:text="${iterStat.even}"></th:block></td>
+                            </tr>
+                            </th:block>
+                        </table>
+                    </div>
+                    <div class="last">
+                        <p>04 신규 업무 시작</p>
+                        
+                       <button id="btn3" th:onclick="|location.href='@{/점검등록}'|">점검 등록으로</button>
+                        <a href="#">대상 교량 선택 → 점검·안전 점검표 작성 → 영상 연결 → 기록 생성</a>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 네 번째 섹션 -->
+            <div class="fourth">
+                <label>조회 예외·상태 예시</label>
+                <p>05 빈 목록·오류 안내</p>
+                    <div class="status1"><a href="#">등록된 점검 기록이 없습니다. 점검 등록에서 첫 기록을 작성하세요.</a></div>
+                    <div class="status2"><a href="#">등록된 점검 기록이 없습니다. 점검 등록에서 첫 기록을 작성하세요.</a></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

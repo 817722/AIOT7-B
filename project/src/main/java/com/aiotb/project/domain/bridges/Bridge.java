@@ -1,15 +1,17 @@
 package com.aiotb.project.domain.bridges;
 
-
-import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import com.aiotb.project.domain.BaseEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "bridges")
@@ -57,7 +59,9 @@ public class Bridge extends BaseEntity {
     private Long createdBy; // 등록 사용자 번호
 
     @Builder
-    public Bridge(String id, LocalDate sourceDataDate, String name, String facilityType, String roadType, String roadName, String province, String city, String address, BigDecimal bridgeLength, BigDecimal bridgeWidth, String managementAgency, Long createdBy) {
+    public Bridge(String id, LocalDate sourceDataDate, String name, String facilityType, String roadType,
+            String roadName, String province, String city, String address, BigDecimal bridgeLength,
+            BigDecimal bridgeWidth, String managementAgency, Long createdBy) {
         this.id = id;
         this.sourceDataDate = sourceDataDate;
         this.name = name;
@@ -74,7 +78,8 @@ public class Bridge extends BaseEntity {
     }
 
     // 수정 로직
-    public void updateBridge(String name, String facilityType, String address, String province, String city, BigDecimal bridgeLength, BigDecimal bridgeWidth, String managementAgency) {
+    public void updateBridge(String name, String facilityType, String address, String province, String city,
+            BigDecimal bridgeLength, BigDecimal bridgeWidth, String managementAgency) {
         this.name = name;
         this.facilityType = facilityType;
         this.address = address;

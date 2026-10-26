@@ -30,16 +30,10 @@ public class Corp extends BaseEntity {
     private String ceoName; // 대표자명
 
     @Column(length = 100)
-    private String corpName; // 회사명
+    private String corpName; // 기업명
 
     @Column(name = "opened_at", nullable = false)
     private LocalDate openDate; // 개업일자 (YYYYMMDD)
-
-    @Column(length = 30)
-    private String phone; // 연락처
-
-    @Column(length = 254)
-    private String email; // 기업 이메일
 
     @Builder.Default
     @Column(name = "bis_verified", nullable = false)

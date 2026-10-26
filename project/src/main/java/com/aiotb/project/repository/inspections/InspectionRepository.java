@@ -1,12 +1,14 @@
 package com.aiotb.project.repository.inspections;
 
-import com.aiotb.project.domain.inspections.Inspection;
-import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.aiotb.project.domain.inspections.Inspection;
+
 public interface InspectionRepository extends JpaRepository<Inspection, Long> {
-    
+
     // 고유 UUID로 조회
     Optional<Inspection> findById(String id);
 

@@ -12,13 +12,6 @@ USE project;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
--- =========================================================
--- 기존 테이블 삭제
--- 자식 테이블부터 삭제하여 외래키 충돌을 방지합니다.
--- ※ 중요 ※
--- 반드시 DROP TABLE IF EXISTS `defect_history`는 
--- DROP TABLE IF EXISTS `defect_actions`; 위에 있어야 합니다.
--- =========================================================
 
 DROP TABLE IF EXISTS `defect_history`;
 DROP TABLE IF EXISTS `defect_actions`;
@@ -34,20 +27,17 @@ DROP TABLE IF EXISTS `corps`;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
--- =========================================================
+-- ===========================
 -- 1. 기업
--- =========================================================
+-- ===========================
 CREATE TABLE `corps` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
     `bis_no` VARCHAR(20) NOT NULL COMMENT '사업자등록번호',
     `ceo_name` VARCHAR(100) NOT NULL COMMENT '대표자명',
     `corp_name` VARCHAR(100) NOT NULL COMMENT '기업명',
     `opened_at` DATE NOT NULL COMMENT '개업일자',
-    `phone` VARCHAR(30) DEFAULT NULL COMMENT '기업 전화번호',
-    `email` VARCHAR(254) DEFAULT NULL COMMENT '기업 이메일',
     `bis_verified` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '기업 인증 완료 여부',
     `verified_at` DATETIME DEFAULT NULL COMMENT '기업 인증 일시',
-    `email_verified` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '기업 이메일 인증 여부',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일자',
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자',
@@ -66,15 +56,11 @@ CREATE TABLE `corps` (
   COMMENT='기업 정보 및 인증 정보';
 
 
--- =========================================================
+-- ==================
 -- 2. 사용자
--- 작업자의 로그인 ID는 username 컬럼으로 관리합니다.
--- 외부 참조 및 식별에 사용할 수 있는 고유 식별자는 id 컬럼으로 관리합니다.
-
--- 복합 FK에서 사용자와 기업의 소속 일치를 검증하기 위한 키
--- (defect_history.changed_by + corp_no → users 복합 FK가 참조)
-    -- UNIQUE KEY `uk_users_no_corp` (`no`, `corp_no`),
--- =========================================================
+-- 담당자의 로그인 ID: username 
+-- 외부 참조 및 식별용 고유 식별자: id
+-- ==================
 CREATE TABLE `users` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
     `id` VARCHAR(64) NOT NULL COMMENT '고유 식별자',
@@ -109,9 +95,12 @@ CREATE TABLE `users` (
   COMMENT='시스템 사용자';
 
 
--- =========================================================
+-- ==================
 -- 3. 사용자 권한
--- =========================================================
+-- SUPER_ADMIN : 웹 관리자
+-- ADMIN : 기업
+-- INSPECTOR : 담당자(=직원)
+-- ==================
 CREATE TABLE `user_auth` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
     `user_no` BIGINT NOT NULL COMMENT '사용자 번호',
@@ -134,11 +123,12 @@ CREATE TABLE `user_auth` (
   COMMENT='사용자별 권한';
 
 
--- =========================================================
--- 4. 전국교량표준데이터 원본
--- CSV 데이터를 최초 1회 적재하여 보관
--- 웹에서 직접 신규 교량을 생성하는 용도로 사용하지 않음
--- =========================================================
+-- ===========================
+-- 4. 전국교량표준데이터
+-- .csv 데이터를 최초 1회 적재하여 보관
+-- 이 테이블내의 데이터는 원본 csv가 바뀐게 아니라면
+-- 절대로 수정하면 안됨.
+-- ===========================
 
 CREATE TABLE `bridge_master` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT '내부 PK',
@@ -223,7 +213,7 @@ CREATE TABLE `bridge_master` (
   COMMENT='전국교량표준데이터 CSV 원본';
 
 
--- =========================================================
+-- ===========================
 -- 5. 업무용 교량
 -- CSV 원본을 선택한 경우에만 등록
 -- 기업별로 별도의 업무용 교량 레코드를 생성
@@ -238,7 +228,7 @@ CREATE TABLE `bridge_master` (
 --
 -- `uk_bridges_no_corp` (no, corp_no)는 inspections/maintenance_records가
 -- "같은 기업의 교량인지"를 복합 FK로 강제하기 위해 계속 필요합니다.
--- =========================================================
+-- ===========================
 
 CREATE TABLE `bridges` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
@@ -366,7 +356,7 @@ CREATE TABLE `bridges` (
   COMMENT='기업별 업무용 교량';
 
 
--- =========================================================
+-- ===========================
 -- 6. 미디어 (통합)
 -- 교량 이미지, 점검 영상, 유지보수 영상을 연결 테이블 없이
 -- media 테이블 하나로 관리합니다.
@@ -386,7 +376,7 @@ CREATE TABLE `bridges` (
 -- 사용할 수 없습니다. corp_no는 chk_media_parent_corp에서 검사하므로
 -- fk_media_corp는 ON UPDATE RESTRICT로 둡니다
 -- (corps.no는 AUTO_INCREMENT PK라 사실상 변경되지 않음).
--- =========================================================
+-- ===========================
 
 CREATE TABLE `media` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
@@ -452,7 +442,7 @@ CREATE TABLE `media` (
   COMMENT='업로드 이미지 및 영상 파일 정보(부모 레코드 다형 연결)';
 
 
--- =========================================================
+-- ===========================
 -- 7. 교량 점검 기록
 -- 점검 기록과 기업의 일치 여부를 복합 FK로 검증합니다.
 --
@@ -462,7 +452,7 @@ CREATE TABLE `media` (
 -- 통해 corp_no 유효성을 이미 보장하므로 중복이기 때문입니다.
 -- 점검 담당자/등록자/수정자는 사용자 존재만 단일 FK로 검증하며,
 -- 기업 소속 일치 검증은 애플리케이션에서 수행합니다.
--- =========================================================
+-- ===========================
 
 CREATE TABLE `inspections` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
@@ -471,6 +461,7 @@ CREATE TABLE `inspections` (
     `bridge_no` BIGINT NOT NULL COMMENT '점검 대상 교량 번호',
     `corp_no` BIGINT NOT NULL COMMENT '점검 기록 소유 기업 번호',
 
+    `title` VARCHAR(255) NOT NULL COMMENT '점검 기록명',
     `inspection_type` ENUM(
         '자체 안전점검',
         '정기 안전점검',
@@ -484,6 +475,7 @@ CREATE TABLE `inspections` (
     `inspection_date` DATE NOT NULL COMMENT '점검 날짜',
     `inspector_no` BIGINT NOT NULL COMMENT '점검 담당자 번호',
 
+    `memo` TEXT DEFAULT NULL COMMENT '담당자 메모',
     `overall_result` TEXT DEFAULT NULL COMMENT '종합 점검 결과',
     `review_opinion` TEXT DEFAULT NULL COMMENT '검토 의견',
     `completed_at` DATETIME DEFAULT NULL COMMENT '점검 완료 일시',
@@ -529,18 +521,17 @@ CREATE TABLE `inspections` (
   COLLATE=utf8mb4_unicode_ci
   COMMENT='교량 점검 기록';
 
-
 -- 점검 영상은 media 테이블에서 p_type='INSPECTION', p_id=inspections.no로
 -- 연결합니다(별도의 inspection_media 연결 테이블 없음).
 
 
--- =========================================================
+-- ===========================
 -- 8. 결함 정보
 -- inspection_no + corp_no: "같은 기업의 점검 기록"이라는 업무 규칙을
 -- 직접 강제하는 복합 FK이므로 유지합니다.
 -- 등록자/수정자는 사용자 존재만 단일 FK로 검증하며,
 -- 기업 소속 일치 검증은 애플리케이션에서 수행합니다.
--- =========================================================
+-- ===========================
 CREATE TABLE `defects` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
     `id` VARCHAR(64) NOT NULL COMMENT '시스템 고유 식별자',
@@ -587,12 +578,11 @@ CREATE TABLE `defects` (
   COLLATE=utf8mb4_unicode_ci
   COMMENT='교량 점검에서 발견된 결함 정보';
 
-
 -- 결함 관련 이미지/영상도 media 테이블에서
 -- p_type='INSPECTION', p_id=inspections.no로 연결하여 조회합니다.
 
 
--- =========================================================
+-- ===========================
 -- 9. 유지보수 기록
 -- bridge_no + corp_no: "같은 기업의 교량"이라는 업무 규칙을
 -- 직접 강제하는 복합 FK이므로 유지합니다.
@@ -600,15 +590,17 @@ CREATE TABLE `defects` (
 -- 통해 corp_no 유효성을 이미 보장하므로 중복이기 때문입니다.
 -- 담당자/등록자/수정자는 사용자 존재만 단일 FK로 검증하며,
 -- 기업 소속 일치 검증은 애플리케이션에서 수행합니다.
--- =========================================================
-CREATE TABLE `maintenance_records` (
+-- ===========================
+CCREATE TABLE `maintenance_records` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
     `id` VARCHAR(64) NOT NULL COMMENT '시스템 고유 식별자',
 
     `bridge_no` BIGINT NOT NULL COMMENT '유지보수 대상 교량 번호',
     `corp_no` BIGINT NOT NULL COMMENT '유지보수 기록 소유 기업 번호',
 
-    `maintenance_type` VARCHAR(50) DEFAULT NULL COMMENT '유지보수 유형(분류 기준 확정 후 적용)',
+    `title` VARCHAR(255) NOT NULL COMMENT '유지보수 기록명',
+    `maintenance_type` VARCHAR(50) NOT NULL COMMENT '유지보수 분류',
+    `memo` TEXT DEFAULT NULL COMMENT '담당자 메모',
     `status` ENUM('진행 대기', '진행 중', '완료')
         NOT NULL DEFAULT '진행 대기' COMMENT '유지보수 진행 상태',
 
@@ -659,13 +651,12 @@ CREATE TABLE `maintenance_records` (
   COLLATE=utf8mb4_unicode_ci
   COMMENT='교량 유지보수 기록';
 
-
 -- 유지보수 영상은 media 테이블에서 p_type='MAINTENANCE',
 -- p_id=maintenance_records.no로 연결합니다
 -- (별도의 maintenance_media 연결 테이블 없음).
 
 
--- =========================================================
+-- ===========================
 -- 10. 결함 조치 및 후속 조치 이력
 -- 결함별로 조치 이력을 여러 건 저장할 수 있습니다.
 -- 상태값은 발견, 조치 필요, 조치 중, 조치 완료를 포함합니다.
@@ -675,7 +666,7 @@ CREATE TABLE `maintenance_records` (
 -- "같은 기업" 소속인지 보장하는 업무 규칙이므로 복합 FK를 유지합니다.
 -- 조치 담당자/등록자/수정자는 사용자 존재만 단일 FK로 검증하며,
 -- 기업 소속 일치 검증은 애플리케이션에서 수행합니다.
--- =========================================================
+-- ===========================
 
 CREATE TABLE `defect_actions` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
@@ -739,12 +730,12 @@ CREATE TABLE `defect_actions` (
   COMMENT='결함 조치 및 후속 조치 이력';
 
 
--- =========================================================
+-- ===========================
 -- 11. 결함 조치 상태 변경 이력
 -- 목적: 결함 조치 상태의 변경 전후 값과 변경 담당자 기록
 -- 이력-조치기록, 이력-변경사용자 모두 기업 소속 일치를
 -- 복합 FK로 강제하여 다른 기업 데이터 혼입을 방지합니다.
--- =========================================================
+-- ===========================
 CREATE TABLE `defect_history` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
 
@@ -780,13 +771,13 @@ CREATE TABLE `defect_history` (
   COMMENT='결함 조치 상태 변경 이력';
 
 
--- =========================================================
+-- ===========================
 -- 12. 외래키 검사 복원
--- =========================================================
+-- ===========================
 
 SET FOREIGN_KEY_CHECKS = 1;
 
--- =========================================================
+-- ===========================
 -- DDL 종료
 --
 -- 구현 시 주의사항
@@ -827,4 +818,4 @@ SET FOREIGN_KEY_CHECKS = 1;
 --    1건이 부모 레코드 1건에만 연결되며(기존 M:N 연결 테이블과
 --    달리 동일 파일을 여러 부모에 공유할 수 없음), 공유가 필요하면
 --    파일을 복제하거나 별도 연결 테이블을 다시 도입해야 합니다.
--- =========================================================
+-- ===========================

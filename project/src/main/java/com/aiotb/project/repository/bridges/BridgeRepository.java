@@ -1,12 +1,14 @@
 package com.aiotb.project.repository.bridges;
 
-import com.aiotb.project.domain.bridges.Bridge;
-import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.aiotb.project.domain.bridges.Bridge;
+
 public interface BridgeRepository extends JpaRepository<Bridge, Long> {
-    
+
     // 고유 UUID 식별자로 조회
     Optional<Bridge> findById(String id);
 

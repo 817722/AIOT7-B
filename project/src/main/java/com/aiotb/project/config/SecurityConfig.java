@@ -16,13 +16,11 @@ import org.springframework.security.web.authentication.rememberme.PersistentToke
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Spring Security 설정
- */
+// Spring Security 설정
 @Slf4j
-@Configuration // 스프링 빈 설정 클래스로 지정
-@EnableWebSecurity // 스프리 시큐리티 설정 클래스로 지정
-@RequiredArgsConstructor // 필수 매개변수 생성자 자동 생성
+@Configuration                  // 스프링 빈 설정 클래스로 지정
+@EnableWebSecurity              // 스프리 시큐리티 설정 클래스로 지정
+@RequiredArgsConstructor        // 필수 매개변수 생성자 자동 생성
 public class SecurityConfig {
 
     // private final CustomUserDetailsService customUserDetailsService;

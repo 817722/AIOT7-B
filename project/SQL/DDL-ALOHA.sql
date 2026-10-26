@@ -1,4 +1,4 @@
--- Active: 1788828726528@@127.0.0.1@3306@project
+-- Active: 1788828728652@@127.0.0.1@3306@project
 -- =========================================================
 -- 드론 영상 기반 교량 점검 업무 지원 시스템
 -- MySQL 8.0.46 / 초기 구축용 DDL
@@ -47,9 +47,7 @@ CREATE TABLE `corps` (
     KEY `idx_corps_ceo` (`ceo_name`),
 
     CONSTRAINT `chk_corps_bis_verified`
-        CHECK (`bis_verified` IN (0, 1)),
-    CONSTRAINT `chk_corps_email_verified`
-        CHECK (`email_verified` IN (0, 1))
+        CHECK (`bis_verified` IN (0, 1))
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci
@@ -591,7 +589,7 @@ CREATE TABLE `defects` (
 -- 담당자/등록자/수정자는 사용자 존재만 단일 FK로 검증하며,
 -- 기업 소속 일치 검증은 애플리케이션에서 수행합니다.
 -- ===========================
-CCREATE TABLE `maintenance_records` (
+CREATE TABLE `maintenance_records` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
     `id` VARCHAR(64) NOT NULL COMMENT '시스템 고유 식별자',
 

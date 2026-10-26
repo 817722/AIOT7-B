@@ -121,3 +121,92 @@
   .auth-actions { justify-content:flex-start; }
   .auth-steps { flex-wrap:wrap; }
 }
+
+
+/* =============================================================
+ * 5단계 작업자 설정 화면 개편 (첨부 화면 설계도 기준)
+ * 1단계 기업 인증, 로그인은 변경하지 않습니다.
+ * ============================================================= */
+.auth-sr-only {
+  position:absolute !important; width:1px !important; height:1px !important;
+  padding:0 !important; margin:-1px !important; overflow:hidden !important;
+  clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important;
+}
+.auth-show-worker .auth-container { width:calc(100% - 60px); max-width:1000px; padding:0 24px; }
+.auth-show-worker .auth-page-nav { display:none; }
+.auth-show-worker .auth-steps { margin-bottom:14px; }
+.auth-show-worker .auth-worker-title { margin-bottom:21px; }
+.auth-show-worker .auth-worker-title h1 { margin:0; font-size:28px; font-weight:700; }
+
+/* 인증 기업 가로 요약 */
+.auth-show-worker .auth-company-summary {
+  margin-bottom:18px;
+  padding:18px 20px 17px;
+  border-radius:7px;
+  box-shadow:none;
+}
+.auth-show-worker .auth-company-summary .auth-card__heading { margin-bottom:7px; }
+.auth-show-worker .auth-company-summary .auth-card__heading h2 {
+  font-size:13px; font-weight:700; margin-bottom:5px;
+}
+.auth-show-worker .auth-company-summary .auth-card__heading p {
+  font-size:12px; color:#2c3b43;
+}
+.auth-company-summary__company {
+  margin:5px 0 4px; font-size:13px; color:#26353e; font-weight:700;
+}
+.auth-company-summary__line {
+  margin:0; font-size:12px; color:#8b9ba5; line-height:1.6;
+  overflow-wrap:anywhere;
+}
+.auth-summary-divider { margin:0 4px; }
+
+/* 작업자 입력 왼쪽 3/4 + 오른쪽 하단 버튼 */
+.auth-worker-layout {
+  display:grid;
+  grid-template-columns:minmax(0,3fr) minmax(180px,1fr);
+  gap:28px;
+  align-items:stretch;
+}
+.auth-worker-card { padding:16px; border-radius:7px; box-shadow:none; }
+.auth-worker-card .auth-card__heading { margin-bottom:9px; }
+.auth-worker-card .auth-card__heading h2 { margin:0 0 7px; font-size:13px; font-weight:700; }
+.auth-worker-card .auth-card__heading p { color:#33434c; font-size:12px; }
+.auth-worker-card .auth-form { gap:8px; }
+.auth-worker-card .auth-form-row { gap:12px; }
+.auth-worker-card .auth-field { gap:0; }
+.auth-worker-card .auth-field input {
+  height:56px; min-height:56px; border-radius:6px;
+  padding:12px 11px; font-size:13px;
+}
+.auth-worker-card #passwordMatchStatus {
+  margin:0; border-radius:5px; min-height:36px;
+  padding:9px 11px; font-size:12px;
+}
+.auth-worker-card .auth-field-error { margin:5px 0; }
+.auth-worker-actions {
+  min-width:0;
+  display:flex; flex-direction:column;
+  align-items:flex-end; justify-content:flex-end;
+  padding:0 10px 14px 0;
+}
+.auth-worker-actions .auth-actions { flex-wrap:nowrap; justify-content:flex-end; gap:20px; }
+.auth-worker-actions .auth-btn { min-height:32px; padding:7px 17px; font-size:12px; font-weight:600; }
+.auth-worker-actions .auth-inline-validation {
+  max-width:265px; margin:9px 0 0; color:#587580;
+  font-size:11px; line-height:1.5; text-align:right;
+}
+.auth-worker-actions .auth-inline-validation:empty { display:none; }
+
+@media (max-width:850px) {
+  .auth-show-worker .auth-container { width:100%; padding:0 18px; }
+  .auth-worker-layout { grid-template-columns:minmax(0,1fr); gap:14px; }
+  .auth-worker-actions { padding:0 0 6px; }
+}
+@media (max-width:520px) {
+  .auth-show-worker .auth-company-summary { padding:16px; }
+  .auth-worker-card { padding:16px; }
+  .auth-worker-card .auth-form-row { grid-template-columns:1fr; gap:8px; }
+  .auth-worker-actions .auth-actions { gap:10px; }
+  .auth-worker-actions .auth-btn { padding:7px 13px; }
+}

@@ -80,26 +80,30 @@
       </section>
 
       <section id="step2" class="auth-stage" aria-labelledby="step2-title" hidden>
-        <div class="auth-page-title">
-          <span class="auth-eyebrow">STEP 02 / WORKER ACCOUNT</span>
+        <div class="auth-page-title auth-worker-title">
           <h1 id="step2-title">작업자 설정</h1>
-          <p>인증 기업에 소속될 작업자 정보를 입력하세요.</p>
         </div>
 
+        <!-- 새 설계도: 인증 기업을 상단의 가로형 카드로 표시 -->
         <div class="auth-card auth-company-summary">
           <header class="auth-card__heading">
             <h2>인증 기업</h2>
-            <p><span class="auth-section-no">01</span> 기업 정보 요약</p>
+            <p><span class="auth-section-no">01</span> 인증 정보 요약</p>
           </header>
-          <div class="auth-company-summary__grid">
-            <span><strong>사업자등록번호</strong><em id="summaryBusinessNo">-</em></span>
-            <span><strong>대표자명</strong><em id="summaryRepresentative">-</em></span>
-            <span><strong>개업일자</strong><em id="summaryOpenDate">-</em></span>
-          </div>
+          <!-- 국세청 진위확인 API로는 기업명이 확인되지 않으므로, 실제 기업명은 표시하지 않습니다. -->
+          <p class="auth-company-summary__company">기업명</p>
+          <p class="auth-company-summary__line">
+            사업자등록번호 <span id="summaryBusinessNo">-</span>
+            <span class="auth-summary-divider" aria-hidden="true">/</span>
+            대표자 <span id="summaryRepresentative">-</span>
+            <span class="auth-summary-divider" aria-hidden="true">/</span>
+            개업일 <span id="summaryOpenDate">-</span>
+          </p>
         </div>
 
-        <div class="auth-two-cols auth-worker-grid">
-          <div class="auth-card">
+        <div class="auth-worker-layout">
+          <!-- 왼쪽: 작업자 정보만 입력. DTO 필드명과 CSRF 처리는 기존 코드 유지 -->
+          <div class="auth-card auth-worker-card">
             <header class="auth-card__heading">
               <h2>작업자 정보</h2>
               <p><span class="auth-section-no">02</span> 필수 계정 정보</p>
@@ -108,73 +112,51 @@
               <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
               <div class="auth-form">
                 <div class="auth-field">
-                  <label for="signupUsername">로그인 ID <span aria-hidden="true">*</span></label>
-                  <input type="text" id="signupUsername" th:field="*{username}" name="username" maxlength="15"
-                         minlength="4" required autocomplete="username" placeholder="4~15자 아이디">
+                  <label class="auth-sr-only" for="signupUsername">로그인 ID (필수)</label>
+                  <input type="text" id="signupUsername" th:field="*{username}" name="username"
+                         maxlength="15" minlength="4" required autocomplete="username" placeholder="로그인 ID *">
                   <small th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="auth-field-error"></small>
                 </div>
                 <div class="auth-form-row">
                   <div class="auth-field">
-                    <label for="signupPassword">비밀번호 <span aria-hidden="true">*</span></label>
+                    <label class="auth-sr-only" for="signupPassword">비밀번호 (필수)</label>
                     <input type="password" id="signupPassword" th:field="*{password}" name="password"
-                           minlength="6" required autocomplete="new-password" placeholder="6자 이상">
+                           minlength="6" required autocomplete="new-password" placeholder="비밀번호 *">
                   </div>
                   <div class="auth-field">
-                    <label for="signupPasswordConfirm">비밀번호 확인 <span aria-hidden="true">*</span></label>
+                    <label class="auth-sr-only" for="signupPasswordConfirm">비밀번호 확인 (필수)</label>
                     <input type="password" id="signupPasswordConfirm" th:field="*{passwordConfirm}" name="passwordConfirm"
-                           minlength="6" required autocomplete="new-password" placeholder="비밀번호 재입력">
+                           minlength="6" required autocomplete="new-password" placeholder="비밀번호 확인 *">
                   </div>
                 </div>
                 <div id="passwordMatchStatus" class="auth-alert auth-alert--neutral" aria-live="polite">비밀번호를 입력하고 일치 여부를 확인하세요.</div>
                 <div class="auth-form-row">
                   <div class="auth-field">
-                    <label for="signupName">작업자명 <span aria-hidden="true">*</span></label>
+                    <label class="auth-sr-only" for="signupName">작업자명 (필수)</label>
                     <input type="text" id="signupName" th:field="*{name}" name="name" maxlength="100"
-                           required autocomplete="name" placeholder="작업자 이름">
+                           required autocomplete="name" placeholder="작업자명 *">
                     <small th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="auth-field-error"></small>
                   </div>
                   <div class="auth-field">
-                    <label for="signupPhone">작업자 연락망 <span aria-hidden="true">*</span></label>
+                    <label class="auth-sr-only" for="signupPhone">작업자 연락망 (필수)</label>
                     <input type="tel" id="signupPhone" th:field="*{phone}" name="phone" maxlength="100"
-                           required autocomplete="tel" placeholder="010-0000-0000">
+                           required autocomplete="tel" placeholder="작업자 연락망 *">
                     <small th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}" class="auth-field-error"></small>
                   </div>
                 </div>
               </div>
             </form>
           </div>
-          <div class="auth-side-col">
-            <div class="auth-card">
-              <header class="auth-card__heading">
-                <h2>기업 연락처</h2>
-                <p><span class="auth-section-no">03</span> 선택 항목</p>
-              </header>
-              <div class="auth-form">
-                <div class="auth-field">
-                  <label for="corpPhone">기업 전화번호 <span class="auth-optional">(선택)</span></label>
-                  <input id="corpPhone" type="tel" autocomplete="off" placeholder="기업 전화번호">
-                </div>
-                <div class="auth-field">
-                  <label for="corpEmail">기업 이메일 <span class="auth-optional">(선택)</span></label>
-                  <input id="corpEmail" type="email" autocomplete="off" placeholder="company@example.com">
-                </div>
-                <div class="auth-inline-meta">
-                  <button class="auth-btn auth-btn--outline auth-btn--small" type="button" disabled title="기업 이메일 인증 API 미구현">이메일 인증</button>
-                  <span class="auth-state-pill">미연동</span>
-                </div>
-                <p class="auth-muted-small">기업 연락처 저장과 이메일 인증은 백엔드 연동 이후 제공됩니다.</p>
-              </div>
-            </div>
-            <div class="auth-card auth-card--notice">
-              <h2>회원가입 연동 안내</h2>
-              <p>기업 저장 및 <code>corp_no</code> 연결 로직이 아직 완성되지 않아 실제 회원가입 제출은 차단되어 있습니다.</p>
-              <p id="workerValidationMessage" class="auth-inline-validation" role="status" aria-live="polite"></p>
-            </div>
+
+          <!-- 오른쪽 아래: 새 설계도의 버튼만 표시 -->
+          <div class="auth-worker-actions">
             <div class="auth-actions">
-              <button class="auth-btn auth-btn--outline" type="button" id="step2Prev">← 이전 단계</button>
-              <button class="auth-btn auth-btn--outline" type="button" id="checkWorkerBtn">입력 확인</button>
-              <button class="auth-btn auth-btn--primary" type="submit" form="joinForm" id="joinSubmit" disabled title="기업 저장 및 회원가입 백엔드 연동 대기">회원가입 완료</button>
+              <button class="auth-btn auth-btn--outline" type="button" id="step2Prev">이전 단계</button>
+              <!-- 최종 가입 백엔드 연결 전: 클릭 시 검증/안내만 하고 POST는 하지 않습니다. -->
+              <button class="auth-btn auth-btn--primary" type="button" id="joinSubmit"
+                      title="현재 기업-사용자 저장 API 연동 대기" aria-describedby="workerValidationMessage">회원가입 완료</button>
             </div>
+            <p id="workerValidationMessage" class="auth-inline-validation" role="status" aria-live="polite"></p>
           </div>
         </div>
       </section>

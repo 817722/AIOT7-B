@@ -36,6 +36,7 @@
   function renderStep(num) {
     step1.hidden = num !== 1;
     step2.hidden = num !== 2;
+    root.classList.toggle('auth-show-worker', num === 2);
     indicator1.classList.toggle('is-current', num === 1);
     indicator1.classList.toggle('is-done', num === 2);
     indicator2.classList.toggle('is-current', num === 2);
@@ -123,20 +124,23 @@
   }
   ['signupPassword','signupPasswordConfirm'].forEach(id => byId(id).addEventListener('input', passwordState));
 
-  byId('checkWorkerBtn').addEventListener('click', () => {
+  // 수정된 화면에는 입력 확인 버튼이 없으므로 '회원가입 완료' 버튼에서 입력을 검사합니다.
+  // 서버가 가입을 허용하도록 연결되기 전까지 실제 POST 전송은 수행하지 않습니다.
+  byId('joinSubmit').addEventListener('click', () => {
     const required = ['signupUsername','signupPassword','signupPasswordConfirm','signupName','signupPhone'];
-    let allGood = true;
+    let firstInvalid = null;
     for (const id of required) {
       const field = byId(id);
       const valid = field.checkValidity() && !!field.value.trim();
       field.setAttribute('aria-invalid', valid ? 'false' : 'true');
-      if (!valid) allGood = false;
+      if (!valid && !firstInvalid) firstInvalid = field;
     }
-    if (!passwordState()) allGood = false;
-    if (byId('corpEmail').value && !byId('corpEmail').checkValidity()) allGood = false;
-    byId('workerValidationMessage').textContent = allGood
-      ? '입력 항목 확인 완료. 실제 회원가입 저장은 백엔드의 기업 연결 기능 구현 후 사용할 수 있습니다.'
-      : '필수 항목과 비밀번호 일치 여부를 확인해 주세요.';
+    const passwordsMatch = passwordState();
+    if (!passwordsMatch && !firstInvalid) firstInvalid = byId('signupPasswordConfirm');
+    byId('workerValidationMessage').textContent = firstInvalid
+      ? '필수 계정 정보와 비밀번호 일치 여부를 확인해 주세요.'
+      : '입력 항목은 확인됐습니다. 실제 회원가입 저장은 백엔드의 기업 연결 기능 구현 후 가능합니다.';
+    if (firstInvalid) firstInvalid.focus();
   });
 
   // 안전 가드: 향후 버튼 disabled를 해제하더라도 서버 검증 통합 전에 submit 금지.

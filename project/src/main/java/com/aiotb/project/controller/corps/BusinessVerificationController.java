@@ -1,4 +1,4 @@
-package com.aiotb.project.controller.users;
+package com.aiotb.project.controller.corps;
 
 import java.time.Instant;
 import java.time.LocalDate;

@@ -1,4 +1,4 @@
-package com.aiotb.project.service.users;
+package com.aiotb.project.service.corps;
 
 import java.util.List;
 import java.util.Map;

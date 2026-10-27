@@ -49,20 +49,30 @@
                 <label>점검 조회</label>
                 <p>01 조회 조건</p>
                 <section id="window2">
-                    <div><input type="text" id="name" name="name"
-                    placeholder="교량명을 입력하세요." required>
-                    <br>
-                    <a href="#">전체 교량 *</a></div>
-                    <div><p>점검 날짜</p><a href="#">2026.10.01 ~ 2026.10.31</a></div>
-                    <div>
+                    <div class="text"><input type="text" id="name" name="name"
+                        placeholder="교량명을 입력하세요." required>
+                        <br>
+                        <a href="#">전체 교량 *</a>
+                    </div>
+                    
+                    <div class="date"><p>점검 날짜</p>
+                        <input type="date" th:value="*{ #dates.format( createdAt, 'yyyy-MM-dd' ) }"   
+                          id="createdAt" name="createdAt">
+                    </div>
+                    <div class="selectBox">
                         <!-- 작업중이었음 -->
-                        <!-- <select th:field="*{type}">
-                            <option value="사용자 타입" disabled>사용자 타입</option>
-                            <option value="사용자">사용자</option>
-                            <option value="관리자">관리자</option>
+                        <!-- <select th:field="*{deliveryCode}" class="form-select">
+                            <option value="">==배송 방식 선택==</option>
+                            <option th:each="deliveryCode : ${deliveryCodes}" th:value="${deliveryCode.code}"
+                                    th:text="${deliveryCode.displayName}">FAST</option>
+                        </select> -->
+                        <!-- <select th:field="*{managerName}">
+                            <option value="담당자" disabled>담당자</option>
+                            <option value="김가람">김가람</option>
+                            <option value="이나루">이나루</option>
                             <option value="선택안함" th:selected="*{ type == null }">선택안함</option>
-                            <option value="사용자" th:selected="*{ type == '사용자' }">사용자</option>
-                            <option value="관리자" th:selected="*{ type == '관리자' }">관리자</option>
+                            <option value="김가람" th:selected="*{ type == '김가람' }">김가람</option>
+                            <option value="이나루" th:selected="*{ type == '이나루' }">이나루</option>
                         </select> -->
                         <br>
                         <a href="#">전체 *</a>

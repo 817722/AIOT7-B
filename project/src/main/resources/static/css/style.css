@@ -156,10 +156,6 @@ nav ul li a{
     font-weight: bold;
 }
 
-.inner .second a{
-    color: var(--main-color);
-}
-
 .inner .second label{
     color: var(--text-color);
     font-size: 15px;
@@ -182,14 +178,14 @@ nav ul li a{
 }
 
 #window2 div p{
-    margin: 5px;
+    margin: 3px;
     color: var(--main-color);
     opacity: 70%;
-    margin-top: 10px;
+    margin-top: 5px;
     margin-left: 15px;
 }
 
-#window2 div input{
+#window2 .text input{
     font-weight: 500;
     height: 20px;
     border: none;
@@ -197,6 +193,15 @@ nav ul li a{
     opacity: 70%;
     margin-top: 10px;
     margin-left: 15px;
+}
+
+#window2 .date input{
+    margin-left: 10px;
+    opacity: 70%;
+    /* display: flex; */
+    color: var(--main-color);
+    border: 1px solid lightgray;
+    /* border-radius: 5px; */
 }
 
 #window2 div a{

@@ -1,4 +1,4 @@
-package com.aiotb.project.controller.users;
+package com.aiotb.project.controller.corps;
 
 import java.util.Map;
 

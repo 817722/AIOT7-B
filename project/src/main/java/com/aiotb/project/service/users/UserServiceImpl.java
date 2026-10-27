@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
         User user = User.builder()
                 .username(dto.getUsername())
                 .password(passwordEncoder.encode(dto.getPassword()))
-                .name(dto.getName())
+                .managerName(dto.getManagerName())
                 .phone(dto.getPhone())
                 .enabled(true)
                 .build();

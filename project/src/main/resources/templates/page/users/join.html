@@ -12,7 +12,7 @@
 </head>
 <body class="auth-page">
   <div th:replace="~{fragments/header :: header}"></div>
-  <main class="auth-join-main" id="joinRoot">
+  <main class="auth-join-main" id="joinRoot" th:attr="data-resume-step-two=${resumeStep2 == true}">
     <div class="auth-container">
       <div class="auth-page-nav">
         <a th:href="@{/login}" href="/login" class="auth-back-link">← 로그인으로 돌아가기</a>
@@ -24,6 +24,9 @@
         <span class="auth-step__connector" aria-hidden="true"></span>
         <span class="auth-step" id="indicatorStep2"><b>2</b> 작업자 설정</span>
       </div>
+
+      <div th:if="${serverError != null}" class="auth-alert auth-alert--error auth-server-error"
+           role="alert" th:text="${serverError}"></div>
 
       <div id="previewBanner" class="auth-alert auth-alert--info" hidden role="status">
         화면 미리보기 모드입니다. 기업 인증이 완료된 것이 아니며 회원가입은 저장되지 않습니다.
@@ -45,16 +48,26 @@
               <div class="auth-field">
                 <label for="businessNo">사업자등록번호 <span aria-hidden="true">*</span></label>
                 <input id="businessNo" type="text" inputmode="numeric" autocomplete="off" maxlength="12"
-                       placeholder="사업자등록번호 10자리" aria-describedby="businessNoHelp">
+                       placeholder="사업자등록번호 10자리" aria-describedby="businessNoHelp"
+                       th:value="${verifiedBusiness != null ? verifiedBusiness.businessNo : ''}">
                 <small id="businessNoHelp">'-' 없이 10자리 숫자를 입력하세요.</small>
               </div>
               <div class="auth-field">
                 <label for="representativeName">대표자명 <span aria-hidden="true">*</span></label>
-                <input id="representativeName" type="text" maxlength="100" autocomplete="off" placeholder="대표자명을 입력하세요">
+                <input id="representativeName" type="text" maxlength="100" autocomplete="off" placeholder="대표자명을 입력하세요"
+                       th:value="${verifiedBusiness != null ? verifiedBusiness.representativeName : ''}">
+              </div>
+              <div class="auth-field">
+                <label for="corpName">기업명 <span aria-hidden="true">*</span></label>
+                <input id="corpName" type="text" maxlength="100" autocomplete="organization"
+                       placeholder="기업명을 입력하세요"
+                       th:value="${verifiedBusiness != null ? verifiedBusiness.corpName : ''}">
+                <small>기업명은 사용자가 입력하며 국세청 진위확인 대상에는 포함되지 않습니다.</small>
               </div>
               <div class="auth-field">
                 <label for="openDate">개업일자 <span aria-hidden="true">*</span></label>
-                <input id="openDate" type="date" autocomplete="off">
+                <input id="openDate" type="date" autocomplete="off"
+                       th:value="${verifiedBusiness != null ? verifiedBusiness.openDate : ''}">
               </div>
             </div>
           </div>
@@ -90,14 +103,18 @@
             <h2>인증 기업</h2>
             <p><span class="auth-section-no">01</span> 인증 정보 요약</p>
           </header>
-          <!-- 국세청 진위확인 API로는 기업명이 확인되지 않으므로, 실제 기업명은 표시하지 않습니다. -->
-          <p class="auth-company-summary__company">기업명</p>
+          <!-- 기업명은 사용자가 입력한 값이며 국세청이 확인한 항목이 아닙니다. -->
+          <p class="auth-company-summary__company" id="summaryCompanyName"
+             th:text="${verifiedBusiness != null ? verifiedBusiness.corpName : '기업명'}">기업명</p>
           <p class="auth-company-summary__line">
-            사업자등록번호 <span id="summaryBusinessNo">-</span>
+            사업자등록번호 <span id="summaryBusinessNo"
+                                     th:text="${verifiedBusiness != null ? verifiedBusiness.businessNo : '-'}">-</span>
             <span class="auth-summary-divider" aria-hidden="true">/</span>
-            대표자 <span id="summaryRepresentative">-</span>
+            대표자 <span id="summaryRepresentative"
+                             th:text="${verifiedBusiness != null ? verifiedBusiness.representativeName : '-'}">-</span>
             <span class="auth-summary-divider" aria-hidden="true">/</span>
-            개업일 <span id="summaryOpenDate">-</span>
+            개업일 <span id="summaryOpenDate"
+                             th:text="${verifiedBusiness != null ? verifiedBusiness.openDate : '-'}">-</span>
           </p>
         </div>
 
@@ -120,15 +137,16 @@
                 <div class="auth-form-row">
                   <div class="auth-field">
                     <label class="auth-sr-only" for="signupPassword">비밀번호 (필수)</label>
-                    <input type="password" id="signupPassword" th:field="*{password}" name="password"
+                    <input type="password" id="signupPassword" name="password"
                            minlength="6" required autocomplete="new-password" placeholder="비밀번호 *">
                   </div>
                   <div class="auth-field">
                     <label class="auth-sr-only" for="signupPasswordConfirm">비밀번호 확인 (필수)</label>
-                    <input type="password" id="signupPasswordConfirm" th:field="*{passwordConfirm}" name="passwordConfirm"
+                    <input type="password" id="signupPasswordConfirm" name="passwordConfirm"
                            minlength="6" required autocomplete="new-password" placeholder="비밀번호 확인 *">
                   </div>
                 </div>
+                <small th:if="${#fields.hasErrors('passwordConfirm')}" th:errors="*{passwordConfirm}" class="auth-field-error"></small>
                 <div id="passwordMatchStatus" class="auth-alert auth-alert--neutral" aria-live="polite">비밀번호를 입력하고 일치 여부를 확인하세요.</div>
                 <div class="auth-form-row">
                   <div class="auth-field">
@@ -152,9 +170,8 @@
           <div class="auth-worker-actions">
             <div class="auth-actions">
               <button class="auth-btn auth-btn--outline" type="button" id="step2Prev">이전 단계</button>
-              <!-- 최종 가입 백엔드 연결 전: 클릭 시 검증/안내만 하고 POST는 하지 않습니다. -->
-              <button class="auth-btn auth-btn--primary" type="button" id="joinSubmit"
-                      title="현재 기업-사용자 저장 API 연동 대기" aria-describedby="workerValidationMessage">회원가입 완료</button>
+              <button class="auth-btn auth-btn--primary" type="submit" form="joinForm" id="joinSubmit"
+                      aria-describedby="workerValidationMessage">회원가입 완료</button>
             </div>
             <p id="workerValidationMessage" class="auth-inline-validation" role="status" aria-live="polite"></p>
           </div>

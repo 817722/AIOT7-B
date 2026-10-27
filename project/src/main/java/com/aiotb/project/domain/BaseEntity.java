@@ -14,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -45,9 +46,21 @@ public abstract class BaseEntity {
 
     @PrePersist                           // INSERT 직전에 호출되는 메소드 지정
     private void generateId() {
-        if( this.id == null ) {
+        if (this.id == null) {
             this.id = UUID.randomUUID().toString();
         }
+        // @EnableJpaAuditing 설정이 없더라도 DDL의 NOT NULL 일시 컬럼을 채운다.
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        if (this.updatedAt == null) {
+            this.updatedAt = this.createdAt;
+        }
+    }
+
+    @PreUpdate
+    private void touchUpdatedAt() {
+        this.updatedAt = LocalDateTime.now();
     }
     
 }

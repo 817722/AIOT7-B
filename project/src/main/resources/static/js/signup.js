@@ -1,103 +1,101 @@
-/* Thymeleaf 회원가입 UI: 실제 기업 인증 결과만 인정. 서버 저장 연동 전 최종 가입 버튼 비활성화. */
+/** 기업 인증(서버 세션) + Thymeleaf 작업자 회원가입 */
 (() => {
   'use strict';
-  const root = document.querySelector('#joinRoot');
+  const root = document.getElementById('joinRoot');
   if (!root) return;
   const byId = (id) => document.getElementById(id);
   const step1 = byId('step1');
   const step2 = byId('step2');
-  const indicator1 = byId('indicatorStep1');
-  const indicator2 = byId('indicatorStep2');
+  const nextBtn = byId('step1Next');
   const verifyBtn = byId('verifyBtn');
   const verifyStatus = byId('verifyStatus');
-  const nextBtn = byId('step1Next');
   const form = byId('joinForm');
   const staticPreview = document.body.dataset.staticPreview === 'true';
   const previewMode = new URLSearchParams(location.search).get('preview') === '1' || staticPreview;
+  const serverResume = root.dataset.resumeStepTwo === 'true';
   let verifiedBusiness = null;
+  let submitting = false;
 
-  function alertStatus(kind, message) {
-    verifyStatus.className = 'auth-alert auth-alert--' + kind;
-    verifyStatus.textContent = message;
+  function message(kind, text) {
+    verifyStatus.className = `auth-alert auth-alert--${kind}`;
+    verifyStatus.textContent = text;
   }
   function readBusiness() {
     return {
       businessNo: byId('businessNo').value.replace(/\D/g, ''),
       representativeName: byId('representativeName').value.trim(),
+      corpName: byId('corpName').value.trim(),
       openDate: byId('openDate').value
     };
   }
-  function validBusiness(data) {
-    if (!/^\d{10}$/.test(data.businessNo)) return '사업자등록번호는 숫자 10자리여야 합니다.';
-    if (!data.representativeName) return '대표자명을 입력해 주세요.';
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(data.openDate)) return '개업일자를 선택해 주세요.';
+  function validateBusiness(b) {
+    if (!/^\d{10}$/.test(b.businessNo)) return '사업자등록번호는 숫자 10자리여야 합니다.';
+    if (!b.representativeName) return '대표자명을 입력해 주세요.';
+    if (!b.corpName) return '기업명을 입력해 주세요.';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(b.openDate)) return '개업일자를 선택해 주세요.';
     return '';
   }
-  function renderStep(num) {
-    step1.hidden = num !== 1;
-    step2.hidden = num !== 2;
-    root.classList.toggle('auth-show-worker', num === 2);
-    indicator1.classList.toggle('is-current', num === 1);
-    indicator1.classList.toggle('is-done', num === 2);
-    indicator2.classList.toggle('is-current', num === 2);
-    if (num === 1) {
-      indicator1.setAttribute('aria-current','step');
-      indicator2.removeAttribute('aria-current');
-      byId('businessNo').focus({preventScroll:true});
+  function renderStep(stage) {
+    step1.hidden = stage !== 1;
+    step2.hidden = stage !== 2;
+    root.classList.toggle('auth-show-worker', stage === 2);
+    byId('indicatorStep1').classList.toggle('is-current', stage === 1);
+    byId('indicatorStep1').classList.toggle('is-done', stage === 2);
+    byId('indicatorStep2').classList.toggle('is-current', stage === 2);
+    if (stage === 1) {
+      byId('indicatorStep1').setAttribute('aria-current', 'step');
+      byId('indicatorStep2').removeAttribute('aria-current');
     } else {
-      indicator1.removeAttribute('aria-current');
-      indicator2.setAttribute('aria-current','step');
-      byId('signupUsername').focus({preventScroll:true});
+      byId('indicatorStep1').removeAttribute('aria-current');
+      byId('indicatorStep2').setAttribute('aria-current', 'step');
     }
-    root.scrollIntoView({behavior:'auto', block:'start'});
   }
-  function showSummary(data) {
-    byId('summaryBusinessNo').textContent = data.businessNo.replace(/^(\d{3})(\d{2})(\d{5})$/, '$1-$2-$3');
-    byId('summaryRepresentative').textContent = data.representativeName;
-    byId('summaryOpenDate').textContent = data.openDate;
+  function showSummary(b) {
+    byId('summaryCompanyName').textContent = b.corpName || '기업명';
+    byId('summaryBusinessNo').textContent = b.businessNo.replace(/^(\d{3})(\d{2})(\d{5})$/, '$1-$2-$3');
+    byId('summaryRepresentative').textContent = b.representativeName;
+    byId('summaryOpenDate').textContent = b.openDate;
   }
-  function resetVerification() {
+  function invalidateVerification() {
     verifiedBusiness = null;
-    nextBtn.disabled = !staticPreview;
-    alertStatus('neutral','기업 정보가 변경되었습니다. 다시 인증해 주세요.');
+    nextBtn.disabled = true;
+    message('neutral', '기업 정보가 변경되었습니다. 다시 인증해 주세요.');
   }
-  ['businessNo','openDate','representativeName'].forEach(id => byId(id).addEventListener('input', resetVerification));
+  ['businessNo', 'representativeName', 'corpName', 'openDate']
+      .forEach(id => byId(id).addEventListener('input', invalidateVerification));
 
   verifyBtn.addEventListener('click', async () => {
     if (previewMode) {
-      alertStatus('info','화면 미리보기에서는 실제 기업 인증 요청을 보내지 않습니다.');
+      message('info', '미리보기 모드에서는 실제 기업 인증이 진행되지 않습니다.');
       return;
     }
-    const payload = readBusiness();
-    const validation = validBusiness(payload);
-    if (validation) { alertStatus('error', validation); return; }
+    const data = readBusiness();
+    const issue = validateBusiness(data);
+    if (issue) { message('error', issue); return; }
     verifyBtn.disabled = true;
     verifyBtn.textContent = '인증 확인 중…';
-    alertStatus('neutral','국세청 사업자 정보 일치 여부를 조회 중입니다.');
+    nextBtn.disabled = true;
+    verifiedBusiness = null;
+    message('neutral', '국세청에 사업자 정보를 확인하고 있습니다.');
     try {
-      const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
-      const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
-      const headers = {'Content-Type':'application/json','Accept':'application/json'};
-      if (csrfToken) headers[csrfHeader] = csrfToken;
+      const token = document.querySelector('meta[name="_csrf"]')?.content;
+      const headerName = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+      const headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+      if (token) headers[headerName] = token;
       const response = await fetch('/api/business/verify', {
-        method:'POST', headers, body:JSON.stringify(payload), credentials:'same-origin'
+        method: 'POST', credentials: 'same-origin', headers, body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error('인증 요청이 실패했습니다 (HTTP ' + response.status + ').');
-      const result = await response.json();
-      // 국세청 진위확인 응답: status_code=OK 자체는 사업자 검증 성공이 아님.
-      // 반드시 데이터 안의 valid=01을 확인한다.
-      const record = Array.isArray(result?.data) ? result.data.find(item => String(item?.b_no).replace(/\D/g,'') === payload.businessNo) : null;
-      if (result?.status_code === 'OK' && record && String(record.valid) === '01') {
-        verifiedBusiness = payload; // 편의상 UI 상태만 보관. 서버 세션 인증의 대체가 될 수 없음.
+      const body = await response.json();
+      if (response.ok && body.verified === true) {
+        verifiedBusiness = data;
         nextBtn.disabled = false;
-        alertStatus('success','사업자 정보 일치가 확인되었습니다. 다음 단계에서 작업자 정보를 설정하세요.');
+        showSummary(data);
+        message('success', body.message || '기업 인증이 완료되었습니다.');
       } else {
-        resetVerification();
-        alertStatus('error', record?.valid_msg || '입력한 사업자 정보와 국세청 등록 정보가 일치하지 않습니다.');
+        message('error', body.message || `기업 인증에 실패했습니다 (HTTP ${response.status}).`);
       }
-    } catch (error) {
-      resetVerification();
-      alertStatus('error', error instanceof Error ? error.message : '기업 인증 중 오류가 발생했습니다.');
+    } catch (e) {
+      message('error', '기업 인증 요청에 실패했습니다. 서버 상태를 확인해 주세요.');
     } finally {
       verifyBtn.disabled = false;
       verifyBtn.textContent = '기업 인증';
@@ -106,57 +104,83 @@
 
   nextBtn.addEventListener('click', () => {
     if (!verifiedBusiness && !staticPreview) return;
-    showSummary(verifiedBusiness || {businessNo:'0000000000', representativeName:'미리보기 예시', openDate:'2026-01-01'});
+    showSummary(verifiedBusiness || {businessNo: '0000000000', representativeName: '미리보기', corpName: '미리보기 기업', openDate: '2026-01-01'});
     renderStep(2);
+    byId('signupUsername').focus();
   });
   byId('step2Prev').addEventListener('click', () => renderStep(1));
 
   function passwordState() {
-    const password = byId('signupPassword').value;
-    const repeat = byId('signupPasswordConfirm').value;
-    const element = byId('passwordMatchStatus');
-    if (!password && !repeat) { element.className='auth-alert auth-alert--neutral'; element.textContent='비밀번호를 입력하고 일치 여부를 확인하세요.'; return false; }
-    if (password.length < 6) { element.className='auth-alert auth-alert--error'; element.textContent='비밀번호는 6자 이상이어야 합니다.'; return false; }
-    if (password !== repeat) { element.className='auth-alert auth-alert--error'; element.textContent='비밀번호가 일치하지 않습니다.'; return false; }
-    element.className='auth-alert auth-alert--success';
-    element.textContent='비밀번호가 일치합니다.';
+    const a = byId('signupPassword').value;
+    const b = byId('signupPasswordConfirm').value;
+    const status = byId('passwordMatchStatus');
+    if (!a && !b) {
+      status.className = 'auth-alert auth-alert--neutral';
+      status.textContent = '비밀번호를 입력하고 일치 여부를 확인하세요.';
+      return false;
+    }
+    if (a.length < 6) {
+      status.className = 'auth-alert auth-alert--error';
+      status.textContent = '비밀번호는 6자 이상 입력해 주세요.';
+      return false;
+    }
+    if (a !== b) {
+      status.className = 'auth-alert auth-alert--error';
+      status.textContent = '비밀번호가 일치하지 않습니다.';
+      return false;
+    }
+    status.className = 'auth-alert auth-alert--success';
+    status.textContent = '비밀번호가 일치합니다.';
     return true;
   }
-  ['signupPassword','signupPasswordConfirm'].forEach(id => byId(id).addEventListener('input', passwordState));
+  ['signupPassword','signupPasswordConfirm']
+      .forEach(id => byId(id).addEventListener('input', passwordState));
 
-  // 수정된 화면에는 입력 확인 버튼이 없으므로 '회원가입 완료' 버튼에서 입력을 검사합니다.
-  // 서버가 가입을 허용하도록 연결되기 전까지 실제 POST 전송은 수행하지 않습니다.
-  byId('joinSubmit').addEventListener('click', () => {
-    const required = ['signupUsername','signupPassword','signupPasswordConfirm','signupName','signupPhone'];
-    let firstInvalid = null;
-    for (const id of required) {
-      const field = byId(id);
-      const valid = field.checkValidity() && !!field.value.trim();
-      field.setAttribute('aria-invalid', valid ? 'false' : 'true');
-      if (!valid && !firstInvalid) firstInvalid = field;
+  function formMessage(text) {
+    const target = byId('workerValidationMessage');
+    target.textContent = text;
+    target.classList.add('is-error');
+  }
+  form.addEventListener('submit', e => {
+    if (previewMode || !verifiedBusiness || submitting) {
+      e.preventDefault();
+      formMessage(previewMode ? '미리보기 모드에서는 회원가입이 저장되지 않습니다.' : '기업 인증을 먼저 완료해 주세요.');
+      return;
     }
-    const passwordsMatch = passwordState();
-    if (!passwordsMatch && !firstInvalid) firstInvalid = byId('signupPasswordConfirm');
-    byId('workerValidationMessage').textContent = firstInvalid
-      ? '필수 계정 정보와 비밀번호 일치 여부를 확인해 주세요.'
-      : '입력 항목은 확인됐습니다. 실제 회원가입 저장은 백엔드의 기업 연결 기능 구현 후 가능합니다.';
-    if (firstInvalid) firstInvalid.focus();
-  });
-
-  // 안전 가드: 향후 버튼 disabled를 해제하더라도 서버 검증 통합 전에 submit 금지.
-  form.addEventListener('submit', event => {
-    event.preventDefault();
-    byId('workerValidationMessage').textContent = '현재는 화면 구현 단계입니다. 기업 검증 결과를 서버가 재확인하고 Corp 연결까지 완료한 후 제출을 활성화하세요.';
+    const fields = ['signupUsername','signupPassword','signupPasswordConfirm','signupName','signupPhone'];
+    let invalid = null;
+    for (const id of fields) {
+      const item = byId(id);
+      const valid = item.checkValidity() && item.value.trim().length > 0;
+      item.setAttribute('aria-invalid', String(!valid));
+      if (!valid && !invalid) invalid = item;
+    }
+    if (!passwordState() && !invalid) invalid = byId('signupPasswordConfirm');
+    if (invalid) {
+      e.preventDefault();
+      formMessage('필수 정보와 비밀번호를 확인해 주세요.');
+      invalid.focus();
+      return;
+    }
+    submitting = true;
+    byId('joinSubmit').disabled = true;
+    byId('workerValidationMessage').textContent = '회원가입을 처리하고 있습니다.';
+    byId('workerValidationMessage').classList.remove('is-error');
+    // 브라우저 기본 POST → /join, CSRF hidden input 포함. 서버가 인증 세션과 기업 정보를 다시 검증.
   });
 
   if (previewMode) {
     byId('previewBanner').hidden = false;
-    if (staticPreview) {
-      nextBtn.disabled = false;
-      alertStatus('info', '정적 미리보기: 실제 API 호출 없이 화면만 확인합니다. 다음 단계 버튼으로 이동할 수 있습니다.');
-    } else {
-      showSummary({businessNo:'0000000000', representativeName:'미리보기 예시', openDate:'2026-01-01'});
+    if (staticPreview) nextBtn.disabled = false;
+    if (!staticPreview) {
+      showSummary({businessNo: '0000000000', representativeName: '미리보기', corpName:'미리보기 기업', openDate:'2026-01-01'});
       renderStep(2);
     }
+  } else if (serverResume) {
+    // 서버가 유효한 기업 인증 세션을 확인한 후 가입 폼을 다시 표시하는 경우.
+    verifiedBusiness = readBusiness();
+    nextBtn.disabled = false;
+    showSummary(verifiedBusiness);
+    renderStep(2);
   }
 })();

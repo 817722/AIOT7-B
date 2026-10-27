@@ -34,6 +34,9 @@
           로그인에 실패했습니다. 아이디와 비밀번호를 확인해 주세요.
         </div>
         <div th:if="${message != null}" class="auth-alert auth-alert--success" role="status" th:text="${message}"></div>
+        <div th:if="${param.logout != null}" class="auth-alert auth-alert--success" role="status">
+          로그아웃되었습니다.
+        </div>
 
         <form class="auth-form" th:action="@{/users/login}" action="/users/login" method="post">
           <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">

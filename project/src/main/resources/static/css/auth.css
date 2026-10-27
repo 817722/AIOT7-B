@@ -210,3 +210,11 @@
   .auth-worker-actions .auth-actions { gap:10px; }
   .auth-worker-actions .auth-btn { padding:7px 13px; }
 }
+
+/* 서버 오류 및 가입 제출 완료 상태 */
+.auth-server-error { max-width:100%; margin:0 0 18px; }
+.auth-worker-actions .auth-inline-validation.is-error {
+  color:#b53f47 !important; background:#fff0ef;
+  padding:10px; border-radius:6px;
+}
+.auth-worker-actions .auth-btn:disabled { cursor:wait; }

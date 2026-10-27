@@ -20,48 +20,40 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// 회원 엔터티
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity {
+    @Column(nullable = false, unique = true, length = 100)
+    private String username;
 
-    @Column(nullable = false, unique = true, length = 50)
-    private String username; // 아이디
+    @Column(nullable = false, length = 255)
+    private String password;
 
-    @Column(nullable = false)
-    private String password; // 비밀번호
+    // Java 속성 name 유지, 최종 DDL의 manager_name 컬럼에 연결
+    @Column(name = "manager_name", nullable = false, length = 100)
+    private String name;
 
-    @Column(nullable = false, length = 50)
-    private String name; // 이름
-
-    @Column(length = 30)
-    private String phone; // 연락망
+    @Column(nullable = false, length = 100)
+    private String phone;
 
     @Builder.Default
     @Column(nullable = false)
-    private boolean enabled = true; // 계정 활성화 여부
+    private boolean enabled = true;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "corp_no", nullable = false)
-    private Corp corp; // 소속 기업
+    private Corp corp;
 
-    // 회원 : 회원 권한 = 1 : N
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserAuth> authList = new ArrayList<>();
 
-    // 권한 추가 메소드
-    public void addAuth(String auth) {
+    public void addAuth(String roleName) {
         UserAuth role = UserAuth.builder()
-                .auth(auth)
+                .auth(UserAuth.Role.valueOf(roleName))
                 .user(this)
                 .build();
         this.authList.add(role);
     }
-
 }

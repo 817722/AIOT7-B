@@ -8,15 +8,19 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import com.aiotb.project.domain.users.User;
+import com.aiotb.project.service.bridges.BridgeService;
+import com.aiotb.project.service.inspections.InspectionService;
+import com.aiotb.project.service.maintenance.MaintenanceService;
 import com.aiotb.project.service.users.UserService;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+// 홈 컨트롤러
 @Slf4j
 @Controller 
-@RequiredArgsConstructor 
+@RequiredArgsConstructor
 public class HomeController {
 
     private final UserService userService;
@@ -24,10 +28,68 @@ public class HomeController {
     @GetMapping({"/", "/{page}"})   //page추가
     public String home(
         @PathVariable(value = "page", required = false) String page,
+        Model model
+    ) {
+
+        return page == null ? "index" : page;
+    }
+
+
+
+// 교량 컨트롤러
+@Controller 
+@RequiredArgsConstructor 
+public class BridgeController {
+    private final BridgeService bridgeService;
+
+    @GetMapping({"/bridge"})   //page추가
+    public String bridge(
+        @PathVariable(value = "page", required = false) String page,
+        Model model
+    ) {
+        model.addAttribute("currentMenu", "bridge");
+
+        //뷰 지정
+        return "bridge";
+    }
+}
+
+
+
+// 교량2 컨트롤러
+@Controller 
+@RequiredArgsConstructor 
+public class Bridge2Controller {
+    private final BridgeService bridgeService;
+
+    @GetMapping({"/bridge2"})   //page추가
+    public String bridge2(
+        @PathVariable(value = "page", required = false) String page,
+        Model model
+    ) {
+        model.addAttribute("currentMenu", "bridge2");
+
+        //뷰 지정
+        return "bridge2";
+    }
+}
+
+
+
+// 점검 컨트롤러
+@Controller 
+@RequiredArgsConstructor 
+public class InspectionController {
+    private final InspectionService inspectionService;
+
+    @GetMapping({"/inspection"})
+    public String inspection(
+        @PathVariable(value = "page", required = false) String page,
         Model model,
         HttpSession session,
         User selectBox
     ) {
+        model.addAttribute("currentMenu", "inspection");
 
         //컬렉션
         List<String> items1 = List.of("IN-2026-011", "IN-2026-012", "IN-2026-013", "IN-2026-014", "IN-2026-015");
@@ -57,8 +119,91 @@ public class HomeController {
         model.addAttribute("selectBox", selectBox);
 
         //뷰 지정
-        return page == null ? "index" : page;
+        return "inspection";
     }
-    
+}
+
+
+
+// 점검2 컨트롤러
+@Controller 
+@RequiredArgsConstructor 
+public class Inspection2Controller {
+    private final InspectionService inspectionService;
+
+    @GetMapping({"/inspection2"})
+    public String inspection2(
+        @PathVariable(value = "page", required = false) String page,
+        Model model,
+        HttpSession session,
+        User selectBox
+    ) {
+        model.addAttribute("currentMenu", "inspection2");
+
+        //뷰 지정
+        return "inspection2";
+    }
+}
+
+
+
+// 유지보수 컨트롤러
+@Controller 
+@RequiredArgsConstructor 
+public class MaintenanceController {
+    private final MaintenanceService maintenanceService;
+
+    @GetMapping({"/maintenance"})   //page추가
+    public String maintenance(
+        @PathVariable(value = "page", required = false) String page,
+        Model model
+    ) {
+        model.addAttribute("currentMenu", "maintenance");
+
+        //뷰 지정
+        return "maintenance";
+    }
+}
+
+
+
+// 유지보수2 컨트롤러
+@Controller 
+@RequiredArgsConstructor 
+public class Maintenance2Controller {
+    private final MaintenanceService maintenanceService;
+
+    @GetMapping({"/maintenance2"})   //page추가
+    public String maintenance2(
+        @PathVariable(value = "page", required = false) String page,
+        Model model
+    ) {
+        model.addAttribute("currentMenu", "maintenance2");
+
+        //뷰 지정
+        return "maintenance2";
+    }
+}
+
+
+
+// 관리자검수 컨트롤러
+@Controller 
+@RequiredArgsConstructor 
+public class UserAuthController {
+    private final UserService userService;
+
+    @GetMapping({"/user"})   //page추가
+    public String user(
+        @PathVariable(value = "page", required = false) String page,
+        Model model
+    ) {
+        model.addAttribute("currentMenu", "user");
+
+        //뷰 지정
+        return "user";
+    }
+}
+
 
 }

@@ -51,7 +51,8 @@ nav{
     font-size: 13px;
 }
 
-nav ul li:hover{
+nav ul li:hover,
+nav ul li.active {
     background: var(--text-color);
     opacity: 100%;
 }

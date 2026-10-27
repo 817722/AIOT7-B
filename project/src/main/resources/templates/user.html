@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>점검등록</title>
+    <title>관리자 검수</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
     <!-- 헤더 파티션 -->
     <header>
         <div class="logo">
-            <a th:href="@{/업무관리}"><img src="images/logo.png" alt="로고"></a>
+            <a th:href="@{/bridge}"><img src="images/logo.png" alt="로고"></a>
         </div>
-        <a th:href="@{/업무관리}">교량점검 시스템</a>
+        <a th:href="@{/bridge}">교량점검 시스템</a>
     </header>
 
     <div class="container">
@@ -21,18 +21,18 @@
             <p>업무 관리</p>
             <nav>
                 <ul class="main-menu">
-                    <li><a th:href="@{/교량관리}">교량 관리</a></li>
-                    <li><a th:href="@{/점검관리}">점검 관리</a></li>
+                    <li th:classappend="${currentMenu == 'bridge'} ? 'active' : ''"><a th:href="@{/bridge}">교량 관리</a></li>
+                    <li th:classappend="${currentMenu == 'inspection'} ? 'active' : ''"><a th:href="@{/inspection}">점검 관리</a></li>
                     <!-- <li><a th:href="@{/점검관리}">결함 관리</a></li> -->
-                    <li><a th:href="@{/점검관리}">유지보수 관리</a></li>
+                    <li th:classappend="${currentMenu == 'maintenance'} ? 'active' : ''"><a th:href="@{/maintenance}">유지보수 관리</a></li>
                     <!-- <li><a th:href="@{/점검관리}">후속 조치</a></li> -->
-                    <li><a th:href="@{/점검관리}">관리자 검수</a></li>
+                    <li th:classappend="${currentMenu == 'user'} ? 'active' : ''"><a th:href="@{/user}">관리자 검수</a></li>
                 </ul>
             </nav>
         </div>
 
         <div class="inner">
-            <div class="sticky"><a href="#">업무 관리 | 점검 관리 | 점검 등록</a></div>
+            <div class="sticky"><a href="#">업무 관리 | 관리자 검수 | 관리자 권한·검수</a></div>
             <!-- 첫 번째 섹션 -->
             <div class="first">
                 <label for="#">점검 목록</label>
@@ -159,12 +159,12 @@
                             </th:block>
                         </table>
                     </div>
-                    <div class="last">
+                    <!-- <div class="last">
                         <p>04 신규 업무 시작</p>
                         
                        <button id="btn3" th:onclick="|location.href='@{/점검등록}'|">점검 등록으로</button>
                         <a href="#">대상 교량 선택 → 점검·안전 점검표 작성 → 영상 연결 → 기록 생성</a>
-                    </div>
+                    </div> -->
                 </div>
 
             </div>

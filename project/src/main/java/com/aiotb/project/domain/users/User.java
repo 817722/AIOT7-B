@@ -24,11 +24,8 @@ import lombok.Setter;
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity {
-    @Column(nullable = false, unique = true, length = 100)
-    private String username;
-
     @Column(name = "username", nullable = false, unique = true, length = 50)
-    private String username; // 로그인 ID
+    private String username;
 
     @Column(name = "password", nullable = false)
     private String password; // 비밀번호

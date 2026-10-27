@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.aiotb.project.domain.corps.Corp;
 import com.aiotb.project.dto.corps.CorpDto;
 import com.aiotb.project.repository.corps.CorpRepository;
-import com.aiotb.project.service.users.BusinessVerificationService;
+
 import lombok.RequiredArgsConstructor;
 
 @Service

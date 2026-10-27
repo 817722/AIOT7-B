@@ -15,7 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.aiotb.project.dto.corps.VerifiedBusiness;
 import com.aiotb.project.repository.corps.CorpRepository;
-import com.aiotb.project.service.users.BusinessVerificationService;
+import com.aiotb.project.service.corps.BusinessVerificationService;
+
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

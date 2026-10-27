@@ -16,13 +16,11 @@ import org.springframework.security.web.authentication.rememberme.PersistentToke
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Spring Security 설정
- */
+// Spring Security 설정
 @Slf4j
-@Configuration // 스프링 빈 설정 클래스로 지정
-@EnableWebSecurity // 스프리 시큐리티 설정 클래스로 지정
-@RequiredArgsConstructor // 필수 매개변수 생성자 자동 생성
+@Configuration                  // 스프링 빈 설정 클래스로 지정
+@EnableWebSecurity              // 스프리 시큐리티 설정 클래스로 지정
+@RequiredArgsConstructor        // 필수 매개변수 생성자 자동 생성
 public class SecurityConfig {
 
     // private final CustomUserDetailsService customUserDetailsService;
@@ -35,12 +33,10 @@ public class SecurityConfig {
         // 인가 설정
         http.authorizeHttpRequests(auth -> auth
                 // 공개 페이지, 정적 자원
-                // TODO: 우리 프로젝트 목적에 맞게 경로 수정 필요
                 .requestMatchers("/", "/css/**", "/js/**", "/img/**", "/images/**").permitAll()
                 .requestMatchers("/users/join", "/users/login").permitAll()
-                .requestMatchers("/products", "/products/**").permitAll()
                 // 로그인 필요 영역
-                .requestMatchers("/cart/**", "/orders/**", "/mypage/**").authenticated()
+                .requestMatchers("/api/maintenance", "/api/inspections").authenticated()
                 .anyRequest().permitAll());
 
         // 폼 로그인

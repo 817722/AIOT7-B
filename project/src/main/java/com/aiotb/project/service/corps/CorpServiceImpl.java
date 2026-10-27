@@ -1,8 +1,8 @@
 
 package com.aiotb.project.service.corps;
 
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,8 +63,6 @@ public class CorpServiceImpl implements CorpService {
                 .ceoName(dto.getCeoName())
                 .corpName(dto.getCorpName())
                 .openDate(dto.getOpenDate())
-                .phone(dto.getPhone())
-                .email(dto.getEmail())
                 .verified(true)
                 .build();
 

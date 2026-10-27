@@ -22,8 +22,4 @@ public class CorpDto {
     @NotNull(message = "개업일자를 입력해 주세요.")
     private LocalDate openDate;
 
-    private String phone;
-
-    private String email;
-
 }

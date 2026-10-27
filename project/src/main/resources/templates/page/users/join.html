@@ -72,7 +72,7 @@
             </div>
           </div>
 
-          <div class="auth-side-col">
+          <div class="auth-side-col"> 
             <div class="auth-card auth-verify-card">
               <header class="auth-card__heading">
                 <h2><span class="auth-section-no">02</span> 국세청 사업자 확인</h2>
@@ -151,9 +151,9 @@
                 <div class="auth-form-row">
                   <div class="auth-field">
                     <label class="auth-sr-only" for="signupName">작업자명 (필수)</label>
-                    <input type="text" id="signupName" th:field="*{name}" name="name" maxlength="100"
+                    <input type="text" id="signupName" th:field="*{managerName}" name="managerName" maxlength="100"
                            required autocomplete="name" placeholder="작업자명 *">
-                    <small th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="auth-field-error"></small>
+                    <small th:if="${#fields.hasErrors('managerName')}" th:errors="*{managerName}" class="auth-field-error"></small>
                   </div>
                   <div class="auth-field">
                     <label class="auth-sr-only" for="signupPhone">작업자 연락망 (필수)</label>

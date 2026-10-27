@@ -50,8 +50,8 @@ public class UserServiceImpl implements UserService {
                 .corp(corp)
                 .username(dto.getUsername().trim())
                 .password(passwordEncoder.encode(dto.getPassword()))
-                .name(dto.getName().trim())
-                .phone(dto.getPhone().trim())
+                .managerName(dto.getManagerName())
+                .phone(dto.getPhone())
                 .enabled(true)
                 .build();
         // 관리자 권한은 셀프 가입으로 부여하지 않으며 별도 승인/권한 부여 절차로 처리한다.

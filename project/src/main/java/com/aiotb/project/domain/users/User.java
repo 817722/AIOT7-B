@@ -27,15 +27,17 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true, length = 100)
     private String username;
 
-    @Column(nullable = false, length = 255)
-    private String password;
+    @Column(name = "username", nullable = false, unique = true, length = 50)
+    private String username; // 로그인 ID
 
-    // Java 속성 name 유지, 최종 DDL의 manager_name 컬럼에 연결
-    @Column(name = "manager_name", nullable = false, length = 100)
-    private String name;
+    @Column(name = "password", nullable = false)
+    private String password; // 비밀번호
 
-    @Column(nullable = false, length = 100)
-    private String phone;
+    @Column(name = "manager_name", nullable = false, length = 50)
+    private String managerName; // 담당자명
+
+    @Column(name = "phone", length = 30)
+    private String phone; // 담당자 연락망
 
     @Builder.Default
     @Column(nullable = false)

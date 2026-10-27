@@ -25,6 +25,12 @@ public class SecurityConfig {
                 .requestMatchers("/", "/login", "/join", "/api/business/verify", "/error",
                         "/css/**", "/js/**", "/img/**", "/images/**", "/favicon.ico").permitAll()
                 .anyRequest().authenticated());
+                // 공개 페이지, 정적 자원
+                .requestMatchers("/", "/css/**", "/js/**", "/img/**", "/images/**").permitAll()
+                .requestMatchers("/users/join", "/users/login").permitAll()
+                // 로그인 필요 영역
+                .requestMatchers("/api/maintenance", "/api/inspections").authenticated()
+                .anyRequest().permitAll());
 
         http.authenticationProvider(authenticationProvider());
         http.formLogin(login -> login

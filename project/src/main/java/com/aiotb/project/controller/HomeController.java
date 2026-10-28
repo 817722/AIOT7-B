@@ -82,9 +82,10 @@ public class Bridge2Controller {
 public class InspectionController {
     private final InspectionService inspectionService;
 
-    @GetMapping({"/inspection"})
+    @GetMapping("/inspection/{bridge}")
     public String inspection(
         @PathVariable(value = "page", required = false) String page,
+        Long bridge,
         Model model,
         HttpSession session,
         User selectBox

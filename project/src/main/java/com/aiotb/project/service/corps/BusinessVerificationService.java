@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -16,7 +16,7 @@ import org.springframework.web.client.RestClient;
  * MockBusinessVerifyServiceImpl이 대신 등록된다.
  */
 @Service
-@ConditionalOnProperty(name = "nts.api.mock-enabled", havingValue = "false", matchIfMissing = true)
+@Profile("!demo")
 public class BusinessVerificationService implements BusinessVerifyService {
 
         private final RestClient restClient;
@@ -25,20 +25,25 @@ public class BusinessVerificationService implements BusinessVerifyService {
         public BusinessVerificationService(
                         RestClient.Builder builder,
                         @Value("${nts.api.base-url}") String baseUrl,
-                        @Value("${nts.api.service-key:}") String serviceKey) {
+                        @Value("${nts.api.service-key}") String serviceKey) {
+
                 this.restClient = builder.baseUrl(baseUrl).build();
                 this.serviceKey = serviceKey;
         }
 
         @Override
-        public Map<?, ?> verify(String businessNo, String openDate, String representativeName) {
-                // 국세청 API는 사업자번호와 개업일자를 숫자만 있는 형식으로 받는다.
+        public Map<?, ?> verify(
+                        String businessNo,
+                        String openDate,
+                        String representativeName) {
+
                 Map<String, Object> business = Map.of(
-                                "b_no", businessNo.replaceAll("\\D", ""),
-                                "start_dt", openDate.replaceAll("\\D", ""),
+                                "b_no", businessNo.replace("-", ""),
+                                "start_dt", openDate.replace("-", ""),
                                 "p_nm", representativeName);
 
-                Map<String, Object> request = Map.of("businesses", List.of(business));
+                Map<String, Object> request = Map.of(
+                                "businesses", List.of(business));
 
                 return restClient.post()
                                 .uri(uriBuilder -> uriBuilder

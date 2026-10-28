@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class CorpServiceImpl implements CorpService {
     private final CorpRepository corpRepository;
-    private final BusinessVerificationService verificationService;
+    private final BusinessVerifyService verificationService;
 
     @Override
     @Transactional

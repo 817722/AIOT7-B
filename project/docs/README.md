@@ -28,6 +28,26 @@ feat: 로그인/회원가입 기능 구현
   - 소스 제어 > ... > 분기 > 병합 > main
   - ⭐ main -> feature/1-project-setup
 
+## Mocking 사용 방법
+### VS Code에서 실행하기
+1. `project` 폴더를 엽니다.
+2. `project` 폴더에서 통합 터미널을 엽니다.
+3. 다음 명령어를 실행합니다.
+.\gradlew.bat bootRun --args="--spring.profiles.active=demo"
+4. 터미널 마지막에 > :bootRun 이라는 문장이 뜨면 localhost:8080으로 접속합니다.
+5. 샘플 사업자등록번호를 입력하고 인증 테스트를 합니다.
+
+## !!!!!!!!! 주의 !!!!!!!!!
+### - Spring Boot Dashboard 에서 web을 누르는게 아니라 주소창에 localhost:8080 들어가서 테스트 하는겁니다!!!!
+
+
+
+
+### 테스트 데이터
+- 샘플 사업자등록번호: `1234567890`
+- 샘플 번호 입력 시 인증 성공 응답을 반환합니다.
+- 샘플 번호 외의 번호 입력 시 불일치 응답을 반환합니다.
+- Mock 모드에서는 실제 국세청 API를 호출하지 않습니다.
 
 # 참조할 수업 내용
 - https://github.com/ALOHA-CLASS/ALOHA-API/tree/main/Project

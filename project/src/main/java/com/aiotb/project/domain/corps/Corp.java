@@ -15,7 +15,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** DDL-ALOHA.sql의 corps 테이블은 id(UUID) 컬럼이 없으므로 BaseEntity를 상속하지 않는다. */
 @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
 @Entity
 @Table(name = "corps")

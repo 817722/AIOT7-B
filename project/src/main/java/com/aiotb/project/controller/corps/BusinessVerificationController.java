@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.aiotb.project.dto.corps.VerifiedBusiness;
 import com.aiotb.project.repository.corps.CorpRepository;
-import com.aiotb.project.service.corps.BusinessVerificationService;
+import com.aiotb.project.service.corps.BusinessVerifyService;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -26,11 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/business")
 @RequiredArgsConstructor
 public class BusinessVerificationController {
-    private final BusinessVerificationService verificationService;
+    private final BusinessVerifyService verificationService;
     private final CorpRepository corpRepository;
 
     public record VerifyRequest(String businessNo, String openDate,
-                                String representativeName, String corpName) {}
+            String representativeName, String corpName) {
+    }
 
     @PostMapping("/verify")
     public ResponseEntity<Map<String, Object>> verify(

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>유지보수 관리</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/maintenance/css/style.css}">
 </head>
 <body>
     <!-- 헤더 파티션 -->
@@ -32,17 +32,21 @@
         </div>
 
         <div class="inner">
-            <div class="sticky"><a href="#">업무 관리 | 유지보수 관리 | 유지보수 목록</a></div>
+            <ul class="sticky">
+                <li th:classappend="${currentMenu == 'maintenance'} ? 'active' : ''"><a th:href="@{/maintenance}">유지보수목록</a></li>
+                <li th:classappend="${currentMenu == 'maintenance2'} ? 'active' : ''"><a th:href="@{/maintenance2}">유지보수등록·기록작성</a></li>
+                <!-- <li th:classappend="${currentMenu == 'maintenance3'} ? 'active' : ''"><a th:href="@{/maintenance3}">유지보수상세</a></li> -->
+            </ul>
             <!-- 첫 번째 섹션 -->
-            <!-- <div class="first">
-                <label for="#">점검 목록</label>
+            <div class="first">
+                <label for="#">유지 보수 목록</label>
                 <p>현재 점검 중인 교량과 완료된 점검 기록을 구분해 조회합니다.</p>
                 <div id="window1">
                     <div><p>진행중</p><a href="#">2건</a></div>
                     <div><p>완료</p><a href="#">3건</a></div>
                     <div><p>이번 달 점검</p><a href="#">5건</a></div>
                 </div>
-            </div> -->
+            </div>
 
             <!-- 두 번째 섹션 -->
             <div class="second">

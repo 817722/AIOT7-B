@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- 공통 사이드바: th:replace="~{fragments/sidebar :: sidebar}" -->
+<aside th:fragment="submenu" class="app-submenu" aria-label="업무 관리 메뉴">
+    <div class="app-submenu">업무 관리</div>
+    <nav class="app-submenu" aria-label="주 메뉴">
+        <!-- 2단계: 교량 목록 실제 화면 경로 -->
+        <a class="app-sidebar__link"
+           th:classappend="${activeMenu == 'bridges'} ? 'is-active' : ''"
+           th:href="@{/bridges}">교량 관리</a>
+
+        <!-- 아래 메뉴는 각 담당자의 페이지/URL이 확정되면 a 태그로 전환 -->
+        <span class="app-submenu app-submenu--pending"
+              aria-disabled="true" title="점검 관리 화면 준비 중">점검 목록</span>
+        <span class="app-submenu app-submenu--pending"
+              aria-disabled="true" title="결함 관리 화면 준비 중">점검 등록 · 기록 작성</span>
+        <span class="app-submenu app-submenu--pending"
+              aria-disabled="true" title="유지보수 관리 화면 준비 중">점검 상세</span>
+    </nav>
+</aside>
+</body>
+</html>

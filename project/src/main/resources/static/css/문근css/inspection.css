@@ -1,0 +1,432 @@
+@charset "utf-8";
+
+*{
+    margin: 0; padding: 0; list-style: none; box-sizing: border-box;
+    text-wrap: 400px;
+}
+a{text-decoration: none; color: var(--text-color);}
+:root{
+    --main-color: #11635c;
+    --sub-color: #d9e0de;
+    --back-color: #ffffff;
+    --text-color: #0c322f;
+    --point1-color: #c0dced;
+    --point2-color: #baecde;
+    --point3-color: #73d8bc;
+    --point4-color: #d7bf76;
+}
+
+body{
+    width: 900px;
+    background-color: var(--back-color);
+    color: var(--text-color);
+}
+
+.container{
+    width: 100%; height: 1250px;
+    font-size: 10px;
+    display: flex; flex-direction: row;
+}
+
+/* 네비게이션 파티션 */
+
+.outer{
+    width: 110px; height: 100%;
+    background: var(--main-color);
+    opacity: 70%;
+    row-gap: 5px;
+    padding: 10px;
+    color: var(--back-color);
+}
+
+nav{
+    display: block;
+    font-size: 13px;
+}
+
+nav ul li:hover,
+nav ul li.active {
+    background: var(--text-color);
+    opacity: 100%;
+}
+
+/* nav ul{
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+} */
+
+nav ul li{
+    margin: 5px 0;
+    display: list-item;
+    width: 100px; height: 30px;
+    line-height: 30px;
+    text-align: start;
+    
+}
+
+nav ul li a{
+    color: var(--back-color);
+    padding-inline-start: 10px;
+}
+
+/* 첫 번째 섹션 */
+
+.inner{
+    width: 100%;
+    padding: 0 20px;
+    background: var(--sub-color);
+    color: var(--main-color);
+}
+
+.sticky{
+    width: 100%;
+    height: 30px;
+    position: sticky; top: 0; z-index: 1000; background: var(--point2-color);
+    display: flex;
+}
+
+.inner ul li{
+    padding: 5px;
+    display: scroll;
+}
+
+.inner ul li:hover,
+.inner ul li.active{
+    background: var(--back-color);
+    opacity: 65%;
+    font-weight: 500;
+    color: #000;
+}
+
+.inner ul li a{
+    font-size: 12px;
+    opacity: 100%;
+
+    
+     
+     /* position: fixed; */
+}
+
+.inner p{
+    margin-bottom: 10px;
+}
+
+.inner .first{
+    margin-top: 10px;
+}
+
+.inner .first a{
+    color: var(--main-color);
+}
+
+.inner .first label{
+    color: var(--text-color);
+    font-size: 15px;
+    font-weight: 500;
+}
+
+#window1{
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    column-gap: 20px;
+    margin-bottom: 20px;
+}
+
+#window1 div{
+    border: 1px solid lightgray;
+    border-radius: 10px;
+    font-weight: 500;
+    background: var(--back-color);
+    height: 92px;
+}
+
+#window1 div p{
+    font-size: 15px;
+    margin-top: 10px;
+    margin-left: 30px;
+}
+
+#window1 div a{
+    color: var(--main-color);
+    opacity: 70%;
+    font-size: 20px;
+    margin-left: 30px;
+}
+
+/* 두 번째 섹션 */
+
+.inner .second{
+    background: var(--back-color);
+    padding: 15px;
+    border: 1px solid lightgray;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.inner .second p{
+    color: var(--main-color);
+    font-size: 15px;
+    margin-bottom: 15px;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+.inner .second label{
+    color: var(--text-color);
+    font-size: 15px;
+    font-weight: 500;
+}
+
+#window2{
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    column-gap: 20px;
+    margin-bottom: 20px;
+}
+
+#window2 div{
+    border: 1px solid lightgray;
+    border-radius: 10px;
+    font-weight: 500;
+    background: var(--back-color);
+    height: 57px;
+}
+
+#window2 div p{
+    margin: 3px;
+    color: var(--main-color);
+    opacity: 70%;
+    margin-top: 5px;
+    margin-left: 15px;
+}
+
+#window2 .text input{
+    font-weight: 500;
+    height: 20px;
+    border: none;
+    margin: 5px;
+    opacity: 70%;
+    margin-top: 10px;
+    margin-left: 15px;
+}
+
+#window2 .date input{
+    margin-left: 10px;
+    opacity: 70%;
+    /* display: flex; */
+    color: var(--main-color);
+    border: 1px solid lightgray;
+    /* border-radius: 5px; */
+}
+
+#window2 div a{
+    color: var(--main-color);
+    opacity: 70%;
+    margin-left: 15px;
+}
+
+#btn1{
+    width: 53px; height: 32px;
+    background: var(--main-color);
+    border: none;
+    border-radius: 5px;
+    color: var(--back-color);
+    cursor: pointer;
+}
+
+#btn2{
+    margin-left: 10px;
+    width: 66px; height: 32px;
+    background: var(--back-color);
+    border: 1px solid lightgray;
+    border-radius: 5px;
+    color: var(--main-color);
+    cursor: pointer;
+}
+
+/* 세 번째 섹션 */
+
+.inner .third{
+    background: var(--back-color);
+    padding: 15px;
+    border: 1px solid lightgray;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.inner .third p{
+    color: var(--main-color);
+    font-size: 15px;
+    margin-bottom: 20px;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+.inner .third a{
+    color: var(--main-color);
+}
+
+.inner .third label{
+    color: var(--text-color);
+    font-size: 15px;
+    font-weight: 500;
+}
+
+
+
+
+/* 탭 전체 스타일 */
+.tabs {
+  margin-top: 30px;
+  padding-bottom: 30px;
+  background-color: #ffffff;
+  width: 700px;
+}
+
+/* 탭 스타일 */
+.tab-item {
+    border-bottom: 1px solid lightgray;
+  width: 80px;
+  height: 30px;
+  line-height: 30px;
+  font-size: 15px;
+  text-align: center;
+  color: var(--text-color);
+  display: block;
+  float: left;
+  cursor: pointer;
+}
+
+#space{
+    width: 460px;
+    cursor: auto;
+}
+
+.tab-item:hover {
+  opacity: 0.75;
+}
+
+/* 라디오 버튼 UI삭제*/
+input[name="tab-item"] {
+  display: none;
+}
+
+/* 탭 컨텐츠 스타일 */
+.tab_content {
+  display: none;
+  clear: both;
+  overflow: hidden;
+}
+
+
+/* 선택 된 탭 콘텐츠를 표시 */
+#all:checked ~ #all_content,
+#ing:checked ~ #ing_content,
+#success:checked ~ #success_content {
+  display: block;
+}
+
+/* 선택된 탭 스타일 */
+.tabs input:checked + .tab-item {
+    border-bottom: 1px solid var(--main-color);
+}
+
+/* 테이블 */
+table.status{
+    border-collapse: collapse;
+    border: 1px solid lightgray;
+    border-collapse: collapse;
+    overflow: hidden;
+    text-align: center;
+}
+
+table.status a{
+    width: 100%;
+    text-align: right;
+}
+
+table.status th {
+    width: 130px;
+    padding: 8px;
+    text-align: center;
+    background-color: var(--point1-color);
+    
+}
+
+table.status td {
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-color);
+}
+
+table.status tr:hover{
+    background: var(--point2-color);
+}
+
+.next{
+    margin-top: 8px;
+    text-align: right;
+    letter-spacing: 2px;
+}
+
+#btn3{
+    margin-left: 10px;
+    width: 100px; height: 32px;
+    background: var(--back-color);
+    border: 1px solid lightgray;
+    border-radius: 5px;
+    color: var(--main-color);
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.last a{pointer-events: none;}
+
+/* 네 번째 섹션 */
+
+.inner .fourth{
+    background: var(--back-color);
+    padding: 15px;
+    border: 1px solid lightgray;
+    border-radius: 10px;
+}
+
+.inner .fourth p{
+    color: var(--main-color);
+    font-size: 15px;
+    margin-bottom: 20px;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+.inner .fourth a{
+    
+    color: var(--main-color);
+    font-weight: normal;
+}
+
+.status1{
+    padding: 7.5px;
+    height: 30px;
+    border-radius: 5px;
+    background: var(--point2-color);
+    text-decoration-color: var(--point2-color);
+    opacity: 80%;
+    margin-bottom: 10px;
+}
+
+.status2{
+    padding: 7.5px;
+    height: 30px;
+    border-radius: 5px;
+    background: var(--main-color);
+    -webkit-text-fill-color: var(--point4-color);
+    opacity: 50%;
+}
+
+.inner .fourth label{
+    color: var(--text-color);
+    font-size: 15px;
+    font-weight: 500;
+}

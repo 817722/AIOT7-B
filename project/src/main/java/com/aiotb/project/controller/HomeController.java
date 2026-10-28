@@ -73,13 +73,14 @@ public class HomeController {
     public class InspectionController {
         private final InspectionService inspectionService;
 
-        @GetMapping({ "/inspection" })
-        public String inspection(
-                @PathVariable(value = "page", required = false) String page,
-                Model model,
-                HttpSession session,
-                User selectBox) {
-            model.addAttribute("currentMenu", "inspection");
+    @GetMapping({"/inspection"})
+    public String inspection(
+        @PathVariable(value = "page", required = false) String page,
+        Model model,
+        HttpSession session,
+        User selectBox
+    ) {
+        model.addAttribute("currentMenu", "inspection");
 
             // 컬렉션
             List<String> items1 = List.of("IN-2026-011", "IN-2026-012", "IN-2026-013", "IN-2026-014", "IN-2026-015");

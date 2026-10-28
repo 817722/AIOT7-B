@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>점검관리</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/inspection/css/style.css}">
 </head>
 <body>
     <!-- 헤더 파티션 -->
@@ -32,7 +32,11 @@
         </div>
 
         <div class="inner">
-            <div class="sticky"><a href="#">업무 관리 | 점검 관리 | 점검 목록</a></div>
+            <ul class="sticky">
+                <li th:classappend="${currentMenu == 'inspection'} ? 'active' : ''"><a th:href="@{/inspection}">점검목록</a></li>
+                <li th:classappend="${currentMenu == 'inspection2'} ? 'active' : ''"><a th:href="@{/inspection2}">점검등록·기록작성</a></li>
+                <!-- <li th:classappend="${currentMenu == 'inspection3'} ? 'active' : ''"><a th:href="@{/inspection3}">점검상세</a></li> -->
+            </ul>
             <!-- 첫 번째 섹션 -->
             <div class="first">
                 <label for="#">점검 목록</label>

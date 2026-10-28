@@ -11,7 +11,7 @@ a{text-decoration: none; color: var(--text-color);}
     --back-color: #ffffff;
     --text-color: #0c322f;
     --point1-color: #c0dced;
-    --point2-color: #9ae2ce;
+    --point2-color: #baecde;
     --point3-color: #73d8bc;
     --point4-color: #d7bf76;
 }
@@ -80,19 +80,37 @@ nav ul li a{
 
 .inner{
     width: 100%;
-    padding: 20px;
+    padding: 0 20px;
     background: var(--sub-color);
     color: var(--main-color);
 }
 
-.inner .sticky{
+.sticky{
     width: 100%;
-    position: sticky; top: 0; z-index: 1000; background: var(--sub-color);
-    padding: 7px 0;
+    height: 30px;
+    position: sticky; top: 0; z-index: 1000; background: var(--point2-color);
+    display: flex;
 }
 
-.inner .sticky a{
-     display: scroll;
+.inner ul li{
+    padding: 5px;
+    display: scroll;
+}
+
+.inner ul li:hover,
+.inner ul li.active{
+    background: var(--back-color);
+    opacity: 65%;
+    font-weight: 500;
+    color: #000;
+}
+
+.inner ul li a{
+    font-size: 12px;
+    opacity: 100%;
+
+    
+     
      /* position: fixed; */
 }
 
@@ -100,6 +118,9 @@ nav ul li a{
     margin-bottom: 10px;
 }
 
+.inner .first{
+    margin-top: 10px;
+}
 
 .inner .first a{
     color: var(--main-color);

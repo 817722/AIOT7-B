@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- 공통 헤더: th:replace="~{fragments/header :: header}" -->
+<header th:fragment="header" class="app-header">
+    <a class="app-brand" th:href="@{/}" aria-label="교량점검 시스템 홈으로 이동">
+        <svg class="app-brand__icon" viewBox="0 0 40 40" fill="none"
+             xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M7 8V32M33 8V32M7 18L20 27L33 18M7 13L20 22L33 13"
+                  stroke="currentColor" stroke-width="2.4"
+                  stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M4 33H36" stroke="currentColor" stroke-width="2.4"
+                  stroke-linecap="round" />
+        </svg>
+        <span class="app-brand__name">교량점검 시스템</span>
+    </a>
+    <span class="app-header__description">드론 영상 기반 교량 점검 업무 지원 시스템</span>
+</header>
+</body>
+</html>

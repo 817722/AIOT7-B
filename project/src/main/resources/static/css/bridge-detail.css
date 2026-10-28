@@ -1,0 +1,66 @@
+/* 교량 상세(4단계) : common.css 및 bridge.css 위에 적용 */
+.bridge-detail-heading,
+.bridge-detail-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+}
+.bridge-detail-heading__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.bridge-detail-identity { margin: 0 0 20px; }
+.bridge-detail-identity > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; }
+.bridge-detail-identity strong { font-size: 20px; font-weight: 800; }
+.bridge-detail-identity span { font-size: 12px; color: #6c8087; }
+.bridge-detail-identity p { margin: 4px 0 0; font-size: 12px; color: #64818c; }
+.bridge-detail-summary { display: grid; grid-template-columns: minmax(260px, .85fr) minmax(0, 1.4fr); gap: 18px; margin-bottom: 18px; }
+.bridge-detail-card { min-width: 0; }
+.bridge-detail-card .app-card__title { margin-bottom: 5px; }
+.bridge-detail-subtitle { margin: 0 0 17px; font-size: 12px; color: #65808a; }
+.bridge-detail-footnote { margin: 13px 0 0; font-size: 11px; line-height: 1.6; color: #72868e; }
+.bridge-detail-footnote code { font-size: 11px; overflow-wrap: anywhere; }
+.bridge-detail-photo { display: flex; min-height: 255px; border: 1px solid #d4e3e7; border-radius: 6px; background: #f4f9fa; overflow: hidden; }
+.bridge-detail-photo__img { display: block; width: 100%; height: 100%; min-height: 255px; max-height: 410px; object-fit: contain; }
+.bridge-detail-photo__placeholder { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 9px; padding: 22px; text-align: center; color: #6e97a2; }
+.bridge-detail-photo__placeholder strong { font-size: 13px; color: #426570; }
+.bridge-detail-photo__placeholder span { font-size: 11px; }
+.bridge-detail-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.bridge-detail-fact { padding: 10px 12px; border: 1px solid #deeaed; border-radius: 5px; min-width: 0; }
+.bridge-detail-fact--wide { grid-column: 1 / -1; }
+.bridge-detail-fact dt { font-size: 11px; color: #70868e; margin-bottom: 3px; }
+.bridge-detail-fact dd { margin: 0; font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
+.bridge-detail-subheading { margin: 23px 0 11px; font-size: 13px; font-weight: 800; }
+.bridge-detail-states { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.bridge-detail-states > div { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; }
+.bridge-detail-label { font-size: 11px; color: #70868e; }
+.bridge-detail-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 10px; white-space: nowrap; font-size: 11px; font-weight: 700; }
+.bridge-detail-pill--neutral { background: #f1f2f4; color: #627079; }
+.bridge-detail-pill--complete { background: #e8f0f6; color: #476e86; }
+.bridge-detail-pill--progress { background: #e3f5ec; color: #167258; }
+.bridge-detail-section { margin-bottom: 18px; }
+.bridge-detail-tabs { display: flex; gap: 0; border-bottom: 1px solid #cbdfe2; overflow-x: auto; margin-bottom: 2px; }
+.bridge-detail-tab { flex: 0 0 auto; min-height: 46px; padding: 11px 17px; background: transparent; border: 0; border-bottom: 3px solid transparent; color: #60747c; cursor: pointer; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.bridge-detail-tab span { display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: 6px; background: #eef3f5; }
+.bridge-detail-tab.is-active, .bridge-detail-tab[aria-selected="true"] { color: #087e85; border-bottom-color: #087e85; }
+.bridge-detail-tab:hover { background: #f3f8f9; }
+.bridge-detail-panel { padding-top: 14px; }
+.bridge-detail-panel[hidden] { display: none !important; }
+.bridge-detail-table { min-width: 700px; font-size: 12px; }
+.bridge-detail-table th { white-space: nowrap; color: #49636f; background: #d5e3e8; }
+.bridge-detail-table td { vertical-align: middle; }
+.bridge-detail-table td:first-child { font-weight: 700; color: #087f88; white-space: nowrap; }
+.bridge-detail-table tbody tr:hover { background: #edf7f7; }
+.bridge-detail-empty { border: 1px dashed #cbdde1; border-radius: 6px; padding: 28px 16px; background: #f8fbfb; color: #69818b; font-size: 12px; text-align: center; }
+.bridge-detail-bottom { align-items: center; }
+.bridge-detail-bottom .bridge-detail-subtitle { margin-bottom: 0; }
+@media (max-width: 1050px) {
+    .bridge-detail-summary { grid-template-columns: 1fr; }
+    .bridge-detail-photo { min-height: 200px; }
+}
+@media (max-width: 650px) {
+    .bridge-detail-heading, .bridge-detail-bottom { flex-direction: column; }
+    .bridge-detail-heading__actions { width: 100%; }
+    .bridge-detail-heading__actions .app-btn { flex: 1; }
+    .bridge-detail-facts { grid-template-columns: 1fr; }
+    .bridge-detail-states { grid-template-columns: 1fr 1fr; }
+    .bridge-detail-tab { padding: 10px 12px; }
+}

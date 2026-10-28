@@ -1,11 +1,13 @@
 package com.aiotb.project.domain.corps;
 
 import java.time.LocalDate;
-
-import com.aiotb.project.domain.BaseEntity;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,30 +15,36 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// 기업 엔터티
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
 @Entity
 @Table(name = "corps")
-public class Corp extends BaseEntity {
+public class Corp {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long no;
 
     @Column(name = "bis_no", nullable = false, unique = true, length = 20)
-    private String bisNo; // 사업자등록번호
+    private String bisNo;
 
-    @Column(name = "ceo_name", nullable = false, length = 50)
-    private String ceoName; // 대표자명
+    @Column(name = "ceo_name", nullable = false, length = 100)
+    private String ceoName;
 
-    @Column(length = 100)
-    private String corpName; // 기업명
+    @Column(name = "corp_name", nullable = false, length = 100)
+    private String corpName;
 
     @Column(name = "opened_at", nullable = false)
-    private LocalDate openDate; // 개업일자 (YYYYMMDD)
+    private LocalDate openDate;
 
     @Builder.Default
     @Column(name = "bis_verified", nullable = false)
-    private boolean verified = false; // 기업 인증 여부
+    private boolean verified = false;
 
+    @Column(name = "verified_at")
+    private LocalDateTime verifiedAt;
+
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private LocalDateTime updatedAt;
 }

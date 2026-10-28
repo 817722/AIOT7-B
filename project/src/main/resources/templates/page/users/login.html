@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>로그인 | 교량점검 시스템</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
+  <link rel="stylesheet" th:href="@{/css/auth.css}" href="/css/auth.css">
+</head>
+<body class="auth-page">
+  <div th:replace="~{fragments/header :: header}"></div>
+
+  <main class="auth-login-main">
+    <div class="auth-login-grid">
+      <section class="auth-intro" aria-labelledby="intro-title">
+        <span class="auth-eyebrow">공공 인프라 운영 콘솔</span>
+        <h1 id="intro-title">교량의 안전을,<br>하나의 기록으로.</h1>
+        <p>교량 현황부터 점검, 결함, 유지보수와 후속 조치까지<br class="desktop-break"> 업무의 흐름을 연결합니다.</p>
+        <div class="auth-intro-note">
+          <strong>함께 사용하는 업무 기록</strong>
+          <p class="auth-intro-note__flow">교량 <span>→</span> 점검 <span>→</span> 결함 <span>→</span> 유지보수 <span>→</span> 후속 조치</p>
+          <small>관리자와 점검 담당자의 업무를 일관된 기준으로 관리합니다.<br>서로 다른 기록들은 한곳에서 확인할 수 있습니다.</small>
+        </div>
+      </section>
+
+      <section class="auth-card auth-login-card" aria-labelledby="login-title">
+        <div class="auth-card__heading">
+          <span class="auth-section-no">01 / SIGN IN</span>
+          <h2 id="login-title">교량점검 시스템 로그인</h2>
+          <p>계정 정보를 입력하여 업무를 시작하세요.</p>
+        </div>
+
+        <div th:if="${param.error != null}" class="auth-alert auth-alert--error" role="alert">
+          로그인에 실패했습니다. 아이디와 비밀번호를 확인해 주세요.
+        </div>
+        <div th:if="${message != null}" class="auth-alert auth-alert--success" role="status" th:text="${message}"></div>
+        <div th:if="${param.logout != null}" class="auth-alert auth-alert--success" role="status">
+          로그아웃되었습니다.
+        </div>
+
+        <form class="auth-form" th:action="@{/users/login}" action="/users/login" method="post">
+          <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <div class="auth-field">
+            <label for="username">로그인 ID <span aria-hidden="true">*</span></label>
+            <input id="username" name="username" type="text" required autocomplete="username"
+                   maxlength="50" placeholder="로그인 ID를 입력하세요" autofocus>
+          </div>
+          <div class="auth-field">
+            <label for="password">비밀번호 <span aria-hidden="true">*</span></label>
+            <input id="password" name="password" type="password" required autocomplete="current-password"
+                   placeholder="비밀번호를 입력하세요">
+          </div>
+          <button class="auth-btn auth-btn--primary auth-btn--wide" type="submit">로그인</button>
+        </form>
+
+        <div class="auth-login-divider"></div>
+        <div class="auth-signup-prompt">
+          <strong>처음 이용하시나요?</strong>
+          <p>기업 인증 후 작업자 계정을 등록하세요.</p>
+          <a class="auth-btn auth-btn--outline" th:href="@{/join}" href="/join">회원가입</a>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer class="auth-footer">드론 영상 기반 교량 점검 업무 지원 시스템</footer>
+</body>
+</html>

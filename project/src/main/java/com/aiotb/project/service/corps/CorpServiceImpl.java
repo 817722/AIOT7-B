@@ -1,6 +1,6 @@
-
 package com.aiotb.project.service.corps;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -17,73 +17,72 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CorpServiceImpl implements CorpService {
-
     private final CorpRepository corpRepository;
-    private final BusinessVerificationService businessVerificationService;
+    private final BusinessVerifyService verificationService;
 
-    // 기업 인증 및 등록
     @Override
     @Transactional
     public Corp verifyAndRegister(CorpDto dto) {
-
-        String bisNo = dto.getBisNo().replace("-", "");
-
-        // 이미 등록된 기업인지 확인
-        if (corpRepository.findByBisNo(bisNo).isPresent()) {
-            throw new IllegalArgumentException("이미 등록된 사업자등록번호입니다.");
+        String bisNo = dto.getBisNo() == null ? "" : dto.getBisNo().replaceAll("\\D", "");
+        if (!bisNo.matches("\\d{10}") || dto.getOpenDate() == null ||
+                dto.getCeoName() == null || dto.getCeoName().isBlank() ||
+                dto.getCorpName() == null || dto.getCorpName().isBlank()) {
+            throw new IllegalArgumentException("기업 정보를 올바르게 입력해 주세요.");
         }
 
-        // 국세청 API 검증
-        Map<?, ?> response = businessVerificationService.verify(
-                bisNo,
-                dto.getOpenDate().toString(),
-                dto.getCeoName());
+        String ceoName = dto.getCeoName().trim();
+        String corpName = dto.getCorpName().trim();
 
-        // 검증 결과 확인
-        Object dataObject = response.get("data");
-
-        if (!(dataObject instanceof List<?> dataList) || dataList.isEmpty()) {
-            throw new IllegalArgumentException("기업 인증 결과를 확인할 수 없습니다.");
+        // 같은 사업자번호의 기업은 한 번만 생성한다. 기존에 인증된 기업이면 새 사용자가 해당 기업에 소속될 수 있도록 재사용한다.
+        Corp existing = corpRepository.findByBisNo(bisNo).orElse(null);
+        if (existing != null) {
+            // 사업자번호만 같고 나머지 기업 정보가 다른 경우에는 기존 기업에 임의로 연결하지 않는다.
+            boolean sameDetails = existing.isVerified()
+                    && existing.getOpenDate().equals(dto.getOpenDate())
+                    && existing.getCeoName().equalsIgnoreCase(ceoName)
+                    && existing.getCorpName().equalsIgnoreCase(corpName);
+            if (!sameDetails) {
+                throw new IllegalArgumentException("등록된 기업 정보와 일치하지 않습니다. 기업 관리자에게 계정 등록을 요청해 주세요.");
+            }
+            return existing;
         }
 
-        Object firstObject = dataList.get(0);
-
-        if (!(firstObject instanceof Map<?, ?> result)) {
-            throw new IllegalArgumentException("기업 인증 응답 형식이 올바르지 않습니다.");
+        // 최초 기업 등록 시에만 외부 사업자 진위확인을 수행한다.
+        Map<?, ?> response = verificationService.verify(bisNo, dto.getOpenDate().toString(), ceoName);
+        Object data = response == null ? null : response.get("data");
+        if (!"OK".equals(String.valueOf(response == null ? null : response.get("status_code")))
+                || !(data instanceof List<?> dataList)) {
+            throw new IllegalArgumentException("국세청 기업 인증 응답을 확인할 수 없습니다.");
+        }
+        boolean matched = dataList.stream()
+                .filter(Map.class::isInstance)
+                .map(Map.class::cast)
+                .anyMatch(item -> bisNo.equals(String.valueOf(item.get("b_no")).replaceAll("\\D", ""))
+                        && "01".equals(String.valueOf(item.get("valid"))));
+        if (!matched) {
+            throw new IllegalArgumentException("사업자 정보가 일치하지 않아 가입할 수 없습니다.");
         }
 
-        if (!"02".equals(String.valueOf(result.get("valid")))) {
-            throw new IllegalArgumentException("기업 인증에 실패했습니다.");
-        }
-
-        // 기업 정보 저장
         Corp corp = Corp.builder()
                 .bisNo(bisNo)
-                .ceoName(dto.getCeoName())
-                .corpName(dto.getCorpName())
+                .ceoName(ceoName)
+                .corpName(corpName)
                 .openDate(dto.getOpenDate())
                 .verified(true)
+                .verifiedAt(LocalDateTime.now())
                 .build();
-
         return corpRepository.save(corp);
     }
 
-    // 사업자등록번호로 기업 조회
     @Override
     public Corp bisCheck(CorpDto dto) {
-        String bisNo = dto.getBisNo().replace("-", "");
-
-        return corpRepository.findByBisNo(bisNo)
+        return corpRepository.findByBisNo(dto.getBisNo().replaceAll("\\D", ""))
                 .orElseThrow(() -> new IllegalArgumentException("등록된 기업을 찾을 수 없습니다."));
     }
 
-    // 기업 인증 여부 확인
     @Override
     public boolean isVerified(String bisNo) {
-        String normalizedBisNo = bisNo.replace("-", "");
-
-        return corpRepository.findByBisNo(normalizedBisNo)
-                .map(Corp::isVerified)
-                .orElse(false);
+        return corpRepository.findByBisNo(bisNo.replaceAll("\\D", ""))
+                .map(Corp::isVerified).orElse(false);
     }
 }

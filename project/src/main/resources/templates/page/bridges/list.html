@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>교량 목록 | 교량점검 시스템</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/bridge.css}">
+    <script th:src="@{/js/bridge-list.js}" defer></script>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="app-layout" th:with="activeMenu='bridges'">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <main class="app-main bridge-page" id="main-content">
+        <div class="app-container">
+            <p class="app-breadcrumb">업무 관리 / 교량 관리 / 교량 목록</p>
+            <h1 class="app-page-title">교량 목록</h1>
+            <p class="app-page-description">등록된 교량을 검색하고, 시설물 종류와 지역을 기준으로 확인합니다.</p>
+            <p class="bridge-notice" th:if="${demoMode}" role="status">
+                <strong>화면 테스트용 예시 데이터</strong>가 표시되고 있습니다. 실제 교량 DB/API는 아직 연결되지 않았습니다.
+            </p>
+
+            <!-- 현황 카드: 전체 등록 데이터 기준. 검색 결과 수와 별도. -->
+            <section class="app-grid bridge-stats" aria-label="교량 업무 현황">
+                <div class="app-card bridge-stat">
+                    <div class="app-stat-label">등록 교량</div>
+                    <div class="app-stat-value"><span th:text="${totalCount}">5</span><span class="bridge-stat__unit">개</span></div>
+                </div>
+                <div class="app-card bridge-stat">
+                    <div class="app-stat-label">점검 진행 중</div>
+                    <div class="app-stat-value"><span th:text="${inProgressCount}">2</span><span class="bridge-stat__unit">개</span></div>
+                </div>
+                <div class="app-card bridge-stat">
+                    <div class="app-stat-label">점검 완료</div>
+                    <div class="app-stat-value"><span th:text="${completedCount}">3</span><span class="bridge-stat__unit">개</span></div>
+                </div>
+            </section>
+
+            <section class="app-card bridge-section" aria-labelledby="bridge-search-title">
+                <h2 class="app-card__title" id="bridge-search-title">교량 목록</h2>
+                <form th:action="@{/bridges}" method="get" id="bridge-search-form">
+                    <fieldset class="bridge-fieldset">
+                        <legend><span class="bridge-step">01</span> 검색 조건</legend>
+                        <div class="bridge-search-grid">
+                            <div class="bridge-field">
+                                <label for="bridge-keyword">교량 검색</label>
+                                <input id="bridge-keyword" class="app-field" type="search" name="keyword"
+                                       placeholder="교량명 또는 교량번호" th:value="${keyword}">
+                            </div>
+                            <div class="bridge-field">
+                                <label for="bridge-year">년 <span class="bridge-field__hint">(최근 점검일 기준)</span></label>
+                                <select id="bridge-year" class="app-field" name="year">
+                                    <option value="">전체</option>
+                                    <option th:each="y : ${yearOptions}" th:value="${y}"
+                                            th:text="${y} + '년'" th:selected="${year == y.toString()}">2026년</option>
+                                </select>
+                            </div>
+                            <div class="bridge-field">
+                                <label for="bridge-month">월 <span class="bridge-field__hint">(최근 점검일 기준)</span></label>
+                                <select id="bridge-month" class="app-field" name="month">
+                                    <option value="">전체</option>
+                                    <option th:each="m : ${monthOptions}" th:value="${m}"
+                                            th:text="${m} + '월'" th:selected="${month == m}">10월</option>
+                                </select>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <fieldset class="bridge-fieldset">
+                        <legend><span class="bridge-step">02</span> 지역 · 시설물</legend>
+                        <div class="bridge-region-grid">
+                            <div class="bridge-field">
+                                <label for="bridge-province">도 · 광역시</label>
+                                <select class="app-field" id="bridge-province" name="province">
+                                    <option value="">전체</option>
+                                    <option th:each="p : ${provinceOptions}" th:value="${p}"
+                                            th:text="${p}" th:selected="${province == p}">경기도</option>
+                                </select>
+                            </div>
+                            <div class="bridge-field">
+                                <label for="bridge-city">시 · 군 · 구</label>
+                                <select class="app-field" id="bridge-city" name="city">
+                                    <option value="">전체</option>
+                                    <option th:each="c : ${cityOptions}" th:value="${c.city}"
+                                            th:attr="data-province=${c.province}"
+                                            th:text="${c.city}" th:selected="${city == c.city}">가평군</option>
+                                </select>
+                            </div>
+                            <div class="bridge-field">
+                                <label for="bridge-facility">시설물 종류</label>
+                                <select class="app-field" id="bridge-facility" name="facilityType">
+                                    <option value="">전체</option>
+                                    <option value="제1종" th:selected="${facilityType == '제1종'}">제1종</option>
+                                    <option value="제2종" th:selected="${facilityType == '제2종'}">제2종</option>
+                                    <option value="제3종" th:selected="${facilityType == '제3종'}">제3종</option>
+                                </select>
+                            </div>
+                            <div class="bridge-field">
+                                <label for="bridge-sort">정렬</label>
+                                <select class="app-field" id="bridge-sort" name="sort">
+                                    <option value="nameAsc" th:selected="${sort == 'nameAsc'}">가나다 오름차순</option>
+                                    <option value="nameDesc" th:selected="${sort == 'nameDesc'}">가나다 내림차순</option>
+                                    <option value="dateDesc" th:selected="${sort == 'dateDesc'}">최근 점검일순</option>
+                                </select>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <div class="bridge-form-actions">
+                        <button type="submit" class="app-btn">조회</button>
+                        <a class="app-btn app-btn--outline" th:href="@{/bridges}">초기화</a>
+                    </div>
+                </form>
+            </section>
+
+            <section class="app-card bridge-section" aria-labelledby="bridge-table-title">
+                <div class="bridge-section-head">
+                    <div>
+                        <h2 class="app-card__title" id="bridge-table-title">교량 현황</h2>
+                        <p class="bridge-section-subtitle"><span class="bridge-step">03</span> 목록 · 상세 진입</p>
+                    </div>
+                    <div class="bridge-section-tools">
+                        <a class="app-btn" th:href="@{/bridges/new}">신규 교량 등록</a>
+                    </div>
+                </div>
+                <p class="bridge-result-summary" aria-live="polite">
+                    검색 결과 <strong th:text="${resultCount}">5</strong>건 ·
+                    <span th:text="|${showFrom}–${showTo}건 표시|">1–5건 표시</span>
+                </p>
+
+                <div class="app-table-wrap" th:if="${resultCount > 0}">
+                    <table class="app-table bridge-table">
+                        <thead>
+                        <tr>
+                            <th scope="col">교량명</th>
+                            <th scope="col">교량 번호</th>
+                            <th scope="col">지역</th>
+                            <th scope="col">종류</th>
+                            <th scope="col">담당자</th>
+                            <th scope="col">최근 점검</th>
+                            <th scope="col">점검 상태</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="bridge : ${rows}">
+                            <td class="bridge-name"><a th:href="@{/bridges/{no}(no=${bridge.no})}" th:text="${bridge.name}" title="교량 상세 화면 보기">가람교</a></td>
+                            <td th:text="${bridge.code}">BR-2026-001</td>
+                            <td th:text="|${bridge.province} ${bridge.city}|">경기도 가평군</td>
+                            <td th:text="${bridge.facilityType}">제1종</td>
+                            <td th:text="${bridge.manager}">김가람</td>
+                            <td th:text="${#temporals.format(bridge.lastInspectionDate, 'yyyy.MM.dd')}">2026.10.16</td>
+                            <td>
+                                <span class="bridge-status"
+                                      th:classappend="${bridge.status == '완료'} ? ' bridge-status--complete' : ' bridge-status--progress'"
+                                      th:text="${bridge.status}">진행 중</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bridge-empty" th:if="${resultCount == 0}" role="status">
+                    <strong>검색 조건에 맞는 교량이 없습니다.</strong>
+                    <p>검색어 또는 필터를 변경한 다음 다시 조회해 주세요.</p>
+                    <a class="app-btn app-btn--outline" th:href="@{/bridges}">필터 초기화</a>
+                </div>
+
+                <nav class="bridge-pagination" aria-label="교량 목록 페이지 이동" th:if="${totalPages > 0}">
+                    <span class="bridge-pagination__info" th:text="|${pageNo} / ${totalPages} 페이지|">1 / 1 페이지</span>
+                    <a th:if="${hasPrev}" class="app-btn app-btn--outline"
+                       th:href="@{/bridges(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo - 1})}">이전</a>
+                    <button th:unless="${hasPrev}" type="button" class="app-btn app-btn--outline" disabled>이전</button>
+                    <a th:if="${hasNext}" class="app-btn app-btn--outline"
+                       th:href="@{/bridges(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo + 1})}">다음</a>
+                    <button th:unless="${hasNext}" type="button" class="app-btn app-btn--outline" disabled>다음</button>
+                </nav>
+            </section>
+
+            <section class="app-card bridge-section bridge-next" aria-labelledby="bridge-next-title">
+                <h2 id="bridge-next-title" class="app-card__title">목록 이외 상태 · 별도 표시 예시</h2>
+                <p class="bridge-section-subtitle"><span class="bridge-step">04</span> 비어 있는 결과와 안내 메시지도 확인합니다.</p>
+                <p>교량명을 클릭하면 해당 교량의 상세 화면으로 이동합니다. 등록·수정·상세는 샘플 데이터 기반이며 실제 저장은 지원하지 않습니다.</p>
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>

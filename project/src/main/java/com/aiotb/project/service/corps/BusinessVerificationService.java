@@ -4,12 +4,20 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+/**
+ * 실제 국세청 사업자등록정보 진위확인 API 구현체.
+ *
+ * nts.api.mock-enabled=true인 경우에는 이 빈을 등록하지 않고
+ * MockBusinessVerifyServiceImpl이 대신 등록된다.
+ */
 @Service
-public class BusinessVerificationService {
+@Profile("!demo")
+public class BusinessVerificationService implements BusinessVerifyService {
 
         private final RestClient restClient;
         private final String serviceKey;
@@ -23,6 +31,7 @@ public class BusinessVerificationService {
                 this.serviceKey = serviceKey;
         }
 
+        @Override
         public Map<?, ?> verify(
                         String businessNo,
                         String openDate,

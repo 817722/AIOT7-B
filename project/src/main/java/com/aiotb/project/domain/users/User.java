@@ -20,18 +20,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// 회원 엔터티
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity {
-
     @Column(name = "username", nullable = false, unique = true, length = 50)
-    private String username; // 로그인 ID
+    private String username;
 
     @Column(name = "password", nullable = false)
     private String password; // 비밀번호
@@ -44,24 +38,21 @@ public class User extends BaseEntity {
 
     @Builder.Default
     @Column(nullable = false)
-    private boolean enabled = true; // 계정 활성화 여부
+    private boolean enabled = true;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "corp_no", nullable = false)
-    private Corp corp; // 소속 기업
+    private Corp corp;
 
-    // 회원 : 회원 권한 = 1 : N
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserAuth> authList = new ArrayList<>();
 
-    // 권한 추가 메소드
-    public void addAuth(String auth) {
+    public void addAuth(String roleName) {
         UserAuth role = UserAuth.builder()
-                .auth(auth)
+                .auth(UserAuth.Role.valueOf(roleName))
                 .user(this)
                 .build();
         this.authList.add(role);
     }
-
 }

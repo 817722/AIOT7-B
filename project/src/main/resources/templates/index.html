@@ -1,14 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>메인화면</title>
+    <title>교량점검 시스템</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
+<<<<<<< HEAD
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="app-layout" th:with="activeMenu='bridges'">
+        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+        <main class="app-main">
+            <div class="app-container">
+                <p class="app-breadcrumb">업무 관리 / 교량 관리</p>
+                <h1 class="app-page-title">교량 목록</h1>
+                <p class="app-page-description">공통 헤더와 사이드바 연결 테스트 화면입니다.</p>
+
+                <section class="app-grid" aria-label="화면 구성 미리보기">
+                    <div class="app-card"><div class="app-stat-label">등록 교량</div><div class="app-stat-value">--</div></div>
+                    <div class="app-card"><div class="app-stat-label">점검 진행 중</div><div class="app-stat-value">--</div></div>
+                    <div class="app-card"><div class="app-stat-label">점검 완료</div><div class="app-stat-value">--</div></div>
+                </section>
+                <section class="app-card" style="margin-top:20px">
+                    <h2 class="app-card__title">교량 목록</h2>
+                    <p>공통 레이아웃이 정상적으로 표시된다면 1단계가 완료된 것입니다.</p>
+                </section>
+            </div>
+        </main>
+    </div>
+=======
     <h1>메인화면입니다.</h1>
     <ul>
         <li><a href="/bridge">업무관리(교량관리)</a></li>
     </ul>
+>>>>>>> 31a9f5420464c5c1e02de15abb4774c5d908c549
 </body>
 </html>

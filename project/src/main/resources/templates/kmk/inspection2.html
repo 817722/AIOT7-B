@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>교량 목록</title>
-    <link rel="stylesheet" th:href="@{/bridge2/css/style.css}">
+    <title>점검등록</title>
+    <link rel="stylesheet" th:href="@{/kmk/inspection2/css/style.css}">
 </head>
 <body>
     <!-- 헤더 파티션 -->
@@ -21,8 +21,8 @@
             <p>업무 관리</p>
             <nav>
                 <ul class="main-menu">
-                    <li th:classappend="${currentMenu == 'bridge2'} ? 'active' : ''"><a th:href="@{/bridge2}">교량 관리</a></li>
-                    <li th:classappend="${currentMenu == 'inspection'} ? 'active' : ''"><a th:href="@{/inspection}">점검 관리</a></li>
+                    <li th:classappend="${currentMenu == 'bridge'} ? 'active' : ''"><a th:href="@{/bridge}">교량 관리</a></li>
+                    <li th:classappend="${currentMenu == 'inspection2'} ? 'active' : ''"><a th:href="@{/inspection2}">점검 관리</a></li>
                     <!-- <li><a th:href="@{/점검관리}">결함 관리</a></li> -->
                     <li th:classappend="${currentMenu == 'maintenance'} ? 'active' : ''"><a th:href="@{/maintenance}">유지보수 관리</a></li>
                     <!-- <li><a th:href="@{/점검관리}">후속 조치</a></li> -->
@@ -33,13 +33,13 @@
 
         <div class="inner">
             <ul class="sticky">
-                <li th:classappend="${currentMenu == 'bridge'} ? 'active' : ''"><a th:href="@{/bridge}">교량등록·수정</a></li>
-                <li th:classappend="${currentMenu == 'bridge2'} ? 'active' : ''"><a th:href="@{/bridge2}">교량목록</a></li>
-                <!-- <li th:classappend="${currentMenu == 'bridge3'} ? 'active' : ''"><a th:href="@{/bridge3}">교량상세</a></li> -->
+                <li th:classappend="${currentMenu == 'inspection'} ? 'active' : ''"><a th:href="@{/inspection}">점검목록</a></li>
+                <li th:classappend="${currentMenu == 'inspection2'} ? 'active' : ''"><a th:href="@{/inspection2}">점검등록·기록작성</a></li>
+                <!-- <li th:classappend="${currentMenu == 'inspection3'} ? 'active' : ''"><a th:href="@{/inspection3}">점검상세</a></li> -->
             </ul>
             <!-- 첫 번째 섹션 -->
             <div class="first">
-                <label for="#">교량 목록</label>
+                <label for="#">점검 등록</label>
                 <p>현재 점검 중인 교량과 완료된 점검 기록을 구분해 조회합니다.</p>
                 <div id="window1">
                     <div><p>진행중</p><a href="#">2건</a></div>

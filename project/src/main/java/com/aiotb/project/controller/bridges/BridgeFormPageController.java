@@ -45,7 +45,7 @@ public class BridgeFormPageController {
 
         @GetMapping("/bridges/new")
         public String create(Model model) {
-            setup(model, false, Map.of());
+            setup(model, false, sample("", "", "", "", "", "", "", "", ""));
             return "page/bridges/form";
         }
 

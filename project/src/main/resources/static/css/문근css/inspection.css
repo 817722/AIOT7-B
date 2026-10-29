@@ -11,7 +11,7 @@ a{text-decoration: none; color: var(--text-color);}
     --back-color: #ffffff;
     --text-color: #0c322f;
     --point1-color: #c0dced;
-    --point2-color: #9ae2ce;
+    --point2-color: #baecde;
     --point3-color: #73d8bc;
     --point4-color: #d7bf76;
 }
@@ -21,13 +21,6 @@ body{
     background-color: var(--back-color);
     color: var(--text-color);
 }
-
-/* 헤더 파티션 */
-
-header{width: 100%; height: 40px; display: flex; align-items: center;
-    justify-content: start; padding: 10px; font-weight: 500;}
-
-.logo{padding: 0 10px;}
 
 .container{
     width: 100%; height: 1250px;
@@ -51,7 +44,8 @@ nav{
     font-size: 13px;
 }
 
-nav ul li:hover{
+nav ul li:hover,
+nav ul li.active {
     background: var(--text-color);
     opacity: 100%;
 }
@@ -79,13 +73,46 @@ nav ul li a{
 
 .inner{
     width: 100%;
-    padding: 20px;
+    padding: 0 20px;
     background: var(--sub-color);
     color: var(--main-color);
 }
 
-.inner .first p{
-    margin-bottom: 15px;
+.sticky{
+    width: 100%;
+    height: 30px;
+    position: sticky; top: 0; z-index: 1000; background: var(--point2-color);
+    display: flex;
+}
+
+.inner ul li{
+    padding: 5px;
+    display: scroll;
+}
+
+.inner ul li:hover,
+.inner ul li.active{
+    background: var(--back-color);
+    opacity: 65%;
+    font-weight: 500;
+    color: #000;
+}
+
+.inner ul li a{
+    font-size: 12px;
+    opacity: 100%;
+
+    
+     
+     /* position: fixed; */
+}
+
+.inner p{
+    margin-bottom: 10px;
+}
+
+.inner .first{
+    margin-top: 10px;
 }
 
 .inner .first a{
@@ -144,10 +171,6 @@ nav ul li a{
     font-weight: bold;
 }
 
-.inner .second a{
-    color: var(--main-color);
-}
-
 .inner .second label{
     color: var(--text-color);
     font-size: 15px;
@@ -170,14 +193,14 @@ nav ul li a{
 }
 
 #window2 div p{
-    margin: 5px;
+    margin: 3px;
     color: var(--main-color);
     opacity: 70%;
-    margin-top: 10px;
+    margin-top: 5px;
     margin-left: 15px;
 }
 
-#window2 div input{
+#window2 .text input{
     font-weight: 500;
     height: 20px;
     border: none;
@@ -185,6 +208,15 @@ nav ul li a{
     opacity: 70%;
     margin-top: 10px;
     margin-left: 15px;
+}
+
+#window2 .date input{
+    margin-left: 10px;
+    opacity: 70%;
+    /* display: flex; */
+    color: var(--main-color);
+    border: 1px solid lightgray;
+    /* border-radius: 5px; */
 }
 
 #window2 div a{
@@ -338,6 +370,19 @@ table.status tr:hover{
     letter-spacing: 2px;
 }
 
+#btn3{
+    margin-left: 10px;
+    width: 100px; height: 32px;
+    background: var(--back-color);
+    border: 1px solid lightgray;
+    border-radius: 5px;
+    color: var(--main-color);
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.last a{pointer-events: none;}
+
 /* 네 번째 섹션 */
 
 .inner .fourth{
@@ -384,15 +429,4 @@ table.status tr:hover{
     color: var(--text-color);
     font-size: 15px;
     font-weight: 500;
-}
-
-#btn3{
-margin-left: 10px;
-    width: 100px; height: 32px;
-    background: var(--back-color);
-    border: 1px solid lightgray;
-    border-radius: 5px;
-    color: var(--main-color);
-    cursor: pointer;
-    margin-right: 10px;
 }

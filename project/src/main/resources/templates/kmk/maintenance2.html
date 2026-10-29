@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>교량관리</title>
-    <link rel="stylesheet" th:href="@{/bridge/css/style.css}">
+    <title>유지보수 상세</title>
+    <link rel="stylesheet" th:href="@{/kmk/maintenance2/css/style.css}">
 </head>
 <body>
-    <!-- 헤더 파티션 -->
+    <!-- 헤더 파티션 --> 
     <header>
         <div class="logo">
             <a th:href="@{/bridge}"><img src="images/logo.png" alt="로고"></a>
@@ -24,7 +24,7 @@
                     <li th:classappend="${currentMenu == 'bridge'} ? 'active' : ''"><a th:href="@{/bridge}">교량 관리</a></li>
                     <li th:classappend="${currentMenu == 'inspection'} ? 'active' : ''"><a th:href="@{/inspection}">점검 관리</a></li>
                     <!-- <li><a th:href="@{/점검관리}">결함 관리</a></li> -->
-                    <li th:classappend="${currentMenu == 'maintenance'} ? 'active' : ''"><a th:href="@{/maintenance}">유지보수 관리</a></li>
+                    <li th:classappend="${currentMenu == 'maintenance2'} ? 'active' : ''"><a th:href="@{/maintenance2}">유지보수 관리</a></li>
                     <!-- <li><a th:href="@{/점검관리}">후속 조치</a></li> -->
                     <li th:classappend="${currentMenu == 'user'} ? 'active' : ''"><a th:href="@{/user}">관리자 검수</a></li>
                 </ul>
@@ -33,14 +33,13 @@
 
         <div class="inner">
             <ul class="sticky">
-                <li th:classappend="${currentMenu == 'bridge'} ? 'active' : ''"><a th:href="@{/bridge}">교량등록·수정</a></li>
-                <li th:classappend="${currentMenu == 'bridge2'} ? 'active' : ''"><a th:href="@{/bridge2}">교량목록</a></li>
-                <!-- <li th:classappend="${currentMenu == 'bridge3'} ? 'active' : ''"><a th:href="@{/bridge3}">교량상세</a></li> -->
+                <li th:classappend="${currentMenu == 'maintenance'} ? 'active' : ''"><a th:href="@{/maintenance}">유지보수목록</a></li>
+                <li th:classappend="${currentMenu == 'maintenance2'} ? 'active' : ''"><a th:href="@{/maintenance2}">유지보수등록·기록작성</a></li>
+                <!-- <li th:classappend="${currentMenu == 'maintenance3'} ? 'active' : ''"><a th:href="@{/maintenance3}">유지보수상세</a></li> -->
             </ul>
-                <!-- <a href="#">업무 관리 | 교량 관리 | 교량 목록</a></div> -->
             <!-- 첫 번째 섹션 -->
             <div class="first">
-                <label for="#">교량 등록</label>
+                <label for="#">유지 보수 등록</label>
                 <p>현재 점검 중인 교량과 완료된 점검 기록을 구분해 조회합니다.</p>
                 <div id="window1">
                     <div><p>진행중</p><a href="#">2건</a></div>
@@ -60,11 +59,11 @@
                     <a href="#">전체 교량 *</a></div>
                     <div><p>점검 날짜</p><a href="#">2026.10.01 ~ 2026.10.31</a></div>
                     <div>
-                        <!-- 작업중 -->
+                        <!-- 작업중이었음 -->
                         <!-- <select th:field="*{type}">
-                            <th:option value="사용자 타입" disabled>사용자 타입</option>
-                            <th:option value="사용자">사용자</option>
-                            <th:option value="관리자">관리자</option>
+                            <option value="사용자 타입" disabled>사용자 타입</option>
+                            <option value="사용자">사용자</option>
+                            <option value="관리자">관리자</option>
                         </select> -->
                         <br>
                         <a href="#">전체 *</a>
@@ -164,23 +163,23 @@
                             </th:block>
                         </table>
                     </div>
-                    <div class="last">
+                    <!-- <div class="last">
                         <p>04 신규 업무 시작</p>
                         
-                       <button id="btn3" th:onclick="|location.href='@{/bridge2}'|">교량 등록·수정으로</button>
+                       <button id="btn3" th:onclick="|location.href='@{/점검등록}'|">점검 등록으로</button>
                         <a href="#">대상 교량 선택 → 점검·안전 점검표 작성 → 영상 연결 → 기록 생성</a>
-                    </div>
+                    </div> -->
                 </div>
 
             </div>
 
             <!-- 네 번째 섹션 -->
-            <!-- <div class="fourth">
+            <div class="fourth">
                 <label>조회 예외·상태 예시</label>
                 <p>05 빈 목록·오류 안내</p>
                     <div class="status1"><a href="#">등록된 점검 기록이 없습니다. 점검 등록에서 첫 기록을 작성하세요.</a></div>
                     <div class="status2"><a href="#">등록된 점검 기록이 없습니다. 점검 등록에서 첫 기록을 작성하세요.</a></div>
-            </div> -->
+            </div>
         </div>
     </div>
 </body>

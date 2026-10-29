@@ -16,11 +16,11 @@ import lombok.extern.slf4j.Slf4j;
 public class HomeController {
     private final UserService userService;
 
-    @GetMapping({ "/", "/{page}" }) // page추가
+    @GetMapping({ "/", "/{page}" })
     public String kmk(
             @PathVariable(value = "page", required = false) String page,
             Model model) {
 
-        return page == null ? "index" : page;
+        return page == null ? "redirect:/login" : page;
     }
 }

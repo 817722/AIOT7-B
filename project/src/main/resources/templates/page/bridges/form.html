@@ -2,51 +2,57 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="_csrf" th:content="${_csrf.token}">
+<meta name="_csrf_header" th:content="${_csrf.headerName}">
 <title th:text="${editMode} ? '교량 수정 | 교량점검 시스템' : '교량 등록 | 교량점검 시스템'">교량 등록·수정</title>
 <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css"><link rel="stylesheet" th:href="@{/css/bridge-v2.css}" href="/css/bridge-v2.css"><script th:src="@{/js/bridge-v2-form.js}" src="/js/bridge-v2-form.js" defer></script>
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
 <div class="app-layout" th:with="activeMenu='bridges'"><div th:replace="~{fragments/sidebar :: sidebar}"></div>
-<main class="app-main bridge-v2" id="main-content"><div class="app-container">
+<main class="app-main bridge-v2" id="main-content" th:attr="data-edit-mode=${editMode},data-bridge-no=${bridge.no},data-can-manage=${canManage},data-manager-no=${bridge.managerNo}"><div class="app-container">
 <p class="bv-crumb">업무 관리 / <a th:href="@{/bridges}" href="/bridges">교량 관리</a> / 교량 목록 / <strong>교량 등록·수정</strong></p>
 <h1 class="bv-title" th:text="${editMode} ? '교량 정보 수정' : '교량 등록·수정'">교량 등록·수정</h1>
-<p class="bv-subtitle">전국교량 원본을 검색해 교량을 선택하고 업무용 정보를 관리합니다.</p>
+<p class="bv-subtitle">등록 시 DB에 적재된 전국교량 원본을 선택합니다. 기존 교량의 담당자 변경·삭제는 관리자 권한이 필요합니다.</p>
 <div class="bv-demo" th:if="${demoMode}">화면 시연용 샘플 검색 결과입니다. 실제 CSV 원본 조회와 DB 저장·삭제, 담당자 이력은 아직 연결되지 않았습니다.</div>
 
-<section class="bv-panel" aria-labelledby="csv-title">
-  <h2 class="bv-panel-title" id="csv-title">교량 고유 데이터 검색</h2>
-  <div class="bv-lookup-line"><label for="bv-csv-query" class="bv-sr-only">교량명 검색</label><input id="bv-csv-query" type="search" placeholder="교량명 또는 관리번호를 입력하세요. 예) 가람교 또는 BR-2026-001"><button type="button" class="bv-btn bv-btn-light" id="bv-csv-search">검색</button></div>
-  <div class="bv-table-scroll"><table class="bv-table bv-csv-table"><thead><tr><th>선택</th><th>교량명</th><th>교량 번호(시연)</th><th>지역</th><th>시설물 종류</th></tr></thead>
-  <tbody><tr th:each="candidate : ${csvCandidates}" th:attr="data-no=${candidate.no},data-code=${candidate.code},data-name=${candidate.name},data-province=${candidate.province},data-city=${candidate.city},data-facility=${candidate.facilityType},data-address=${candidate.address},data-road=${candidate.roadName}" class="bv-candidate-row"><td><input type="radio" name="csvCandidate" th:value="${candidate.no}" th:checked="${editMode and candidate.no == bridge.no}" aria-label="교량 선택"></td><td th:text="${candidate.name}">가람교</td><td th:text="${candidate.code}">BR-2026-001</td><td th:text="|${candidate.province} ${candidate.city}|">경기도 가평군</td><td th:text="${candidate.facilityType}">제1종</td></tr></tbody></table></div>
+<section class="bv-panel" aria-labelledby="csv-title" th:if="${!editMode}">
+  <h2 class="bv-panel-title" id="csv-title">전국교량 원본 검색</h2>
+  <div class="bv-lookup-line"><label for="bv-csv-query" class="bv-sr-only">교량명 검색</label><input id="bv-csv-query" type="search" placeholder="DB 교량명을 입력하세요. 예) 진위교"><button type="button" class="bv-btn bv-btn-light" id="bv-csv-search">검색</button></div>
+  <div class="bv-table-scroll"><table class="bv-table bv-csv-table"><thead><tr><th>선택</th><th>교량명</th><th>CSV 식별자</th><th>지역</th><th>시설물 종류</th></tr></thead>
+  <tbody id="bv-csv-results"><tr><td colspan="5">교량명을 입력한 뒤 검색해 주세요.</td></tr></tbody></table></div>
   <p class="bv-help" id="bv-csv-empty" hidden>검색된 교량이 없습니다. 검색어를 변경해 주세요.</p>
   <div class="bv-form-actions"><button type="button" id="bv-choose-bridge" class="bv-btn bv-btn-primary">선택한 교량 정보 불러오기</button><span class="bv-help" id="bv-selection-message" aria-live="polite">교량을 선택해 주세요.</span></div>
 </section>
 
 <div class="bv-form-layout">
   <section class="bv-panel" aria-labelledby="form-title">
-    <h2 class="bv-panel-title" id="form-title">교량 기본정보</h2><h3 class="bv-minor-heading">등록·수정 필드</h3>
+    <h2 class="bv-panel-title" id="form-title">교량 기본정보</h2><h3 class="bv-minor-heading">CSV 원본에서 등록된 교량 정보</h3>
     <div class="bv-detail-fields">
       <label class="bv-field"><span>교량 이름 *</span><input type="text" id="bv-name" readonly th:value="${bridge.name}" placeholder="원본 교량을 선택하세요"></label>
-      <label class="bv-field"><span>교량 번호</span><input type="text" id="bv-code" readonly th:value="${bridge.code}" placeholder="- (샘플 표시용)"></label>
+      <label class="bv-field"><span>등록번호</span><input type="text" id="bv-code" readonly th:value="${bridge.code}" placeholder="등록 시 자동 발급"></label>
       <label class="bv-field"><span>지역 · 원본 검색값</span><input type="text" id="bv-region" readonly th:value="${editMode} ? |${bridge.province} ${bridge.city}| : ''" placeholder="원본 선택 시 자동 입력"></label>
       <label class="bv-field"><span>시설물 종류 · 원본 검색값</span><input type="text" id="bv-facility" readonly th:value="${bridge.facilityType}" placeholder="원본 선택 시 자동 입력"></label>
     </div>
-    <label class="bv-field bv-image-field"><span>대표 이미지</span><input id="bv-image" type="file" accept="image/png,image/jpeg,image/webp"><small>JPG·PNG·WebP, 최대 5MB. 이 파일은 저장 API 연결 전까지 서버에 업로드되지 않습니다.</small></label>
-    <div class="bv-preview-image" id="bv-preview-box"><span id="bv-preview-placeholder">선택된 파일 없음</span><img id="bv-preview" alt="선택한 대표 이미지 미리보기" hidden></div>
+    <label class="bv-field bv-image-field"><span>대표 이미지 (등록/수정 시 업로드)</span><input id="bv-image" type="file" accept="image/png,image/jpeg,image/webp"><small>JPG·PNG·WebP, 최대 5MB. 교량 등록·수정 저장 시 이미지가 업로드됩니다.</small></label>
+    <div class="bv-preview-image" id="bv-preview-box"><span id="bv-preview-placeholder" th:hidden="${representativeImageUrl != null}">선택된 파일 없음</span><img id="bv-preview" alt="교량 대표 이미지 미리보기" th:src="${representativeImageUrl}" th:hidden="${representativeImageUrl == null}"></div>
     <p id="bv-image-message" class="bv-help" aria-live="polite">대표 이미지를 선택해 미리볼 수 있습니다.</p>
   </section>
   <aside class="bv-panel" aria-labelledby="manager-title">
-    <h2 class="bv-panel-title" id="manager-title">담당자 관리 · 설계 제안</h2>
-    <label class="bv-field"><span>현재 담당자</span><input type="text" id="bv-manager" th:value="${bridge.manager}" placeholder="담당자 API 연동 대기" readonly></label>
-    <h3 class="bv-minor-heading">이전 담당자 <span class="bv-muted">(예시)</span></h3>
-    <div class="bv-table-scroll"><table class="bv-table"><thead><tr><th>이전 담당자</th><th>변경일</th></tr></thead><tbody><tr><td>이예슬</td><td>2026.10.01</td></tr><tr><td>박이음</td><td>2026.08.10</td></tr></tbody></table></div>
+    <h2 class="bv-panel-title" id="manager-title">담당자 정보</h2>
+    <label class="bv-field"><span>현재 담당자</span><input type="text" id="bv-manager" th:value="${bridge.manager}" readonly></label>
+    <label class="bv-field" th:if="${editMode and canManage}"><span>변경할 담당자</span><select id="bv-manager-select"><option value="">조회 중...</option></select></label>
+    <h3 class="bv-minor-heading">이전 담당자</h3><p class="bv-help">담당자 변경 이력 데이터 연동 예정</p>
     <p class="bv-help">담당자 이력 테이블과 사용자 선택 API가 확정되면 실제 정보를 연결합니다.</p>
   </aside>
 </div>
 <section class="bv-panel" aria-labelledby="save-title">
-  <h2 class="bv-panel-title" id="save-title">변경 사항 저장</h2>
-  <div class="bv-form-actions"><button type="button" class="bv-btn bv-btn-primary" disabled title="저장 API 연동 후 활성화" th:text="${editMode} ? '변경사항 저장 (연동 대기)' : '교량 등록 (연동 대기)'">교량 등록 (연동 대기)</button><a class="bv-btn bv-btn-light" th:href="@{/bridges}" href="/bridges">취소</a><button th:if="${editMode}" type="button" class="bv-btn bv-btn-danger" disabled title="관리자 권한 및 삭제 API 연동 후 활성화">교량 삭제 (연동 대기)</button></div>
-  <p class="bv-help">실제 저장은 `bridge_master` 원본 PK로 교량을 등록하고, 기업·등록자 정보를 서버가 인증 세션에서 확인하도록 연결해야 합니다.</p>
+  <h2 class="bv-panel-title" id="save-title">등록·수정 상태</h2>
+  <div class="bv-form-actions">
+    <button type="button" id="bv-save" class="bv-btn bv-btn-primary" th:if="${!editMode or canManage}" th:text="${editMode} ? '담당자 변경 저장' : '선택한 교량 등록'">선택한 교량 등록</button>
+    <a class="bv-btn bv-btn-light" th:href="@{/bridges}" href="/bridges">취소</a>
+    <button th:if="${editMode and canManage}" type="button" id="bv-delete" class="bv-btn bv-btn-danger">교량 삭제</button>
+  </div>
+  <p class="bv-help">새 교량 등록은 bridge_master의 실제 PK로 처리됩니다. 대표 이미지는 저장 버튼을 눌렀을 때 함께 업로드됩니다. 담당자 변경 이력 저장은 별도 연동 예정입니다.</p>
 </section>
 </div></main></div></body></html>

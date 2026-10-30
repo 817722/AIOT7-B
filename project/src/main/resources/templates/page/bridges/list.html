@@ -6,6 +6,7 @@
   <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
   <link rel="stylesheet" th:href="@{/css/bridge-v2.css}" href="/css/bridge-v2.css">
   <script th:src="@{/js/bridge-v2-list.js}" src="/js/bridge-v2-list.js" defer></script>
+<link rel="stylesheet" th:href="@{/css/bridge-images.css}" href="/css/bridge-images.css">
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
@@ -20,20 +21,20 @@
 
       <section class="bv-panel bv-recent" aria-labelledby="recent-title">
         <h2 id="recent-title" class="bv-panel-title">최근 확인한 교량</h2>
-        <p id="bv-recent-text" class="bv-recent-text">최근 확인한 교량이 없습니다. 교량 상세 화면에 방문하면 여기에 표시됩니다.</p>
-        <a id="bv-recent-link" hidden href="/bridges" class="bv-recent-link">교량 상세 보기 →</a>
+        <p id="bv-recent-text" class="bv-recent-text">최근 조회 이력 기능은 계정별 기록 저장 방식이 결정된 뒤 연결합니다.</p>
+
       </section>
 
       <section class="bv-panel" aria-labelledby="search-title">
         <h2 id="search-title" class="bv-panel-title">교량 조회</h2>
         <form id="bv-search" th:action="@{/bridges}" action="/bridges" method="get">
           <div class="bv-filter-grid">
-            <label class="bv-field"><span>교량명</span><input type="search" name="keyword" placeholder="교량명 또는 관리번호" th:value="${keyword}"></label>
-            <label class="bv-field"><span>년</span><select name="year"><option value="">전체</option><option th:each="y : ${yearOptions}" th:value="${y}" th:text="|${y}년|" th:selected="${year == y.toString()}">2026년</option></select></label>
-            <label class="bv-field"><span>월</span><select name="month"><option value="">전체</option><option th:each="m : ${monthOptions}" th:value="${m}" th:text="|${m}월|" th:selected="${month == m}">10월</option></select></label>
+            <label class="bv-field"><span>교량명</span><input type="search" name="keyword" placeholder="교량명 또는 등록번호" th:value="${keyword}"></label>
+            <label class="bv-field"><span>최종안전점검 연도</span><select name="year"><option value="">전체</option><option th:each="y : ${yearOptions}" th:value="${y}" th:text="|${y}년|" th:selected="${year == y.toString()}">2026년</option></select></label>
+            <label class="bv-field"><span>최종안전점검 월</span><select name="month"><option value="">전체</option><option th:each="m : ${monthOptions}" th:value="${m}" th:text="|${m}월|" th:selected="${month == m}">10월</option></select></label>
             <label class="bv-field"><span>시 / 도</span><select id="bv-province" name="province"><option value="">전체</option><option th:each="p : ${provinceOptions}" th:value="${p}" th:text="${p}" th:selected="${province == p}">경기도</option></select></label>
             <label class="bv-field"><span>시 / 군 / 구</span><select id="bv-city" name="city"><option value="">전체</option><option th:each="c : ${cityOptions}" th:value="${c.city}" th:attr="data-province=${c.province}" th:text="${c.city}" th:selected="${city == c.city}">가평군</option></select></label>
-            <label class="bv-field"><span>시설물 종류</span><select name="facilityType"><option value="">전체</option><option value="제1종" th:selected="${facilityType == '제1종'}">제1종</option><option value="제2종" th:selected="${facilityType == '제2종'}">제2종</option><option value="제3종" th:selected="${facilityType == '제3종'}">제3종</option></select></label>
+            <label class="bv-field"><span>시설물 종류</span><select name="facilityType"><option value="">전체</option><option value="제1종" th:selected="${facilityType == '제1종'}">제1종</option><option value="제2종" th:selected="${facilityType == '제2종'}">제2종</option><option value="제3종" th:selected="${facilityType == '제3종'}">제3종</option><option value="미분류" th:selected="${facilityType == '미분류'}">미분류</option></select></label>
           </div>
           <div class="bv-form-actions"><button class="bv-btn bv-btn-primary" type="submit">조회</button><a class="bv-btn bv-btn-light" th:href="@{/bridges}" href="/bridges">초기화</a></div>
         </form>
@@ -44,8 +45,8 @@
         <div class="bv-blank" th:if="${totalCount == 0}"><strong>등록된 교량이 없습니다.</strong><p>신규 등록을 통해 등록하여 관리해 보세요.</p></div>
         <div class="bv-card-grid" th:if="${resultCount > 0}">
           <a class="bv-bridge-card" th:each="bridge,iter : ${rows}" th:href="@{/bridges/{no}(no=${bridge.no})}" href="/bridges/1">
-            <div class="bv-card-visual" th:classappend="| bv-card-visual--${iter.index % 5}|" aria-hidden="true"><span class="bv-card-bridge"></span><span class="bv-card-deck"></span></div>
-            <div class="bv-card-info"><strong th:text="${bridge.name}">가람교</strong><span th:text="|${bridge.province} ${bridge.city} · ${bridge.facilityType}|">경기도 가평군 · 제1종</span><span class="bv-card-footer"><time th:text="${#temporals.format(bridge.lastInspectionDate,'yyyy-MM-dd')}">2026-10-16</time><em class="bv-state" th:classappend="${bridge.status == '완료'} ? ' bv-state--done' : ''" th:text="${bridge.status}">진행 중</em></span></div>
+            <div class="bv-card-visual" th:classappend="| bv-card-visual--${iter.index % 5}|" aria-hidden="true"><img class="bv-card-photo" th:if="${bridge.representativeImageUrl != null}" th:src="${bridge.representativeImageUrl}" alt="교량 대표 이미지"><span th:unless="${bridge.representativeImageUrl != null}" class="bv-card-bridge"></span><span th:unless="${bridge.representativeImageUrl != null}" class="bv-card-deck"></span></div>
+            <div class="bv-card-info"><strong th:text="${bridge.name}">가람교</strong><span th:text="|${bridge.province} ${bridge.city} · ${bridge.facilityType}|">경기도 가평군 · 제1종</span><span class="bv-card-footer"><time th:text="${bridge.lastInspectionDate != null ? #temporals.format(bridge.lastInspectionDate,'yyyy-MM-dd') : '최종안전점검일 없음'}">최종안전점검일 없음</time><em class="bv-state" th:classappend="${bridge.status == '완료'} ? ' bv-state--done' : ''" th:text="${bridge.status}">진행 중</em></span></div>
           </a>
         </div>
         <div class="bv-blank" th:if="${totalCount > 0 and resultCount == 0}"><strong>검색 결과 없음</strong><p>다른 조건으로 검색하거나 필터를 초기화해 주세요.</p><a class="bv-btn bv-btn-light" th:href="@{/bridges}" href="/bridges">검색 초기화</a></div>

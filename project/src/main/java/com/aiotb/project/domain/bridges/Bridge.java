@@ -13,56 +13,75 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * 현재 DDL-ALOHA(1).sql의 bridges 컬럼과 매핑.
+ * BaseEntity에 no/id/createdAt/updatedAt이 있으므로 id를 중복 선언하지 않습니다.
+ * 원본 데이터 전체의 복사/등록은 BridgeUiWriteService(JDBC) 담당입니다.
+ */
 @Entity
 @Table(name = "bridges")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Bridge extends BaseEntity {
+    @Column(name = "bridge_master_no", nullable = false)
+    private Long bridgeMasterNo;
 
-    @Column(nullable = false, length = 64, unique = true)
-    private String id; // 시스템 고유 식별자
+    @Column(name = "corp_no", nullable = false)
+    private Long corpNo;
 
     @Column(name = "source_data_date")
-    private LocalDate sourceDataDate; // CSV 데이터 기준일자
+    private LocalDate sourceDataDate;
 
-    @Column(nullable = false, length = 48)
-    private String name; // 교량명
+    @Column(name = "bridge_name", nullable = false, length = 255)
+    private String name;
 
-    @Column(name = "facility_type", length = 10)
-    private String facilityType; // 시설물종별등급구분 (제1종, 제2종, 제3종)
+    @Column(name = "facility_type", length = 50)
+    private String facilityType;
 
-    @Column(name = "road_type", length = 14)
-    private String roadType; // 도로종류
+    @Column(name = "road_type", length = 100)
+    private String roadType;
 
-    @Column(name = "road_name", length = 21)
-    private String roadName; // 도로노선명
+    @Column(name = "road_name", length = 255)
+    private String roadName;
 
-    @Column(length = 14)
-    private String province; // 시도명
+    @Column(name = "province", length = 100)
+    private String province;
 
-    @Column(length = 17)
-    private String city; // 시군구명
+    @Column(name = "city", length = 100)
+    private String city;
 
-    @Column(length = 500)
-    private String address; // 소재지지번주소
+    @Column(name = "address", length = 500)
+    private String address;
 
-    @Column(name = "bridge_length", precision = 10, scale = 2)
-    private BigDecimal bridgeLength; // 교량연장(m)
+    @Column(name = "bridge_length", precision = 12, scale = 2)
+    private BigDecimal bridgeLength;
 
-    @Column(name = "bridge_width", precision = 8, scale = 2)
-    private BigDecimal bridgeWidth; // 교량폭(m)
+    @Column(name = "bridge_width", precision = 10, scale = 2)
+    private BigDecimal bridgeWidth;
 
-    @Column(name = "management_agency", length = 35)
-    private String managementAgency; // 관리기관명
+    @Column(name = "management_agency", length = 255)
+    private String managementAgency;
+
+    @Column(name = "manager_no")
+    private Long managerNo;
 
     @Column(name = "created_by", nullable = false)
-    private Long createdBy; // 등록 사용자 번호
+    private Long createdBy;
 
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    /** 기존 BridgeService의 Builder 사용 형태를 유지합니다. */
     @Builder
-    public Bridge(String id, LocalDate sourceDataDate, String name, String facilityType, String roadType,
-            String roadName, String province, String city, String address, BigDecimal bridgeLength,
-            BigDecimal bridgeWidth, String managementAgency, Long createdBy) {
-        this.id = id;
+    public Bridge(String id, Long bridgeMasterNo, Long corpNo,
+                  LocalDate sourceDataDate, String name, String facilityType,
+                  String roadType, String roadName, String province,
+                  String city, String address, BigDecimal bridgeLength,
+                  BigDecimal bridgeWidth, String managementAgency,
+                  Long managerNo, Long createdBy, Long updatedBy) {
+        setId(id); // BaseEntity가 관리하는 UUID
+        this.bridgeMasterNo = bridgeMasterNo;
+        this.corpNo = corpNo;
         this.sourceDataDate = sourceDataDate;
         this.name = name;
         this.facilityType = facilityType;
@@ -74,12 +93,16 @@ public class Bridge extends BaseEntity {
         this.bridgeLength = bridgeLength;
         this.bridgeWidth = bridgeWidth;
         this.managementAgency = managementAgency;
+        this.managerNo = managerNo;
         this.createdBy = createdBy;
+        this.updatedBy = updatedBy;
     }
 
-    // 수정 로직
-    public void updateBridge(String name, String facilityType, String address, String province, String city,
-            BigDecimal bridgeLength, BigDecimal bridgeWidth, String managementAgency) {
+    // 기존 Service의 호출 시그니처를 보존. 신규 UI는 원본 필드를 수정하지 않습니다.
+    public void updateBridge(String name, String facilityType, String address,
+                             String province, String city,
+                             BigDecimal bridgeLength, BigDecimal bridgeWidth,
+                             String managementAgency) {
         this.name = name;
         this.facilityType = facilityType;
         this.address = address;

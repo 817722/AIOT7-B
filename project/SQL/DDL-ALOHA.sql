@@ -11,7 +11,7 @@ CREATE DATABASE IF NOT EXISTS `project`
 USE project;
 
 SET FOREIGN_KEY_CHECKS = 0;
-
+DROP TABLE IF EXISTS `manager_history`;
 DROP TABLE IF EXISTS `maintenance_records`;
 DROP TABLE IF EXISTS `inspections`;
 DROP TABLE IF EXISTS `media`;
@@ -521,7 +521,7 @@ CREATE TABLE `inspections` (
 
 
 -- ===========================
--- 9. 유지보수 기록
+-- 8. 유지보수 기록
 -- bridge_no + corp_no: "같은 기업의 교량"이라는 업무 규칙을
 -- 직접 강제하는 복합 FK이므로 유지합니다.
 -- corp_no 단독 FK는 두지 않습니다: 위 복합 FK가 bridges.corp_no(→corps.no)를
@@ -595,7 +595,81 @@ CREATE TABLE `maintenance_records` (
 
 
 -- ===========================
--- 12. 외래키 검사 복원
+-- 9. 과거 담당자 이력 history 테이블
+-- 담당자 변경 시 변경 전·후 담당자와 변경자를 기록
+--
+-- bridge_no + corp_no:
+-- 동일 기업에 소속된 교량인지 복합 FK로 검증
+--
+-- 사용자 번호 + corp_no:
+-- 변경 전·후 담당자와 변경 작업자가
+-- 해당 교량과 동일한 기업 소속인지 복합 FK로 검증
+--
+-- previous_manager_no:
+-- 최초 담당자 배정인 경우 NULL 허용
+-- ===========================
+
+CREATE TABLE `manager_history` (
+    `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
+
+    `bridge_no` BIGINT NOT NULL COMMENT '담당자가 변경된 교량 번호',
+    `corp_no` BIGINT NOT NULL COMMENT '소속 기업 번호',
+
+    `previous_manager_no` BIGINT DEFAULT NULL COMMENT '변경 전 담당자 번호',
+    `new_manager_no` BIGINT NOT NULL COMMENT '변경 후 담당자 번호',
+
+    `changed_by` BIGINT NOT NULL COMMENT '담당자를 변경한 사용자 번호',
+
+    `changed_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        COMMENT '담당자 변경 일시',
+
+    PRIMARY KEY (`no`),
+
+    KEY `idx_manager_history_bridge_date`
+        (`bridge_no`, `corp_no`, `changed_at`),
+
+    KEY `idx_manager_history_previous`
+        (`previous_manager_no`, `corp_no`),
+
+    KEY `idx_manager_history_new`
+        (`new_manager_no`, `corp_no`),
+
+    KEY `idx_manager_history_changed_by`
+        (`changed_by`, `corp_no`),
+
+    CONSTRAINT `fk_manager_history_bridge_corp`
+        FOREIGN KEY (`bridge_no`, `corp_no`)
+        REFERENCES `bridges` (`no`, `corp_no`)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+
+    CONSTRAINT `fk_manager_history_previous_corp`
+        FOREIGN KEY (`previous_manager_no`, `corp_no`)
+        REFERENCES `users` (`no`, `corp_no`)
+        ON DELETE RESTRICT ON UPDATE RESTRICT,
+
+    CONSTRAINT `fk_manager_history_new_corp`
+        FOREIGN KEY (`new_manager_no`, `corp_no`)
+        REFERENCES `users` (`no`, `corp_no`)
+        ON DELETE RESTRICT ON UPDATE RESTRICT,
+
+    CONSTRAINT `fk_manager_history_changed_by_corp`
+        FOREIGN KEY (`changed_by`, `corp_no`)
+        REFERENCES `users` (`no`, `corp_no`)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+
+    CONSTRAINT `chk_manager_history_different`
+        CHECK (
+            `previous_manager_no` IS NULL
+            OR `previous_manager_no` <> `new_manager_no`
+        )
+
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci
+  COMMENT='교량 담당자 변경 이력';
+
+-- ===========================
+-- 10. 외래키 검사 복원
 -- ===========================
 
 SET FOREIGN_KEY_CHECKS = 1;

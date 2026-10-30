@@ -156,3 +156,52 @@ button, input, select, textarea { font: inherit; }
     .app-grid { grid-template-columns: 1fr; }
     .app-card { padding: 18px; }
 }
+
+
+/* === 2026-10 공통 레이아웃 v3: 우측 작업자명 + POST 로그아웃 === */
+.app-header__account {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 18px;
+    min-width: 0;
+}
+.app-header__worker {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--app-text);
+    font-size: 13px;
+    white-space: nowrap;
+}
+.app-header__worker-label { font-weight: 500; }
+.app-header__worker-name { font-weight: 700; }
+.app-header__logout-form { margin: 0; }
+.app-header__logout {
+    padding: 8px 4px;
+    border: 0;
+    background: transparent;
+    color: var(--app-text);
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.app-header__logout:hover { color: var(--app-primary-hover); text-decoration: underline; }
+.app-header__logout:focus-visible { outline: 2px solid var(--app-primary); outline-offset: 3px; }
+/* 레이아웃 v2와 일치하는 메뉴 폭 및 색상. 기존 app-layout 구조 유지. */
+.app-sidebar__nav > .app-sidebar__link { min-height: 40px; }
+@media (max-width: 760px) {
+    .app-header__account { gap: 8px; }
+    .app-header__worker, .app-header__logout { font-size: 12px; }
+    .app-header__logout { padding: 6px 2px; }
+    .app-brand { gap: 6px; }
+    .app-brand__icon { width: 26px; height: 26px; }
+    .app-brand__name { font-size: 14px; }
+}
+@media (max-width: 370px) {
+    .app-header { padding: 0 9px; gap: 6px; }
+    .app-header__account { gap: 5px; }
+    .app-header__worker { gap: 2px; }
+    .app-brand__name { font-size: 13px; }
+}

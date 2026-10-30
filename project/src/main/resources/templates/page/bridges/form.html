@@ -1,185 +1,58 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${editMode} ? '교량 정보 수정 | 교량점검 시스템' : '교량 신규 등록 | 교량점검 시스템'">교량 등록·수정</title>
-    <link rel="stylesheet" th:href="@{/css/common.css}">
-    <link rel="stylesheet" th:href="@{/css/bridge.css}">
-    <link rel="stylesheet" th:href="@{/css/bridge-form.css}">
-    <script th:src="@{/js/bridge-form.js}" defer></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="_csrf" th:content="${_csrf.token}">
+<meta name="_csrf_header" th:content="${_csrf.headerName}">
+<title th:text="${editMode} ? '교량 수정 | 교량점검 시스템' : '교량 등록 | 교량점검 시스템'">교량 등록·수정</title>
+<link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css"><link rel="stylesheet" th:href="@{/css/bridge-v2.css}" href="/css/bridge-v2.css"><script th:src="@{/js/bridge-v2-form.js}" src="/js/bridge-v2-form.js" defer></script>
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
-<div class="app-layout" th:with="activeMenu='bridges'">
-    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-    <main class="app-main bridge-page" id="main-content">
-        <div class="app-container">
-            <p class="app-breadcrumb">업무 관리 / <a th:href="@{/bridges}">교량 관리</a> / 교량 등록·수정</p>
-            <div class="bridge-editor-head">
-                <div>
-                    <h1 class="app-page-title" th:text="${editMode} ? '교량 정보 수정' : '신규 교량 등록'">신규 교량 등록</h1>
-                    <p class="app-page-description">전국 교량 데이터 검색 후 정보를 확인하거나 직접 정보를 입력합니다.</p>
-                </div>
-                <a th:href="@{/bridges}" class="app-btn app-btn--outline">목록으로</a>
-            </div>
+<div class="app-layout" th:with="activeMenu='bridges'"><div th:replace="~{fragments/sidebar :: sidebar}"></div>
+<main class="app-main bridge-v2" id="main-content" th:attr="data-edit-mode=${editMode},data-bridge-no=${bridge.no},data-can-manage=${canManage},data-manager-no=${bridge.managerNo}"><div class="app-container">
+<p class="bv-crumb">업무 관리 / <a th:href="@{/bridges}" href="/bridges">교량 관리</a> / 교량 목록 / <strong>교량 등록·수정</strong></p>
+<h1 class="bv-title" th:text="${editMode} ? '교량 정보 수정' : '교량 등록·수정'">교량 등록·수정</h1>
+<p class="bv-subtitle">등록 시 DB에 적재된 전국교량 원본을 선택합니다. 기존 교량의 담당자 변경·삭제는 관리자 권한이 필요합니다.</p>
+<div class="bv-demo" th:if="${demoMode}">화면 시연용 샘플 검색 결과입니다. 실제 CSV 원본 조회와 DB 저장·삭제, 담당자 이력은 아직 연결되지 않았습니다.</div>
 
-            <div class="bridge-notice" th:if="${demoMode}" role="status">
-                <strong>프론트엔드 테스트 모드</strong>입니다. 검색 결과는 실제 CSV/DB가 아닌 샘플 5건이며,
-                입력 내용 확인은 가능하지만 <strong>저장·수정·삭제는 실행되지 않습니다.</strong>
-            </div>
+<section class="bv-panel" aria-labelledby="csv-title" th:if="${!editMode}">
+  <h2 class="bv-panel-title" id="csv-title">전국교량 원본 검색</h2>
+  <div class="bv-lookup-line"><label for="bv-csv-query" class="bv-sr-only">교량명 검색</label><input id="bv-csv-query" type="search" placeholder="DB 교량명을 입력하세요. 예) 진위교"><button type="button" class="bv-btn bv-btn-light" id="bv-csv-search">검색</button></div>
+  <div class="bv-table-scroll"><table class="bv-table bv-csv-table"><thead><tr><th>선택</th><th>교량명</th><th>CSV 식별자</th><th>지역</th><th>시설물 종류</th></tr></thead>
+  <tbody id="bv-csv-results"><tr><td colspan="5">교량명을 입력한 뒤 검색해 주세요.</td></tr></tbody></table></div>
+  <p class="bv-help" id="bv-csv-empty" hidden>검색된 교량이 없습니다. 검색어를 변경해 주세요.</p>
+  <div class="bv-form-actions"><button type="button" id="bv-choose-bridge" class="bv-btn bv-btn-primary">선택한 교량 정보 불러오기</button><span class="bv-help" id="bv-selection-message" aria-live="polite">교량을 선택해 주세요.</span></div>
+</section>
 
-            <nav class="bridge-editor-tabs" aria-label="교량 등록 유형">
-                <a th:href="@{/bridges/new}" th:classappend="${!editMode} ? 'is-active' : ''"
-                   th:attr="aria-current=${!editMode} ? 'page' : null">신규 등록 모드</a>
-                <a th:if="${editMode}" th:href="@{/bridges/{no}/edit(no=${bridge.no})}" class="is-active"
-                   aria-current="page">정보 수정 모드</a>
-                <span th:unless="${editMode}" class="bridge-editor-tabs__hint">기존 교량을 수정하려면 목록에서 교량명을 클릭하세요.</span>
-            </nav>
-
-            <section class="app-card bridge-editor-section" aria-labelledby="csv-panel-title">
-                <div class="bridge-editor-section__title">
-                    <div>
-                        <h2 id="csv-panel-title" class="app-card__title">교량 공공 데이터 검색</h2>
-                        <p class="bridge-section-subtitle"><span class="bridge-step">01</span> CSV 기반 후보 선택 (현재 샘플 데이터)</p>
-                    </div>
-                    <span class="bridge-mode-label">검색 · 선택</span>
-                </div>
-                <div class="bridge-editor-search-row">
-                    <div class="bridge-field">
-                        <label for="csv-keyword">교량 검색어</label>
-                        <input class="app-field" type="search" id="csv-keyword" placeholder="교량명 · 지역 · 예시 관리번호" autocomplete="off">
-                    </div>
-                    <button class="app-btn" type="button" id="csv-search-button">후보 검색</button>
-                    <button class="app-btn app-btn--outline" type="button" id="direct-entry-button">직접 입력</button>
-                </div>
-                <p id="csv-search-status" class="bridge-editor-help" role="status" aria-live="polite">5건의 예시 교량 중 선택할 수 있습니다.</p>
-                <div class="app-table-wrap">
-                    <table class="app-table bridge-csv-table" aria-label="교량 검색 후보">
-                        <thead>
-                        <tr><th scope="col">선택</th><th scope="col">교량명</th><th scope="col">표시용 번호</th><th scope="col">지역</th><th scope="col">시설물 종류</th></tr>
-                        </thead>
-                        <tbody id="csv-candidates">
-                        <tr class="bridge-csv-row" th:each="candidate : ${csvCandidates}"
-                            th:attr="data-name=${candidate.name},data-code=${candidate.code},data-province=${candidate.province},data-city=${candidate.city},data-facility=${candidate.facilityType},data-address=${candidate.address},data-road=${candidate.roadName}">
-                            <td><input type="radio" name="csvSelection" th:value="${candidate.no}" th:attr="aria-label=|${candidate.name} 선택|"></td>
-                            <td th:text="${candidate.name}">가람교</td>
-                            <td th:text="${candidate.code}">BR-2026-001</td>
-                            <td th:text="|${candidate.province} ${candidate.city}|">경기도 가평군</td>
-                            <td th:text="${candidate.facilityType}">제1종</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <p id="csv-empty" class="bridge-editor-empty" hidden>검색 결과가 없습니다. 다른 검색어를 입력하거나 직접 입력을 선택해 주세요.</p>
-                <div class="bridge-editor-select-actions">
-                    <button type="button" id="csv-apply-button" class="app-btn">선택한 교량 정보 불러오기</button>
-                    <span class="bridge-editor-help">선택 시 아래 입력란에 값만 복사됩니다. DB에는 저장되지 않습니다.</span>
-                </div>
-            </section>
-
-            <form id="bridge-editor-form" class="bridge-editor-grid" enctype="multipart/form-data"
-                  th:attr="data-mode=${editMode} ? 'edit' : 'create'" novalidate>
-                <div class="bridge-editor-left">
-                    <section class="app-card bridge-editor-section" aria-labelledby="bridge-info-title">
-                        <h2 class="app-card__title" id="bridge-info-title">교량 기본정보</h2>
-                        <p class="bridge-section-subtitle"><span class="bridge-step">02</span> 등록·수정 필드</p>
-                        <div class="bridge-editor-fields">
-                            <div class="bridge-field">
-                                <label for="bridge-name">교량명 <span class="bridge-editor-required">*</span></label>
-                                <input class="app-field" id="bridge-name" name="name" type="text" maxlength="48" required
-                                       placeholder="교량 이름" th:value="${bridge.name}">
-                            </div>
-                            <div class="bridge-field">
-                                <label for="bridge-display-code">교량 번호 <span class="bridge-field__hint">(화면 예시)</span></label>
-                                <input class="app-field app-field--readonly" id="bridge-display-code" name="displayCode"
-                                       type="text" readonly placeholder="DB에 표시용 번호 컬럼 없음" th:value="${bridge.code}">
-                            </div>
-                            <div class="bridge-field">
-                                <label for="bridge-province">시·도 <span class="bridge-editor-required">*</span></label>
-                                <input class="app-field" id="bridge-province" name="province" type="text" maxlength="14" required
-                                       placeholder="예: 경기도" th:value="${bridge.province}">
-                            </div>
-                            <div class="bridge-field">
-                                <label for="bridge-city">시·군·구 <span class="bridge-editor-required">*</span></label>
-                                <input class="app-field" id="bridge-city" name="city" type="text" maxlength="17" required
-                                       placeholder="예: 가평군" th:value="${bridge.city}">
-                            </div>
-                            <div class="bridge-field bridge-field--full">
-                                <label for="bridge-address">소재지 지번주소</label>
-                                <input class="app-field" id="bridge-address" name="address" type="text" maxlength="500"
-                                       placeholder="교량 소재지" th:value="${bridge.address}">
-                            </div>
-                            <div class="bridge-field">
-                                <label for="bridge-facility-type">시설물 종류 <span class="bridge-editor-required">*</span></label>
-                                <select class="app-field" name="facilityType" id="bridge-facility-type" required>
-                                    <option value="">시설물 종류 선택</option>
-                                    <option value="제1종" th:selected="${bridge.facilityType == '제1종'}">제1종</option>
-                                    <option value="제2종" th:selected="${bridge.facilityType == '제2종'}">제2종</option>
-                                    <option value="제3종" th:selected="${bridge.facilityType == '제3종'}">제3종</option>
-                                </select>
-                            </div>
-                            <div class="bridge-field">
-                                <label for="bridge-road">도로노선명</label>
-                                <input class="app-field" id="bridge-road" name="roadName" type="text" maxlength="21"
-                                       placeholder="도로노선명" th:value="${bridge.roadName}">
-                            </div>
-                        </div>
-                    </section>
-                    <section class="app-card bridge-editor-section" aria-labelledby="image-title">
-                        <h2 id="image-title" class="app-card__title">교량 대표 이미지</h2>
-                        <p class="bridge-section-subtitle"><span class="bridge-step">03</span> 이미지 선택 및 미리보기</p>
-                        <p class="bridge-editor-help">JPG, PNG, WebP 파일만 선택할 수 있습니다. 최대 5MB (프론트 검사 기준).</p>
-                        <label class="bridge-image-input" for="bridge-image-file">
-                            <span>대표 이미지 파일 선택</span>
-                            <input id="bridge-image-file" type="file" name="image" accept="image/jpeg,image/png,image/webp">
-                        </label>
-                        <div id="bridge-image-preview" class="bridge-image-preview" aria-live="polite">
-                            <p id="bridge-image-placeholder">선택한 대표 이미지가 없습니다.</p>
-                            <img id="bridge-preview-img" alt="선택한 교량 대표 이미지 미리보기" hidden>
-                        </div>
-                        <button type="button" class="app-btn app-btn--outline" id="bridge-image-remove" hidden>선택 이미지 제거</button>
-                    </section>
-                </div>
-
-                <div class="bridge-editor-right">
-                    <section class="app-card bridge-editor-section" aria-labelledby="manager-title">
-                        <h2 id="manager-title" class="app-card__title">담당자 정보</h2>
-                        <p class="bridge-section-subtitle"><span class="bridge-step">04</span> 현재 담당자 (표시용)</p>
-                        <div class="bridge-field">
-                            <label for="bridge-manager">현재 담당자</label>
-                            <input id="bridge-manager" class="app-field app-field--readonly" type="text" readonly
-                                   th:value="${bridge.manager}" placeholder="담당자 정보 미연결">
-                        </div>
-                        <p class="bridge-editor-help">실제 저장에는 <code>bridges.manager_no</code>와 사용자 조회 API 연동이 필요합니다.</p>
-                        <div class="bridge-history-placeholder">
-                            <strong>담당자 변경 이력</strong>
-                            <p>현재 DDL에는 담당자 변경 이력 테이블이 없어 화면만 준비했습니다.</p>
-                        </div>
-                    </section>
-
-                    <section class="app-card bridge-editor-section" aria-labelledby="save-title">
-                        <h2 id="save-title" class="app-card__title">저장 작업</h2>
-                        <p class="bridge-editor-help">지금은 입력값 검증만 할 수 있습니다. 실제 등록·수정 API가 완성되면 저장 버튼을 연결할 예정입니다.</p>
-                        <button type="submit" id="bridge-validate-button" class="app-btn bridge-editor-primary">입력 내용 확인</button>
-                        <a th:href="@{/bridges}" class="app-btn app-btn--outline">취소 · 목록으로</a>
-                        <hr class="bridge-editor-divider">
-                        <h3 class="bridge-editor-subheading">등록 · 수정</h3>
-                        <button type="button" class="app-btn" disabled aria-disabled="true">서버 저장 (미연결)</button>
-                        <h3 class="bridge-editor-subheading" th:if="${editMode}">삭제</h3>
-                        <button th:if="${editMode}" type="button" class="app-btn bridge-editor-danger" disabled aria-disabled="true">교량 삭제 (미연결)</button>
-                        <p id="bridge-form-status" class="bridge-editor-feedback" role="status" aria-live="polite"></p>
-                    </section>
-
-                    <section class="app-card bridge-editor-section" id="bridge-summary-section" hidden aria-labelledby="summary-title">
-                        <h2 id="summary-title" class="app-card__title">입력 내용 확인 결과</h2>
-                        <dl id="bridge-summary" class="bridge-editor-summary"></dl>
-                        <p class="bridge-editor-help">이 내용은 브라우저에서 확인한 정보이며 서버에 전송하거나 저장하지 않았습니다.</p>
-                    </section>
-                </div>
-            </form>
-        </div>
-    </main>
+<div class="bv-form-layout">
+  <section class="bv-panel" aria-labelledby="form-title">
+    <h2 class="bv-panel-title" id="form-title">교량 기본정보</h2><h3 class="bv-minor-heading">CSV 원본에서 등록된 교량 정보</h3>
+    <div class="bv-detail-fields">
+      <label class="bv-field"><span>교량 이름 *</span><input type="text" id="bv-name" readonly th:value="${bridge.name}" placeholder="원본 교량을 선택하세요"></label>
+      <label class="bv-field"><span>등록번호</span><input type="text" id="bv-code" readonly th:value="${bridge.code}" placeholder="등록 시 자동 발급"></label>
+      <label class="bv-field"><span>지역 · 원본 검색값</span><input type="text" id="bv-region" readonly th:value="${editMode} ? |${bridge.province} ${bridge.city}| : ''" placeholder="원본 선택 시 자동 입력"></label>
+      <label class="bv-field"><span>시설물 종류 · 원본 검색값</span><input type="text" id="bv-facility" readonly th:value="${bridge.facilityType}" placeholder="원본 선택 시 자동 입력"></label>
+    </div>
+    <label class="bv-field bv-image-field"><span>대표 이미지 (등록/수정 시 업로드)</span><input id="bv-image" type="file" accept="image/png,image/jpeg,image/webp"><small>JPG·PNG·WebP, 최대 5MB. 교량 등록·수정 저장 시 이미지가 업로드됩니다.</small></label>
+    <div class="bv-preview-image" id="bv-preview-box"><span id="bv-preview-placeholder" th:hidden="${representativeImageUrl != null}">선택된 파일 없음</span><img id="bv-preview" alt="교량 대표 이미지 미리보기" th:src="${representativeImageUrl}" th:hidden="${representativeImageUrl == null}"></div>
+    <p id="bv-image-message" class="bv-help" aria-live="polite">대표 이미지를 선택해 미리볼 수 있습니다.</p>
+  </section>
+  <aside class="bv-panel" aria-labelledby="manager-title">
+    <h2 class="bv-panel-title" id="manager-title">담당자 정보</h2>
+    <label class="bv-field"><span>현재 담당자</span><input type="text" id="bv-manager" th:value="${bridge.manager}" readonly></label>
+    <label class="bv-field" th:if="${editMode and canManage}"><span>변경할 담당자</span><select id="bv-manager-select"><option value="">조회 중...</option></select></label>
+    <h3 class="bv-minor-heading">이전 담당자</h3><p class="bv-help">담당자 변경 이력 데이터 연동 예정</p>
+    <p class="bv-help">담당자 이력 테이블과 사용자 선택 API가 확정되면 실제 정보를 연결합니다.</p>
+  </aside>
 </div>
-</body>
-</html>
+<section class="bv-panel" aria-labelledby="save-title">
+  <h2 class="bv-panel-title" id="save-title">등록·수정 상태</h2>
+  <div class="bv-form-actions">
+    <button type="button" id="bv-save" class="bv-btn bv-btn-primary" th:if="${!editMode or canManage}" th:text="${editMode} ? '담당자 변경 저장' : '선택한 교량 등록'">선택한 교량 등록</button>
+    <a class="bv-btn bv-btn-light" th:href="@{/bridges}" href="/bridges">취소</a>
+    <button th:if="${editMode and canManage}" type="button" id="bv-delete" class="bv-btn bv-btn-danger">교량 삭제</button>
+  </div>
+  <p class="bv-help">새 교량 등록은 bridge_master의 실제 PK로 처리됩니다. 대표 이미지는 저장 버튼을 눌렀을 때 함께 업로드됩니다. 담당자 변경 이력 저장은 별도 연동 예정입니다.</p>
+</section>
+</div></main></div></body></html>

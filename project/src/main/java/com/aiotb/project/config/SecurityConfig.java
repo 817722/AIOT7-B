@@ -21,10 +21,15 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(auth -> auth
+        http
+
+        // (Postman 테스트용) REST API 테스트를 위해 CSRF 보안을 잠시 꺼둡니다. 
+        .csrf(csrf -> csrf.disable())
+        
+        .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/login", "/join", "/users/join", "/users/login", "/api/business/verify", "/error",
                         "/css/**", "/js/**", "/img/**", "/images/**", "/favicon.ico").permitAll()
-                .requestMatchers("/api/maintenance", "/api/maintenance/**", "/api/inspections", "/api/inspections/**").authenticated()
+                .requestMatchers("/api/maintenance", "/api/maintenance/**", "/api/inspections", "/api/inspections/**").permitAll()
                 .anyRequest().authenticated());
 
         http.authenticationProvider(authenticationProvider());
@@ -43,6 +48,7 @@ public class SecurityConfig {
                 .deleteCookies("JSESSIONID"));
         return http.build();
     }
+
 
     @Bean
     public AuthenticationProvider authenticationProvider() {

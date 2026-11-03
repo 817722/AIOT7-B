@@ -5,7 +5,7 @@
 <meta name="_csrf" th:content="${_csrf.token}">
 <meta name="_csrf_header" th:content="${_csrf.headerName}">
 <title th:text="${editMode} ? '교량 수정 | 교량점검 시스템' : '교량 등록 | 교량점검 시스템'">교량 등록·수정</title>
-<link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css"><link rel="stylesheet" th:href="@{/css/bridge-v2.css}" href="/css/bridge-v2.css"><script th:src="@{/js/bridge-v2-form.js}" src="/js/bridge-v2-form.js" defer></script>
+<link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css"><link rel="stylesheet" th:href="@{/css/bridge-v2.css}" href="/css/bridge-v2.css"><link rel="stylesheet" th:href="@{/css/bridge-registered.css}" href="/css/bridge-registered.css"><script th:src="@{/js/bridge-v2-form.js}" src="/js/bridge-v2-form.js" defer></script>
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
@@ -19,9 +19,21 @@
 <section class="bv-panel" aria-labelledby="csv-title" th:if="${!editMode}">
   <h2 class="bv-panel-title" id="csv-title">전국교량 원본 검색</h2>
   <div class="bv-lookup-line"><label for="bv-csv-query" class="bv-sr-only">교량명 검색</label><input id="bv-csv-query" type="search" placeholder="DB 교량명을 입력하세요. 예) 진위교"><button type="button" class="bv-btn bv-btn-light" id="bv-csv-search">검색</button></div>
-  <div class="bv-table-scroll"><table class="bv-table bv-csv-table"><thead><tr><th>선택</th><th>교량명</th><th>CSV 식별자</th><th>지역</th><th>시설물 종류</th></tr></thead>
-  <tbody id="bv-csv-results"><tr><td colspan="5">교량명을 입력한 뒤 검색해 주세요.</td></tr></tbody></table></div>
+  <div class="bv-table-scroll"><table class="bv-table bv-csv-table"><thead><tr><th>선택</th><th>교량명</th><th>CSV 식별자</th><th>지역</th><th>시설물 종류</th><th>등록 상태</th><th>현재 담당자</th></tr></thead>
+  <tbody id="bv-csv-results"><tr><td colspan="7">교량명을 입력한 뒤 검색해 주세요.</td></tr></tbody></table></div>
   <p class="bv-help" id="bv-csv-empty" hidden>검색된 교량이 없습니다. 검색어를 변경해 주세요.</p>
+  <div id="bv-registered-info" class="bv-registered-info" hidden aria-live="polite">
+    <strong>이미 우리 기업에 등록된 교량입니다.</strong>
+    <div class="bv-registered-details">
+      <span>교량명: <b id="bv-existing-name">-</b></span>
+      <span>등록번호: <b id="bv-existing-no">-</b></span>
+      <span>지역: <b id="bv-existing-region">-</b></span>
+      <span>시설물 종류: <b id="bv-existing-facility">-</b></span>
+      <span>현재 담당자: <b id="bv-existing-manager">-</b></span>
+    </div>
+    <a id="bv-existing-edit" class="bv-btn bv-btn-primary" href="/bridges">기존 교량 수정 화면으로 이동</a>
+    <small>같은 기업에서 동일한 원본 교량은 다시 등록할 수 없습니다.</small>
+  </div>
   <div class="bv-form-actions"><button type="button" id="bv-choose-bridge" class="bv-btn bv-btn-primary">선택한 교량 정보 불러오기</button><span class="bv-help" id="bv-selection-message" aria-live="polite">교량을 선택해 주세요.</span></div>
 </section>
 
@@ -40,10 +52,30 @@
   </section>
   <aside class="bv-panel" aria-labelledby="manager-title">
     <h2 class="bv-panel-title" id="manager-title">담당자 정보</h2>
-    <label class="bv-field"><span>현재 담당자</span><input type="text" id="bv-manager" th:value="${bridge.manager}" readonly></label>
+    <label class="bv-field">
+      <span id="bv-manager-label" th:text="${editMode} ? '현재 담당자' : '등록 예정 담당자'">현재 담당자</span>
+      <input type="text" id="bv-manager"
+             th:value="${editMode ? bridge.manager : currentWorkerName}"
+             readonly>
+      <small id="bv-manager-help" class="bv-help" th:if="${!editMode}">교량을 등록하면 현재 로그인한 작업자가 최초 담당자로 지정됩니다.</small>
+    </label>
     <label class="bv-field" th:if="${editMode and canManage}"><span>변경할 담당자</span><select id="bv-manager-select"><option value="">조회 중...</option></select></label>
-    <h3 class="bv-minor-heading">이전 담당자</h3><p class="bv-help">담당자 변경 이력 데이터 연동 예정</p>
-    <p class="bv-help">담당자 이력 테이블과 사용자 선택 API가 확정되면 실제 정보를 연결합니다.</p>
+    <h3 class="bv-minor-heading">담당자 변경 이력 <span class="bv-muted">(최근 30건)</span></h3>
+    <p class="bv-help" th:if="${!editMode}">교량 등록 후 담당자를 변경하면 이곳에 이력이 표시됩니다.</p>
+    <p class="bv-help" th:if="${editMode and #lists.isEmpty(managerHistory)}">아직 담당자 변경 이력이 없습니다.</p>
+    <div class="bv-table-scroll" th:if="${editMode and !#lists.isEmpty(managerHistory)}">
+      <table class="bv-table">
+        <thead><tr><th>이전 담당자</th><th>변경 후</th><th>변경자</th><th>변경 일시</th></tr></thead>
+        <tbody>
+          <tr th:each="history : ${managerHistory}">
+            <td th:text="${history.previousManagerName}">김가람</td>
+            <td th:text="${history.newManagerName}">이예슬</td>
+            <td th:text="${history.changedByName}">관리자</td>
+            <td th:text="${history.changedAt}">2026-10-30 15:00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </aside>
 </div>
 <section class="bv-panel" aria-labelledby="save-title">
@@ -53,6 +85,7 @@
     <a class="bv-btn bv-btn-light" th:href="@{/bridges}" href="/bridges">취소</a>
     <button th:if="${editMode and canManage}" type="button" id="bv-delete" class="bv-btn bv-btn-danger">교량 삭제</button>
   </div>
-  <p class="bv-help">새 교량 등록은 bridge_master의 실제 PK로 처리됩니다. 대표 이미지는 저장 버튼을 눌렀을 때 함께 업로드됩니다. 담당자 변경 이력 저장은 별도 연동 예정입니다.</p>
+  <p id="bv-save-message" class="bv-help" aria-live="polite"></p>
+  <p class="bv-help">새 교량 등록은 bridge_master의 실제 PK로 처리됩니다. 대표 이미지는 저장 버튼을 눌렀을 때 함께 업로드됩니다. 담당자를 실제로 변경하면 변경 이력이 자동 저장됩니다. 동일 담당자 재선택은 이력에 남지 않습니다.</p>
 </section>
 </div></main></div></body></html>

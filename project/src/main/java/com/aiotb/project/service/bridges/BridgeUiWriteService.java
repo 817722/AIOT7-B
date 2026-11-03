@@ -1,10 +1,15 @@
 package com.aiotb.project.service.bridges;
 
+import java.sql.Timestamp;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.AccessDeniedException;
@@ -19,7 +24,7 @@ import com.aiotb.project.repository.users.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
- * DDL-ALOHA(1).sql 업무용 교량 CRUD 어댑터. 팀원 기존 /api/bridges REST 코드를 변경하지 않음.
+ * DDL-ALOHA(2).sql 업무용 교량 CRUD 어댑터. 팀원 기존 /api/bridges REST 코드를 변경하지 않음.
  * bridge_master의 실제 DB PK(no)만 입력받고 교량 속성은 DB의 원본에서 복사한다.
  */
 @Service
@@ -48,27 +53,44 @@ public class BridgeUiWriteService {
         if (!allowed) throw new AccessDeniedException("교량 변경 및 삭제는 관리자 권한이 필요합니다.");
     }
 
-    /** 원본은 DB에 선적재된 bridge_master에서만 검색. 검색어는 바인딩하고 50건으로 제한. */
+    /**
+     * 전국교량 원본 검색 결과에 현재 로그인 기업의 등록 상태를 추가한다.
+     * b.corp_no 를 JOIN 조건에서 제한해 타 기업의 등록 교량 번호/담당자가 노출되지 않게 한다.
+     * 기존 catalogId, masterNo 등 응답 필드는 유지한다.
+     */
     @Transactional(readOnly = true)
     public List<Map<String,Object>> catalog(String keyword, Authentication auth) {
-        actor(auth);
+        CurrentUser actor = actor(auth);
         if (keyword == null || keyword.isBlank()) return List.of();
         String word = keyword.strip();
-        if (word.length() > 100) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "검색어가 너무 깁니다.");
-        // SQL LIKE 특수문자를 리터럴로 취급
+        if (word.length() > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "검색어가 너무 깁니다.");
+        }
+        // LIKE 와일드카드 이스케이프
         String escaped = word.replace("!", "!!").replace("%", "!%").replace("_", "!_");
         return jdbc.query("""
-            SELECT no, name, facility_type, road_type, road_name, province, city,
-                   address, bridge_length, bridge_width, management_agency, source_data_date
-              FROM bridge_master
-             WHERE name LIKE ? ESCAPE '!'
-             ORDER BY name, province, city, no
+            SELECT bm.no, bm.name, bm.facility_type, bm.road_type, bm.road_name,
+                   bm.province, bm.city, bm.address, bm.bridge_length, bm.bridge_width,
+                   bm.management_agency, bm.source_data_date,
+                   b.no AS registered_bridge_no,
+                   manager.manager_name AS current_manager_name
+              FROM bridge_master bm
+              LEFT JOIN bridges b
+                ON b.bridge_master_no = bm.no AND b.corp_no = ?
+              LEFT JOIN users manager
+                ON manager.no = b.manager_no AND manager.corp_no = b.corp_no
+             WHERE bm.name LIKE ? ESCAPE '!'
+             ORDER BY bm.name, bm.province, bm.city, bm.no
              LIMIT 50
             """, (rs, idx) -> {
-            Map<String,Object> item = new java.util.LinkedHashMap<>();
-            long no = rs.getLong("no");
-            item.put("catalogId", String.valueOf(no));
-            item.put("masterNo", no);
+            Map<String,Object> item = new LinkedHashMap<>();
+            long masterNo = rs.getLong("no");
+            long foundBridgeNo = rs.getLong("registered_bridge_no");
+            Long registeredBridgeNo = rs.wasNull() ? null : foundBridgeNo;
+            String currentManager = rs.getString("current_manager_name");
+
+            item.put("catalogId", String.valueOf(masterNo));
+            item.put("masterNo", masterNo);
             item.put("name", rs.getString("name"));
             item.put("facilityType", rs.getString("facility_type"));
             item.put("roadType", rs.getString("road_type"));
@@ -79,10 +101,14 @@ public class BridgeUiWriteService {
             item.put("bridgeLength", rs.getBigDecimal("bridge_length"));
             item.put("bridgeWidth", rs.getBigDecimal("bridge_width"));
             item.put("managementAgency", rs.getString("management_agency"));
-            java.sql.Date d = rs.getDate("source_data_date");
-            item.put("sourceDataDate", d == null ? null : d.toLocalDate());
+            java.sql.Date date = rs.getDate("source_data_date");
+            item.put("sourceDataDate", date == null ? null : date.toLocalDate());
+            item.put("registered", registeredBridgeNo != null);
+            item.put("registeredBridgeNo", registeredBridgeNo);
+            item.put("currentManagerName", registeredBridgeNo == null ? null :
+                (currentManager == null || currentManager.isBlank() ? "미지정" : currentManager));
             return item;
-        }, "%" + escaped + "%");
+        }, actor.corpNo(), "%" + escaped + "%");
     }
 
     @Transactional(readOnly = true)
@@ -145,16 +171,83 @@ public class BridgeUiWriteService {
         if (count == null || count == 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "교량을 찾을 수 없습니다.");
     }
 
+    /** 현재 담당자 변경과 이력 저장은 같은 트랜잭션으로 실행한다. */
     @Transactional
     public void assignManager(long bridgeNo, long managerNo, Authentication auth) {
         requireManager(auth);
         CurrentUser actor = actor(auth);
+        if (bridgeNo <= 0 || managerNo <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "교량과 담당자를 선택해 주세요.");
+        }
+
+        // 같은 교량의 동시 변경을 직렬화하여 이전 담당자 값과 이력을 일치시킨다.
+        Long previousManagerNo;
+        try {
+            previousManagerNo = jdbc.queryForObject("""
+                SELECT manager_no FROM bridges
+                 WHERE no = ? AND corp_no = ?
+                 FOR UPDATE
+                """, Long.class, bridgeNo, actor.corpNo());
+        } catch (EmptyResultDataAccessException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "교량을 찾을 수 없습니다.");
+        }
+
+        Integer eligible = jdbc.queryForObject("""
+            SELECT COUNT(*) FROM users
+             WHERE no = ? AND corp_no = ? AND enabled = 1
+            """, Integer.class, managerNo, actor.corpNo());
+        if (eligible == null || eligible == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "같은 기업의 활성 작업자를 선택해 주세요.");
+        }
+
+        // 동일 담당자를 재선택한 경우에는 수정일시와 이력을 변경하지 않는다.
+        if (Objects.equals(previousManagerNo, managerNo)) return;
+
+        int updated = jdbc.update("""
+            UPDATE bridges SET manager_no = ?, updated_by = ?
+             WHERE no = ? AND corp_no = ?
+            """, managerNo, actor.no(), bridgeNo, actor.corpNo());
+        if (updated != 1) throw new IllegalStateException("교량 담당자 변경에 실패했습니다.");
+
+        // 이 INSERT가 실패하면 위 UPDATE도 롤백된다.
+        jdbc.update("""
+            INSERT INTO manager_history
+                (bridge_no, corp_no, previous_manager_no, new_manager_no, changed_by)
+            VALUES (?, ?, ?, ?, ?)
+            """, bridgeNo, actor.corpNo(), previousManagerNo, managerNo, actor.no());
+    }
+
+    /** 로그인 기업에 속한 교량의 최근 담당자 변경 이력만 조회한다. */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> managerHistory(long bridgeNo, Authentication auth) {
+        CurrentUser actor = actor(auth);
         ensureOwnership(bridgeNo, actor);
-        Integer eligible = jdbc.queryForObject("SELECT COUNT(*) FROM users WHERE no=? AND corp_no=? AND enabled=1",
-                Integer.class, managerNo, actor.corpNo());
-        if (eligible == null || eligible == 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "같은 기업의 활성 작업자를 선택해 주세요.");
-        jdbc.update("UPDATE bridges SET manager_no=?, updated_by=? WHERE no=? AND corp_no=?",
-                managerNo, actor.no(), bridgeNo, actor.corpNo());
+        return jdbc.query("""
+            SELECT h.no, h.previous_manager_no, h.new_manager_no,
+                   prev.manager_name AS previous_manager_name,
+                   next_user.manager_name AS new_manager_name,
+                   changer.manager_name AS changed_by_name,
+                   h.changed_at
+              FROM manager_history h
+              JOIN bridges b ON b.no = h.bridge_no AND b.corp_no = h.corp_no
+              LEFT JOIN users prev ON prev.no = h.previous_manager_no
+              JOIN users next_user ON next_user.no = h.new_manager_no
+              JOIN users changer ON changer.no = h.changed_by
+             WHERE h.bridge_no = ? AND h.corp_no = ?
+             ORDER BY h.changed_at DESC, h.no DESC
+             LIMIT 30
+            """, (rs, index) -> {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("no", rs.getLong("no"));
+            row.put("previousManagerName", rs.getString("previous_manager_name") == null
+                    ? "미배정" : rs.getString("previous_manager_name"));
+            row.put("newManagerName", rs.getString("new_manager_name"));
+            row.put("changedByName", rs.getString("changed_by_name"));
+            Timestamp changedAt = rs.getTimestamp("changed_at");
+            row.put("changedAt", changedAt == null ? "" : changedAt.toLocalDateTime()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+            return row;
+        }, bridgeNo, actor.corpNo());
     }
 
     /** FK/미디어가 남아있으면 삭제하지 않는다. 별도 업무 기록을 임의로 지우지 않는다. */
@@ -163,6 +256,17 @@ public class BridgeUiWriteService {
         requireManager(auth);
         CurrentUser actor = actor(auth);
         ensureOwnership(bridgeNo, actor);
+        // 팀 최신 DDL: manager_history -> bridges FK가 ON DELETE RESTRICT 이므로
+        // 변경 이력이 있는 교량은 삭제하지 않고 명확한 409 오류를 반환한다.
+        Integer historyCount = jdbc.queryForObject("""
+            SELECT COUNT(*) FROM manager_history
+             WHERE bridge_no=? AND corp_no=?
+            """, Integer.class, bridgeNo, actor.corpNo());
+        if (historyCount != null && historyCount > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "담당자 변경 이력이 있는 교량은 삭제할 수 없습니다.");
+        }
+
         Integer records = jdbc.queryForObject("""
             SELECT (SELECT COUNT(*) FROM inspections WHERE bridge_no=? AND corp_no=?)
                  + (SELECT COUNT(*) FROM maintenance_records WHERE bridge_no=? AND corp_no=?)

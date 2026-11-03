@@ -1,0 +1,18 @@
+/* bridge v8: 같은 기업의 등록 교량 상태를 CSV 검색 결과에서 표시 */
+.bridge-v2 .bv-candidate-registered { background: #eaf4f4; }
+.bridge-v2 .bv-registration-badge {
+  display: inline-block; padding: 3px 8px; border-radius: 999px;
+  background: #eef2f5; color: #45616b; font-size: .8rem; white-space: nowrap;
+}
+.bridge-v2 .bv-registration-badge.is-registered { background: #ddf3ed; color: #087b75; font-weight: 700; }
+.bridge-v2 .bv-existing-row-link { display: inline-block; margin-top: 4px; font-size: .82rem; color: #087b83; text-decoration: underline; }
+.bridge-v2 .bv-registered-info {
+  display: grid; gap: 10px; margin-top: 15px; padding: 16px;
+  border: 1px solid #8bbfbd; border-radius: 8px; background: #f0fafa; color: #19464b;
+}
+.bridge-v2 .bv-registered-info[hidden] { display: none !important; }
+.bridge-v2 .bv-registered-info > strong { color: #086c70; }
+.bridge-v2 .bv-registered-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; }
+.bridge-v2 .bv-registered-info > a { justify-self: start; }
+.bridge-v2 .bv-registered-info > small { color: #5a737d; }
+@media (max-width: 720px) { .bridge-v2 .bv-registered-details { grid-template-columns: 1fr; } }

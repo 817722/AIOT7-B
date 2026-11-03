@@ -42,6 +42,12 @@ public class BridgeUiWriteController {
         return service.managers(auth);
     }
 
+    // 현재 교량의 담당자 변경 이력 (동일 기업 사용자만 조회 가능)
+    @GetMapping("/{no}/manager-history")
+    public List<Map<String, Object>> managerHistory(@PathVariable("no") long no, Authentication auth) {
+        return service.managerHistory(no, auth);
+    }
+
     @PostMapping
     public ResponseEntity<Map<String,Long>> create(@Valid @RequestBody CreateRequest request, Authentication auth) {
         long no = service.create(request.masterNo(), auth);

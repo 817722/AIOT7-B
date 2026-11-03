@@ -53,10 +53,15 @@ public class BusinessVerificationController {
                 || company.isBlank() || company.length() > 100 || date.isAfter(LocalDate.now())) {
             return result(HttpStatus.BAD_REQUEST, false, "사업자번호·대표자명·기업명·개업일자를 확인해 주세요.");
         }
+        // [개발·테스트용 임시 비활성화]
+        // 기존 기업의 사업자등록번호로 추가 작업자를 가입시키기 위해 중복 차단을 주석 처리했습니다.
+        // 운영 환경에서는 관리자 초대/승인 흐름을 구현하고 이 차단 정책을 재검토해야 합니다.
+        /*
         if (corpRepository.findByBisNo(businessNo).isPresent()) {
             return result(HttpStatus.CONFLICT, false,
                     "이미 등록된 기업입니다. 기업 관리자에게 작업자 계정 등록을 요청해 주세요.");
         }
+        */
         try {
             Map<?, ?> response = verificationService.verify(businessNo, date.toString(), ceo);
             Object data = response == null ? null : response.get("data");

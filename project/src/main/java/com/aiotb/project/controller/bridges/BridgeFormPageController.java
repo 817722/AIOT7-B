@@ -11,13 +11,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import com.aiotb.project.service.bridges.BridgeListViewService;
+import com.aiotb.project.service.bridges.BridgeUiWriteService;
 import lombok.RequiredArgsConstructor;
 
-/** 실제 CSV API 검색 + 기존 교량의 DB 값 확인. 저장 API 연동 전까지 입력은 읽기 전용. */
+/** 교량 등록·수정 화면: 실제 DB 조회와 담당자 변경 이력 연결. */
 @Controller
 @RequiredArgsConstructor
 public class BridgeFormPageController {
     private final BridgeListViewService bridgeListViewService;
+    private final BridgeUiWriteService bridgeUiWriteService;
 
     @GetMapping("/bridges/new")
     public String create(Authentication authentication, Model model) {
@@ -28,6 +30,7 @@ public class BridgeFormPageController {
     @GetMapping("/bridges/{no}/edit")
     public String edit(@PathVariable("no") Long no, Authentication authentication, Model model) {
         setup(model, true, bridgeListViewService.detail(authentication.getName(), no), isAdmin(authentication));
+        model.addAttribute("managerHistory", bridgeUiWriteService.managerHistory(no, authentication));
         return "page/bridges/form";
     }
 
@@ -52,5 +55,6 @@ public class BridgeFormPageController {
         model.addAttribute("bridge", bridge);
         model.addAttribute("representativeImageUrl", bridge.get("representativeImageUrl"));
         model.addAttribute("csvCandidates", List.of());
+        model.addAttribute("managerHistory", List.of());
     }
 }

@@ -1,0 +1,31 @@
+/* v10 — 화면 설계도에 맞춘 최근 확인한 교량 한 줄 목록. 기존 파일명 유지. */
+.bridge-v2 .bv-recent { padding: 17px 20px; }
+.bridge-v2 .bv-recent .bv-panel-title { margin: 0 0 9px; }
+.bridge-v2 .bv-recent-lines { display: flex; flex-direction: column; gap: 0; }
+.bridge-v2 .bv-recent-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0;
+  min-width: 0;
+  padding: 8px 0;
+  color: #4f8490;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.65;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  transition: background-color .15s, color .15s;
+}
+.bridge-v2 .bv-recent-line + .bv-recent-line { border-top: 1px solid #e7eff2; }
+.bridge-v2 .bv-recent-line:hover { color: #087f87; background-color: #f2f9f9; }
+.bridge-v2 .bv-recent-line:focus-visible { outline: 2px solid #07858a; outline-offset: 2px; border-radius: 3px; }
+.bridge-v2 .bv-recent-name { color: #267887; font-weight: 800; font-size: 13px; }
+.bridge-v2 .bv-recent-segment { min-width: 0; }
+.bridge-v2 .bv-recent-segment::before { content: ' / '; white-space: pre; color: #93abb1; }
+.bridge-v2 .bv-recent-text { margin: 0; font-size: 13px; color: #6c858e; }
+@media (max-width: 600px) {
+  .bridge-v2 .bv-recent { padding: 15px 16px; }
+  .bridge-v2 .bv-recent-line { font-size: 12px; }
+  .bridge-v2 .bv-recent-name { font-size: 12px; }
+}

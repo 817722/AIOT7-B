@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import com.aiotb.project.service.bridges.BridgeListViewService;
+import com.aiotb.project.service.bridges.BridgeRecentViewService;
 import lombok.RequiredArgsConstructor;
 
 /** 실제 DB 기반의 읽기 전용 상세 페이지. 수정/이미지 업로드 기능은 아직 연동하지 않습니다. */
@@ -17,11 +18,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BridgeDetailPageController {
     private final BridgeListViewService bridgeListViewService;
+    private final BridgeRecentViewService bridgeRecentViewService;
 
     @GetMapping("/bridges/{no}")
     public String detail(@PathVariable("no") Long no, Authentication authentication, Model model) {
         String username = authentication.getName();
+        // 소속 기업의 교량을 정상적으로 조회한 경우에만 최근 열람 이력을 저장합니다.
         Map<String,Object> bridge = bridgeListViewService.detail(username, no);
+        bridgeRecentViewService.recordView(username, no);
         List<Map<String,Object>> inspections = bridgeListViewService.inspections(username, no);
         List<Map<String,Object>> maintenances = bridgeListViewService.maintenances(username, no);
         model.addAttribute("activeMenu", "bridges");

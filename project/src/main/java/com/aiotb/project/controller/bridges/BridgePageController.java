@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.aiotb.project.service.bridges.BridgeListViewService;
+import com.aiotb.project.service.bridges.BridgeRecentViewService;
 import lombok.RequiredArgsConstructor;
 
 /** 최신 DDL 기반 기업별 교량 목록 화면. 기존 샘플 목록 Controller를 교체합니다. */
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class BridgePageController {
     private static final int PAGE_SIZE = 8;
     private final BridgeListViewService bridgeListViewService;
+    private final BridgeRecentViewService bridgeRecentViewService;
 
     @GetMapping("/bridges")
     public String list(@RequestParam(name = "keyword", defaultValue = "") String keyword,
@@ -67,6 +69,7 @@ public class BridgePageController {
             if (!c.isBlank() && !cities.contains(pc)) cities.add(pc);
         });
         cities.sort(Comparator.comparing(row -> row.get("city")));
+        model.addAttribute("recentBridges", bridgeRecentViewService.listRecent(authentication.getName()));
         model.addAttribute("activeMenu", "bridges");
         model.addAttribute("demoMode", false);
         model.addAttribute("rows", matched.subList(from, to));

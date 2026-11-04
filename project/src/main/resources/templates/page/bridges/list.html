@@ -5,6 +5,7 @@
   <title>교량 목록 | 교량점검 시스템</title>
   <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
   <link rel="stylesheet" th:href="@{/css/bridge-v2.css}" href="/css/bridge-v2.css">
+  <link rel="stylesheet" th:href="@{/css/bridge-recent.css}" href="/css/bridge-recent.css">
   <script th:src="@{/js/bridge-v2-list.js}" src="/js/bridge-v2-list.js" defer></script>
 <link rel="stylesheet" th:href="@{/css/bridge-images.css}" href="/css/bridge-images.css">
 </head>
@@ -19,10 +20,23 @@
       <p class="bv-subtitle">교량을 조회하고 등록된 교량의 점검 현황을 확인합니다.</p>
       <div class="bv-demo" th:if="${demoMode}">현재 표시 중인 교량과 점검 상태는 화면 테스트용 샘플입니다. 실제 DB 조회는 백엔드 연결 후 적용됩니다.</div>
 
+      <!-- 최근 확인한 교량: 하나의 패널에 최근 열람한 교량 최대 5개를 한 줄씩 표시 -->
       <section class="bv-panel bv-recent" aria-labelledby="recent-title">
         <h2 id="recent-title" class="bv-panel-title">최근 확인한 교량</h2>
-        <p id="bv-recent-text" class="bv-recent-text">최근 조회 이력 기능은 계정별 기록 저장 방식이 결정된 뒤 연결합니다.</p>
-
+        <p class="bv-recent-text" th:if="${#lists.isEmpty(recentBridges)}">아직 확인한 교량이 없습니다. 교량 상세 화면을 열면 이곳에 최근 순서대로 표시됩니다.</p>
+        <div class="bv-recent-lines" th:if="${!#lists.isEmpty(recentBridges)}">
+          <a class="bv-recent-line" th:each="recent : ${recentBridges}"
+             th:href="@{/bridges/{no}(no=${recent.no})}" href="/bridges/1"
+             th:title="|${recent.name} 교량 상세 보기|">
+            <strong class="bv-recent-name" th:text="${recent.name}">진위교</strong>
+            <span class="bv-recent-segment" th:text="|등록번호 ${recent.displayCode}|">등록번호 #1</span>
+            <span class="bv-recent-segment" th:text="|${recent.province ?: '-'} ${recent.city ?: ''}|">경기도 평택시</span>
+            <span class="bv-recent-segment" th:text="${recent.facilityType}">제2종</span>
+            <span class="bv-recent-segment" th:text="${recent.manager}">작업자1</span>
+            <span class="bv-recent-segment" th:text="${recent.lastInspectionDate != null ? #temporals.format(recent.lastInspectionDate, 'yyyy.MM.dd') : '점검일 미등록'}">2026.10.16</span>
+            <span class="bv-recent-segment" th:text="${recent.status}">진행 중</span>
+          </a>
+        </div>
       </section>
 
       <section class="bv-panel" aria-labelledby="search-title">

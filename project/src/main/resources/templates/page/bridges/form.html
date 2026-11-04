@@ -10,8 +10,12 @@
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
 <div class="app-layout" th:with="activeMenu='bridges'"><div th:replace="~{fragments/sidebar :: sidebar}"></div>
-<main class="app-main bridge-v2" id="main-content" th:attr="data-edit-mode=${editMode},data-bridge-no=${bridge.no},data-can-manage=${canManage},data-manager-no=${bridge.managerNo}"><div class="app-container">
-<p class="bv-crumb">업무 관리 / <a th:href="@{/bridges}" href="/bridges">교량 관리</a> / 교량 목록 / <strong>교량 등록·수정</strong></p>
+<!-- <main class="app-main bridge-v2" id="main-content" th:attr="data-edit-mode=${editMode},data-bridge-no=${bridge.no},data-can-manage=${canManage},data-manager-no=${bridge.managerNo}"><div class="app-container"> -->
+  <!-- 서브메뉴 관련 코드 수정 -->
+  <main class="app-main bridge-v2" id="main-content" th:attr="data-edit-mode=${editMode},data-bridge-no=${editMode and bridge != null ? bridge.no : ''},data-can-manage=${canManage},data-manager-no=${editMode and bridge != null ? bridge.managerNo : ''}">
+<!-- <p class="bv-crumb">업무 관리 / <a th:href="@{/bridges}" href="/bridges">교량 관리</a> / 교량 목록 / <strong>교량 등록·수정</strong></p> -->
+<!-- 서브메뉴 수정 -->
+<div th:replace="~{fragments/submenu :: submenu(activeMenu='/bridges/new')}"></div>
 <h1 class="bv-title" th:text="${editMode} ? '교량 정보 수정' : '교량 등록·수정'">교량 등록·수정</h1>
 <p class="bv-subtitle">등록 시 DB에 적재된 전국교량 원본을 선택합니다. 기존 교량의 담당자 변경·삭제는 관리자 권한이 필요합니다.</p>
 <div class="bv-demo" th:if="${demoMode}">화면 시연용 샘플 검색 결과입니다. 실제 CSV 원본 조회와 DB 저장·삭제, 담당자 이력은 아직 연결되지 않았습니다.</div>

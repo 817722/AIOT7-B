@@ -6,7 +6,9 @@
 </head><body>
 <div th:replace="~{fragments/header :: header}"></div><div class="app-layout" th:with="activeMenu='bridges'"><div th:replace="~{fragments/sidebar :: sidebar}"></div>
 <main class="app-main bridge-v2" id="main-content"><div class="app-container">
-  <p class="bv-crumb">업무 관리 / <a th:href="@{/bridges}" href="/bridges">교량 관리</a> / 교량 목록 / <strong>교량 상세</strong></p>
+  <!-- <p class="bv-crumb">업무 관리 / <a th:href="@{/bridges}" href="/bridges">교량 관리</a> / 교량 목록 / <strong>교량 상세</strong></p> -->
+  <!-- 서브메뉴 수정 -->
+  <div th:replace="~{fragments/submenu :: submenu(activeMenu='/bridges/5')}"></div> 
   <h1 class="bv-title">교량 상세</h1><p class="bv-subtitle">선택한 교량의 기본정보 및 연결 업무를 확인합니다.</p>
   <div class="bv-demo" th:if="${demoMode}">교량 및 연결 기록은 화면 테스트용 데이터입니다. 업무 상세 화면 이동은 실제 API 경로 확정 후 연결됩니다.</div>
   <div class="bv-detail-top">

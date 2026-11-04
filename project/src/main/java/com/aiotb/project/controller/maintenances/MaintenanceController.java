@@ -1,4 +1,4 @@
-package com.aiotb.project.controller.maintenance;
+package com.aiotb.project.controller.maintenances;
 
 import java.util.List;
 

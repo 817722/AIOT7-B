@@ -553,9 +553,9 @@ CREATE TABLE `manager_history` (
 
 -- ===========================
 -- 10. 가장 최근 관리된 교량 열람
--- 사용자별 "최근 본 교량" 목록.
+-- 사용자별 "최근 작업한 교량" 목록.
 -- (user_no, bridge_no)당 1행만 유지하고, 다시 열람하면
--- viewed_at/view_count만 갱신(upsert)합니다. 열람 로그 테이블이 아닙니다.
+-- viewed_at만 갱신(upsert)합니다. 열람 로그/통계 테이블이 아닙니다.
 --
 -- user_no + corp_no  : 사용자가 해당 기업 소속인지 복합 FK로 검증
 -- bridge_no + corp_no: 교량이 해당 기업 소유인지 복합 FK로 검증
@@ -565,14 +565,14 @@ CREATE TABLE `manager_history` (
 -- 임시성 데이터이므로 사용자/교량 삭제 시 함께 삭제(CASCADE)합니다.
 -- 최근 N건 초과분 정리는 애플리케이션(또는 스케줄러)에서 처리합니다.
 -- ===========================
+
 CREATE TABLE `bridge_recent` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
     `user_no` BIGINT NOT NULL COMMENT '열람한 사용자 번호',
     `bridge_no` BIGINT NOT NULL COMMENT '열람한 업무용 교량 번호',
     `corp_no` BIGINT NOT NULL COMMENT '소속 기업 번호',
-    `view_count` INT UNSIGNED NOT NULL DEFAULT 1 COMMENT '누적 열람 횟수',
     `viewed_at` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '마지막 열람 일시',
-    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '최초 열람 일시',
+
     PRIMARY KEY (`no`),
     UNIQUE KEY `uk_bridge_recent_user_bridge` (`user_no`, `bridge_no`),
     KEY `idx_bridge_recent_user_corp_viewed` (
@@ -580,11 +580,23 @@ CREATE TABLE `bridge_recent` (
         `corp_no`,
         `viewed_at` DESC
     ),
+
     KEY `idx_bridge_recent_bridge_corp` (`bridge_no`, `corp_no`),
-    CONSTRAINT `fk_bridge_recent_user_corp` FOREIGN KEY (`user_no`, `corp_no`) REFERENCES `users` (`no`, `corp_no`) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT `fk_bridge_recent_bridge_corp` FOREIGN KEY (`bridge_no`, `corp_no`) REFERENCES `bridges` (`no`, `corp_no`) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT `chk_bridge_recent_view_count` CHECK (`view_count` >= 1)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '사용자별 최근 열람 교량';
+
+    CONSTRAINT `fk_bridge_recent_user_corp`
+        FOREIGN KEY (`user_no`, `corp_no`)
+        REFERENCES `users` (`no`, `corp_no`)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+
+    CONSTRAINT `fk_bridge_recent_bridge_corp`
+        FOREIGN KEY (`bridge_no`, `corp_no`)
+        REFERENCES `bridges` (`no`, `corp_no`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci
+  COMMENT='사용자별 최근 작업 교량';
+
 
 -- ===========================
 -- 11. 외래키 검사 복원

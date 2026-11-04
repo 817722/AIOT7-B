@@ -56,5 +56,7 @@ public class BridgeFormPageController {
         model.addAttribute("representativeImageUrl", bridge.get("representativeImageUrl"));
         model.addAttribute("csvCandidates", List.of());
         model.addAttribute("managerHistory", List.of());
+        // 서브메뉴 관련
+        model.addAttribute("currentMenuGroup", "bridges" );
     }
 }

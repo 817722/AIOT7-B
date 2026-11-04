@@ -1,24 +1,33 @@
--- Active: 1788828751938@@127.0.0.1@3306@project
+-- Active: 1788828728652@@127.0.0.1@3306@project
 -- =========================================================
 -- 드론 영상 기반 교량 점검 업무 지원 시스템
 -- MySQL 8.0.46 / 초기 구축용 DDL
 -- =========================================================
 
-CREATE DATABASE IF NOT EXISTS `project`
-    DEFAULT CHARACTER SET utf8mb4
-    COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS `project` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 USE project;
 
 SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS `bridge_recent`;
+
 DROP TABLE IF EXISTS `manager_history`;
+
 DROP TABLE IF EXISTS `maintenance_records`;
+
 DROP TABLE IF EXISTS `inspections`;
+
 DROP TABLE IF EXISTS `media`;
+
 DROP TABLE IF EXISTS `bridges`;
+
 DROP TABLE IF EXISTS `user_auth`;
+
 DROP TABLE IF EXISTS `users`;
+
 DROP TABLE IF EXISTS `bridge_master`;
+
 DROP TABLE IF EXISTS `corps`;
 
 SET FOREIGN_KEY_CHECKS = 1;
@@ -35,24 +44,16 @@ CREATE TABLE `corps` (
     `bis_verified` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '기업 인증 완료 여부',
     `verified_at` DATETIME DEFAULT NULL COMMENT '기업 인증 일시',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일자',
-    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자',
-
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자',
     PRIMARY KEY (`no`),
     UNIQUE KEY `uk_corps_bis_no` (`bis_no`),
     KEY `idx_corps_ceo` (`ceo_name`),
-
-    CONSTRAINT `chk_corps_bis_verified`
-        CHECK (`bis_verified` IN (0, 1))
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci
-  COMMENT='기업 정보 및 인증 정보';
-
+    CONSTRAINT `chk_corps_bis_verified` CHECK (`bis_verified` IN (0, 1))
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '기업 정보 및 인증 정보';
 
 -- ==================
 -- 2. 사용자
--- 담당자의 로그인 ID: username 
+-- 담당자의 로그인 ID: username
 -- 외부 참조 및 식별용 고유 식별자: id
 -- ==================
 CREATE TABLE `users` (
@@ -65,29 +66,16 @@ CREATE TABLE `users` (
     `phone` VARCHAR(100) NOT NULL COMMENT '담당자 연락망',
     `enabled` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일자',
-    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자',
-
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자',
     PRIMARY KEY (`no`),
     UNIQUE KEY `uk_users_id` (`id`),
     UNIQUE KEY `uk_users_username` (`username`),
-
     UNIQUE KEY `uk_users_no_corp` (`no`, `corp_no`),
-
     KEY `idx_users_corp` (`corp_no`),
     KEY `idx_users_name` (`manager_name`),
-
-    CONSTRAINT `fk_users_corp`
-        FOREIGN KEY (`corp_no`) REFERENCES `corps` (`no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT `chk_users_enabled`
-        CHECK (`enabled` IN (0, 1))
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci
-  COMMENT='시스템 사용자';
-
+    CONSTRAINT `fk_users_corp` FOREIGN KEY (`corp_no`) REFERENCES `corps` (`no`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `chk_users_enabled` CHECK (`enabled` IN (0, 1))
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '시스템 사용자';
 
 -- ==================
 -- 3. 사용자 권한
@@ -98,24 +86,18 @@ CREATE TABLE `users` (
 CREATE TABLE `user_auth` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
     `user_no` BIGINT NOT NULL COMMENT '사용자 번호',
-    `auth` ENUM('SUPER_ADMIN', 'ADMIN', 'INSPECTOR')
-        NOT NULL COMMENT '권한: 최고관리자/관리자/점검 담당자',
+    `auth` ENUM(
+        'SUPER_ADMIN',
+        'ADMIN',
+        'INSPECTOR'
+    ) NOT NULL COMMENT '권한: 최고관리자/관리자/점검 담당자',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일자',
-    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자',
-
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자',
     PRIMARY KEY (`no`),
     UNIQUE KEY `uk_user_auth_user_role` (`user_no`, `auth`),
     KEY `idx_user_auth_role` (`auth`),
-
-    CONSTRAINT `fk_user_auth_user`
-        FOREIGN KEY (`user_no`) REFERENCES `users` (`no`)
-        ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci
-  COMMENT='사용자별 권한';
-
+    CONSTRAINT `fk_user_auth_user` FOREIGN KEY (`user_no`) REFERENCES `users` (`no`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '사용자별 권한';
 
 -- ===========================
 -- 4. 전국교량표준데이터
@@ -126,86 +108,88 @@ CREATE TABLE `user_auth` (
 
 CREATE TABLE `bridge_master` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT '내부 PK',
-
     `name` VARCHAR(255) NOT NULL COMMENT '교량명',
     `facility_type` VARCHAR(50) DEFAULT NULL COMMENT '시설물종별등급구분',
     `road_type` VARCHAR(100) DEFAULT NULL COMMENT '도로종류',
     `road_name` VARCHAR(255) DEFAULT NULL COMMENT '도로노선명',
     `road_number` VARCHAR(50) DEFAULT NULL COMMENT '도로노선번호',
     `road_direction` VARCHAR(20) DEFAULT NULL COMMENT '도로노선방향',
-
     `province` VARCHAR(100) DEFAULT NULL COMMENT '시도명',
     `city` VARCHAR(100) DEFAULT NULL COMMENT '시군구명',
     `city_code` VARCHAR(20) DEFAULT NULL COMMENT '시군구코드',
     `address` VARCHAR(500) DEFAULT NULL COMMENT '소재지지번주소',
-
-    `start_latitude` DECIMAL(10,7) DEFAULT NULL COMMENT '교량 시작점 위도',
-    `start_longitude` DECIMAL(10,7) DEFAULT NULL COMMENT '교량 시작점 경도',
-    `end_latitude` DECIMAL(10,7) DEFAULT NULL COMMENT '교량 종료점 위도',
-    `end_longitude` DECIMAL(10,7) DEFAULT NULL COMMENT '교량 종료점 경도',
-
-    `bridge_length` DECIMAL(12,2) DEFAULT NULL COMMENT '교량연장(m)',
-    `bridge_width` DECIMAL(10,2) DEFAULT NULL COMMENT '교량폭(m)',
-    `sidewalk_width` DECIMAL(10,2) DEFAULT NULL COMMENT '교량보도폭(m)',
-    `bridge_height` DECIMAL(10,2) DEFAULT NULL COMMENT '교량높이(m)',
+    `start_latitude` DECIMAL(10, 7) DEFAULT NULL COMMENT '교량 시작점 위도',
+    `start_longitude` DECIMAL(10, 7) DEFAULT NULL COMMENT '교량 시작점 경도',
+    `end_latitude` DECIMAL(10, 7) DEFAULT NULL COMMENT '교량 종료점 위도',
+    `end_longitude` DECIMAL(10, 7) DEFAULT NULL COMMENT '교량 종료점 경도',
+    `bridge_length` DECIMAL(12, 2) DEFAULT NULL COMMENT '교량연장(m)',
+    `bridge_width` DECIMAL(10, 2) DEFAULT NULL COMMENT '교량폭(m)',
+    `sidewalk_width` DECIMAL(10, 2) DEFAULT NULL COMMENT '교량보도폭(m)',
+    `bridge_height` DECIMAL(10, 2) DEFAULT NULL COMMENT '교량높이(m)',
     `lane_count` INT DEFAULT NULL COMMENT '차로수',
-
     `divided_traffic` VARCHAR(10) DEFAULT NULL COMMENT '상하행선분리여부',
     `superstructure_type` VARCHAR(100) DEFAULT NULL COMMENT '상부구조형식',
     `completion_year` VARCHAR(10) DEFAULT NULL COMMENT '교량준공연도',
-
     `last_inspection_date` DATE DEFAULT NULL COMMENT '최종안전점검일자',
     `last_inspection_result` VARCHAR(50) DEFAULT NULL COMMENT '최종안전점검결과',
     `last_inspection_type` VARCHAR(50) DEFAULT NULL COMMENT '최종안전점검유형',
-
     `seismic_design_applied` VARCHAR(50) DEFAULT NULL COMMENT '내진설계적용여부',
     `seismic_performance_secured` VARCHAR(10) DEFAULT NULL COMMENT '내진성능확보여부',
-
     `repair_history` TEXT DEFAULT NULL COMMENT '교량보수보강내역',
-    `repair_cost` DECIMAL(15,2) DEFAULT NULL COMMENT '교량보수보강비용(천원)',
-
+    `repair_cost` DECIMAL(15, 2) DEFAULT NULL COMMENT '교량보수보강비용(천원)',
     `design_live_load` VARCHAR(100) DEFAULT NULL COMMENT '설계활하중',
     `allowable_traffic_load` VARCHAR(50) DEFAULT NULL COMMENT '허용통행하중',
     `underpass_height_limit` VARCHAR(50) DEFAULT NULL COMMENT '하부통과제한높이(m)',
-
     `management_agency` VARCHAR(255) DEFAULT NULL COMMENT '관리기관명',
     `management_phone` VARCHAR(50) DEFAULT NULL COMMENT '관리기관전화번호',
     `source_data_date` DATE DEFAULT NULL COMMENT '데이터기준일자',
-
     PRIMARY KEY (`no`),
-
     KEY `idx_bridge_master_name` (`name`),
-    KEY `idx_bridge_master_address` (`address`(191)),
+    KEY `idx_bridge_master_address` (`address` (191)),
     KEY `idx_bridge_master_region` (`province`, `city`),
     KEY `idx_bridge_master_city_code` (`city_code`),
     KEY `idx_bridge_master_facility_type` (`facility_type`),
-
-    CONSTRAINT `chk_master_start_latitude`
-        CHECK (`start_latitude` IS NULL OR `start_latitude` BETWEEN -90 AND 90),
-    CONSTRAINT `chk_master_start_longitude`
-        CHECK (`start_longitude` IS NULL OR `start_longitude` BETWEEN -180 AND 180),
-    CONSTRAINT `chk_master_end_latitude`
-        CHECK (`end_latitude` IS NULL OR `end_latitude` BETWEEN -90 AND 90),
-    CONSTRAINT `chk_master_end_longitude`
-        CHECK (`end_longitude` IS NULL OR `end_longitude` BETWEEN -180 AND 180),
-
-    CONSTRAINT `chk_master_length`
-        CHECK (`bridge_length` IS NULL OR `bridge_length` >= 0),
-    CONSTRAINT `chk_master_width`
-        CHECK (`bridge_width` IS NULL OR `bridge_width` >= 0),
-    CONSTRAINT `chk_master_sidewalk_width`
-        CHECK (`sidewalk_width` IS NULL OR `sidewalk_width` >= 0),
-    CONSTRAINT `chk_master_height`
-        CHECK (`bridge_height` IS NULL OR `bridge_height` >= 0),
-    CONSTRAINT `chk_master_lane_count`
-        CHECK (`lane_count` IS NULL OR `lane_count` >= 0),
-    CONSTRAINT `chk_master_repair_cost`
-        CHECK (`repair_cost` IS NULL OR `repair_cost` >= 0)
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci
-  COMMENT='전국교량표준데이터 CSV 원본';
-
+    CONSTRAINT `chk_master_start_latitude` CHECK (
+        `start_latitude` IS NULL
+        OR `start_latitude` BETWEEN -90 AND 90
+    ),
+    CONSTRAINT `chk_master_start_longitude` CHECK (
+        `start_longitude` IS NULL
+        OR `start_longitude` BETWEEN -180 AND 180
+    ),
+    CONSTRAINT `chk_master_end_latitude` CHECK (
+        `end_latitude` IS NULL
+        OR `end_latitude` BETWEEN -90 AND 90
+    ),
+    CONSTRAINT `chk_master_end_longitude` CHECK (
+        `end_longitude` IS NULL
+        OR `end_longitude` BETWEEN -180 AND 180
+    ),
+    CONSTRAINT `chk_master_length` CHECK (
+        `bridge_length` IS NULL
+        OR `bridge_length` >= 0
+    ),
+    CONSTRAINT `chk_master_width` CHECK (
+        `bridge_width` IS NULL
+        OR `bridge_width` >= 0
+    ),
+    CONSTRAINT `chk_master_sidewalk_width` CHECK (
+        `sidewalk_width` IS NULL
+        OR `sidewalk_width` >= 0
+    ),
+    CONSTRAINT `chk_master_height` CHECK (
+        `bridge_height` IS NULL
+        OR `bridge_height` >= 0
+    ),
+    CONSTRAINT `chk_master_lane_count` CHECK (
+        `lane_count` IS NULL
+        OR `lane_count` >= 0
+    ),
+    CONSTRAINT `chk_master_repair_cost` CHECK (
+        `repair_cost` IS NULL
+        OR `repair_cost` >= 0
+    )
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '전국교량표준데이터 CSV 원본';
 
 -- ===========================
 -- 5. 업무용 교량
@@ -227,71 +211,52 @@ CREATE TABLE `bridge_master` (
 CREATE TABLE `bridges` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
     `id` VARCHAR(64) NOT NULL COMMENT '시스템 고유 식별자',
-
     `bridge_master_no` BIGINT NOT NULL COMMENT '선택한 CSV 원본 교량 PK',
     `corp_no` BIGINT NOT NULL COMMENT '업무용 교량을 등록한 기업 PK',
-
     `source_data_date` DATE DEFAULT NULL COMMENT 'CSV 데이터 기준일자',
-
     `bridge_name` VARCHAR(255) NOT NULL COMMENT '교량명',
     `facility_type` VARCHAR(50) DEFAULT NULL COMMENT '시설물종별등급구분',
     `road_type` VARCHAR(100) DEFAULT NULL COMMENT '도로종류',
     `road_name` VARCHAR(255) DEFAULT NULL COMMENT '도로노선명',
     `road_number` VARCHAR(50) DEFAULT NULL COMMENT '도로노선번호',
     `road_direction` VARCHAR(20) DEFAULT NULL COMMENT '도로노선방향',
-
     `province` VARCHAR(100) DEFAULT NULL COMMENT '시도명',
     `city` VARCHAR(100) DEFAULT NULL COMMENT '시군구명',
     `city_code` VARCHAR(20) DEFAULT NULL COMMENT '시군구코드',
     `address` VARCHAR(500) DEFAULT NULL COMMENT '소재지지번주소',
-
-    `start_latitude` DECIMAL(10,7) DEFAULT NULL COMMENT '교량 시작점 위도',
-    `start_longitude` DECIMAL(10,7) DEFAULT NULL COMMENT '교량 시작점 경도',
-    `end_latitude` DECIMAL(10,7) DEFAULT NULL COMMENT '교량 종료점 위도',
-    `end_longitude` DECIMAL(10,7) DEFAULT NULL COMMENT '교량 종료점 경도',
-
-    `bridge_length` DECIMAL(12,2) DEFAULT NULL COMMENT '교량연장(m)',
-    `bridge_width` DECIMAL(10,2) DEFAULT NULL COMMENT '교량폭(m)',
-    `sidewalk_width` DECIMAL(10,2) DEFAULT NULL COMMENT '교량보도폭(m)',
-    `bridge_height` DECIMAL(10,2) DEFAULT NULL COMMENT '교량높이(m)',
+    `start_latitude` DECIMAL(10, 7) DEFAULT NULL COMMENT '교량 시작점 위도',
+    `start_longitude` DECIMAL(10, 7) DEFAULT NULL COMMENT '교량 시작점 경도',
+    `end_latitude` DECIMAL(10, 7) DEFAULT NULL COMMENT '교량 종료점 위도',
+    `end_longitude` DECIMAL(10, 7) DEFAULT NULL COMMENT '교량 종료점 경도',
+    `bridge_length` DECIMAL(12, 2) DEFAULT NULL COMMENT '교량연장(m)',
+    `bridge_width` DECIMAL(10, 2) DEFAULT NULL COMMENT '교량폭(m)',
+    `sidewalk_width` DECIMAL(10, 2) DEFAULT NULL COMMENT '교량보도폭(m)',
+    `bridge_height` DECIMAL(10, 2) DEFAULT NULL COMMENT '교량높이(m)',
     `lane_count` INT DEFAULT NULL COMMENT '차로수',
-
     `divided_traffic` VARCHAR(10) DEFAULT NULL COMMENT '상하행선분리여부',
     `superstructure_type` VARCHAR(100) DEFAULT NULL COMMENT '상부구조형식',
     `completion_year` VARCHAR(10) DEFAULT NULL COMMENT '교량준공연도',
-
     `last_inspection_date` DATE DEFAULT NULL COMMENT '최종안전점검일자',
     `last_inspection_result` VARCHAR(50) DEFAULT NULL COMMENT '최종안전점검결과',
     `last_inspection_type` VARCHAR(50) DEFAULT NULL COMMENT '최종안전점검유형',
-
     `seismic_design_applied` VARCHAR(50) DEFAULT NULL COMMENT '내진설계적용여부',
     `seismic_performance_secured` VARCHAR(10) DEFAULT NULL COMMENT '내진성능확보여부',
-
     `repair_history` TEXT DEFAULT NULL COMMENT '교량보수보강내역',
-    `repair_cost` DECIMAL(15,2) DEFAULT NULL COMMENT '교량보수보강비용(천원)',
-
+    `repair_cost` DECIMAL(15, 2) DEFAULT NULL COMMENT '교량보수보강비용(천원)',
     `design_live_load` VARCHAR(100) DEFAULT NULL COMMENT '설계활하중',
     `allowable_traffic_load` VARCHAR(50) DEFAULT NULL COMMENT '허용통행하중',
     `underpass_height_limit` VARCHAR(50) DEFAULT NULL COMMENT '하부통과제한높이(m)',
-
     `management_agency` VARCHAR(255) DEFAULT NULL COMMENT '관리기관명',
     `management_phone` VARCHAR(50) DEFAULT NULL COMMENT '관리기관전화번호',
-
     `manager_no` BIGINT DEFAULT NULL COMMENT '현재 담당자 번호',
     `created_by` BIGINT NOT NULL COMMENT '최초 등록자 번호',
     `updated_by` BIGINT DEFAULT NULL COMMENT '최종 수정 사용자 번호',
-
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일시',
-    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
-
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
     PRIMARY KEY (`no`),
     UNIQUE KEY `uk_bridges_id` (`id`),
-
     UNIQUE KEY `uk_bridges_corp_master` (`corp_no`, `bridge_master_no`),
-
     UNIQUE KEY `uk_bridges_no_corp` (`no`, `corp_no`),
-
     KEY `idx_bridges_master` (`bridge_master_no`),
     KEY `idx_bridges_corp` (`corp_no`),
     KEY `idx_bridges_name` (`bridge_name`),
@@ -302,53 +267,52 @@ CREATE TABLE `bridges` (
     KEY `idx_bridges_created_by` (`created_by`),
     KEY `idx_bridges_updated_by` (`updated_by`),
     KEY `idx_bridges_last_inspection` (`last_inspection_date`),
-
-    CONSTRAINT `fk_bridges_master`
-        FOREIGN KEY (`bridge_master_no`) REFERENCES `bridge_master` (`no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT `fk_bridges_corp`
-        FOREIGN KEY (`corp_no`) REFERENCES `corps` (`no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT `fk_bridges_manager`
-        FOREIGN KEY (`manager_no`) REFERENCES `users` (`no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT `fk_bridges_created_by`
-        FOREIGN KEY (`created_by`) REFERENCES `users` (`no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT `fk_bridges_updated_by`
-        FOREIGN KEY (`updated_by`) REFERENCES `users` (`no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT `chk_bridges_start_latitude`
-        CHECK (`start_latitude` IS NULL OR `start_latitude` BETWEEN -90 AND 90),
-    CONSTRAINT `chk_bridges_start_longitude`
-        CHECK (`start_longitude` IS NULL OR `start_longitude` BETWEEN -180 AND 180),
-    CONSTRAINT `chk_bridges_end_latitude`
-        CHECK (`end_latitude` IS NULL OR `end_latitude` BETWEEN -90 AND 90),
-    CONSTRAINT `chk_bridges_end_longitude`
-        CHECK (`end_longitude` IS NULL OR `end_longitude` BETWEEN -180 AND 180),
-
-    CONSTRAINT `chk_bridges_length`
-        CHECK (`bridge_length` IS NULL OR `bridge_length` >= 0),
-    CONSTRAINT `chk_bridges_width`
-        CHECK (`bridge_width` IS NULL OR `bridge_width` >= 0),
-    CONSTRAINT `chk_bridges_sidewalk_width`
-        CHECK (`sidewalk_width` IS NULL OR `sidewalk_width` >= 0),
-    CONSTRAINT `chk_bridges_height`
-        CHECK (`bridge_height` IS NULL OR `bridge_height` >= 0),
-    CONSTRAINT `chk_bridges_lane_count`
-        CHECK (`lane_count` IS NULL OR `lane_count` >= 0),
-    CONSTRAINT `chk_bridges_repair_cost`
-        CHECK (`repair_cost` IS NULL OR `repair_cost` >= 0)
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci
-  COMMENT='기업별 업무용 교량';
-
+    CONSTRAINT `fk_bridges_master` FOREIGN KEY (`bridge_master_no`) REFERENCES `bridge_master` (`no`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_bridges_corp` FOREIGN KEY (`corp_no`) REFERENCES `corps` (`no`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_bridges_manager` FOREIGN KEY (`manager_no`) REFERENCES `users` (`no`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_bridges_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`no`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_bridges_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`no`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `chk_bridges_start_latitude` CHECK (
+        `start_latitude` IS NULL
+        OR `start_latitude` BETWEEN -90 AND 90
+    ),
+    CONSTRAINT `chk_bridges_start_longitude` CHECK (
+        `start_longitude` IS NULL
+        OR `start_longitude` BETWEEN -180 AND 180
+    ),
+    CONSTRAINT `chk_bridges_end_latitude` CHECK (
+        `end_latitude` IS NULL
+        OR `end_latitude` BETWEEN -90 AND 90
+    ),
+    CONSTRAINT `chk_bridges_end_longitude` CHECK (
+        `end_longitude` IS NULL
+        OR `end_longitude` BETWEEN -180 AND 180
+    ),
+    CONSTRAINT `chk_bridges_length` CHECK (
+        `bridge_length` IS NULL
+        OR `bridge_length` >= 0
+    ),
+    CONSTRAINT `chk_bridges_width` CHECK (
+        `bridge_width` IS NULL
+        OR `bridge_width` >= 0
+    ),
+    CONSTRAINT `chk_bridges_sidewalk_width` CHECK (
+        `sidewalk_width` IS NULL
+        OR `sidewalk_width` >= 0
+    ),
+    CONSTRAINT `chk_bridges_height` CHECK (
+        `bridge_height` IS NULL
+        OR `bridge_height` >= 0
+    ),
+    CONSTRAINT `chk_bridges_lane_count` CHECK (
+        `lane_count` IS NULL
+        OR `lane_count` >= 0
+    ),
+    CONSTRAINT `chk_bridges_repair_cost` CHECK (
+        `repair_cost` IS NULL
+        OR `repair_cost` >= 0
+    )
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '기업별 업무용 교량';
 
 -- ===========================
 -- 6. 미디어 (통합)
@@ -376,10 +340,12 @@ CREATE TABLE `media` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
     `id` VARCHAR(64) NOT NULL COMMENT '시스템 고유 식별자',
     `corp_no` BIGINT DEFAULT NULL COMMENT '업로드 기업 번호(NULL=공통 미디어)',
-
-    `p_type` ENUM('BRIDGE', 'INSPECTION', 'MAINTENANCE') DEFAULT NULL COMMENT '연결된 부모 테이블 구분(NULL=미연결 공통 파일)',
+    `p_type` ENUM(
+        'BRIDGE',
+        'INSPECTION',
+        'MAINTENANCE'
+    ) DEFAULT NULL COMMENT '연결된 부모 테이블 구분(NULL=미연결 공통 파일)',
     `p_id` BIGINT DEFAULT NULL COMMENT '부모 레코드 no. p_type에 따라 bridges.no/inspections.no/maintenance_records.no를 의미(다형 연결, DB FK 미적용)',
-
     `type` ENUM('IMAGE', 'VIDEO') NOT NULL COMMENT '미디어 유형',
     `is_main` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '대표 이미지 여부(p_type=BRIDGE 전용)',
     `path` VARCHAR(1000) NOT NULL COMMENT '저장 파일 경로',
@@ -387,54 +353,47 @@ CREATE TABLE `media` (
     `mime_type` VARCHAR(100) DEFAULT NULL COMMENT '파일 MIME 유형',
     `file_size` BIGINT DEFAULT NULL COMMENT '파일 크기(Byte)',
     `uploaded_by` BIGINT NOT NULL COMMENT '업로드 사용자 번호',
-
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '업로드 일시',
-
-    `main_bridge_id` BIGINT
-        GENERATED ALWAYS AS (
-            CASE
-                WHEN `p_type` = 'BRIDGE' AND `is_main` = 1 THEN `p_id`
-                ELSE NULL
-            END
-        ) STORED COMMENT '대표 이미지 중복 방지용 교량 번호',
-
+    `main_bridge_id` BIGINT GENERATED ALWAYS AS (
+        CASE
+            WHEN `p_type` = 'BRIDGE'
+            AND `is_main` = 1 THEN `p_id`
+            ELSE NULL
+        END
+    ) STORED COMMENT '대표 이미지 중복 방지용 교량 번호',
     PRIMARY KEY (`no`),
     UNIQUE KEY `uk_media_id` (`id`),
     UNIQUE KEY `uk_media_single_main` (`main_bridge_id`),
-
     KEY `idx_media_parent` (`p_type`, `p_id`),
     KEY `idx_media_type` (`type`),
     KEY `idx_media_uploader` (`uploaded_by`),
     KEY `idx_media_corp` (`corp_no`),
-
-    CONSTRAINT `fk_media_corp`
-        FOREIGN KEY (`corp_no`) REFERENCES `corps` (`no`)
-        ON DELETE RESTRICT ON UPDATE RESTRICT,
-
-    CONSTRAINT `fk_media_uploader`
-        FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT `chk_media_file_size`
-        CHECK (`file_size` IS NULL OR `file_size` >= 0),
-
-    CONSTRAINT `chk_media_is_main`
-        CHECK (`is_main` IN (0, 1)),
-
-    CONSTRAINT `chk_media_parent_pair`
-        CHECK ((`p_type` IS NULL AND `p_id` IS NULL)
-            OR (`p_type` IS NOT NULL AND `p_id` IS NOT NULL)),
-
-    CONSTRAINT `chk_media_parent_corp`
-        CHECK (`p_type` IS NULL OR `corp_no` IS NOT NULL),
-
-    CONSTRAINT `chk_media_main_scope`
-        CHECK (`is_main` = 0 OR `p_type` = 'BRIDGE')
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci
-  COMMENT='업로드 이미지 및 영상 파일 정보(부모 레코드 다형 연결)';
-
+    CONSTRAINT `fk_media_corp` FOREIGN KEY (`corp_no`) REFERENCES `corps` (`no`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT `fk_media_uploader` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`no`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `chk_media_file_size` CHECK (
+        `file_size` IS NULL
+        OR `file_size` >= 0
+    ),
+    CONSTRAINT `chk_media_is_main` CHECK (`is_main` IN (0, 1)),
+    CONSTRAINT `chk_media_parent_pair` CHECK (
+        (
+            `p_type` IS NULL
+            AND `p_id` IS NULL
+        )
+        OR (
+            `p_type` IS NOT NULL
+            AND `p_id` IS NOT NULL
+        )
+    ),
+    CONSTRAINT `chk_media_parent_corp` CHECK (
+        `p_type` IS NULL
+        OR `corp_no` IS NOT NULL
+    ),
+    CONSTRAINT `chk_media_main_scope` CHECK (
+        `is_main` = 0
+        OR `p_type` = 'BRIDGE'
+    )
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '업로드 이미지 및 영상 파일 정보(부모 레코드 다형 연결)';
 
 -- ===========================
 -- 7. 교량 점검 기록
@@ -451,10 +410,8 @@ CREATE TABLE `media` (
 CREATE TABLE `inspections` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
     `id` VARCHAR(64) NOT NULL COMMENT '고유 식별자',
-
     `bridge_no` BIGINT NOT NULL COMMENT '점검 대상 교량 번호',
     `corp_no` BIGINT NOT NULL COMMENT '점검 기록 소유 기업 번호',
-
     `title` VARCHAR(255) NOT NULL COMMENT '점검 기록명',
     `inspection_type` ENUM(
         '자체 안전점검',
@@ -462,29 +419,20 @@ CREATE TABLE `inspections` (
         '정밀 안전진단',
         '긴급 안전점검'
     ) NOT NULL COMMENT '점검 유형',
-
-    `status` ENUM('진행 대기', '진행 중', '완료')
-        NOT NULL DEFAULT '진행 대기' COMMENT '점검 진행 상태',
-
+    `status` ENUM('진행 대기', '진행 중', '완료') NOT NULL DEFAULT '진행 대기' COMMENT '점검 진행 상태',
     `inspection_date` DATE NOT NULL COMMENT '점검 날짜',
     `inspector_no` BIGINT NOT NULL COMMENT '점검 담당자 번호',
-
     `memo` TEXT DEFAULT NULL COMMENT '담당자 메모',
     `overall_result` TEXT DEFAULT NULL COMMENT '종합 점검 결과',
     `review_opinion` TEXT DEFAULT NULL COMMENT '검토 의견',
     `completed_at` DATETIME DEFAULT NULL COMMENT '점검 완료 일시',
-
     `created_by` BIGINT NOT NULL COMMENT '기록 생성 사용자 번호',
     `updated_by` BIGINT DEFAULT NULL COMMENT '최종 수정 사용자 번호',
-
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일시',
-    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
-
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
     PRIMARY KEY (`no`),
     UNIQUE KEY `uk_inspections_no_corp` (`no`, `corp_no`),
     UNIQUE KEY `uk_inspections_id` (`id`),
-
     KEY `idx_inspections_bridge_corp` (`bridge_no`, `corp_no`),
     KEY `idx_inspections_corp` (`corp_no`),
     KEY `idx_inspections_status` (`status`),
@@ -492,33 +440,18 @@ CREATE TABLE `inspections` (
     KEY `idx_inspections_inspector` (`inspector_no`),
     KEY `idx_inspections_created_by` (`created_by`),
     KEY `idx_inspections_updated_by` (`updated_by`),
-    KEY `idx_inspections_bridge_date` (`bridge_no`, `inspection_date`),
-
-    CONSTRAINT `fk_inspections_bridge_corp`
-        FOREIGN KEY (`bridge_no`, `corp_no`)
-        REFERENCES `bridges` (`no`, `corp_no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT `fk_inspections_inspector`
-        FOREIGN KEY (`inspector_no`) REFERENCES `users` (`no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT `fk_inspections_created_by`
-        FOREIGN KEY (`created_by`) REFERENCES `users` (`no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT `fk_inspections_updated_by`
-        FOREIGN KEY (`updated_by`) REFERENCES `users` (`no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci
-  COMMENT='교량 점검 기록';
+    KEY `idx_inspections_bridge_date` (
+        `bridge_no`,
+        `inspection_date`
+    ),
+    CONSTRAINT `fk_inspections_bridge_corp` FOREIGN KEY (`bridge_no`, `corp_no`) REFERENCES `bridges` (`no`, `corp_no`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_inspections_inspector` FOREIGN KEY (`inspector_no`) REFERENCES `users` (`no`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_inspections_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`no`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_inspections_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`no`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '교량 점검 기록';
 
 -- 점검 영상은 media 테이블에서 p_type='INSPECTION', p_id=inspections.no로
 -- 연결합니다(별도의 inspection_media 연결 테이블 없음).
-
-
 
 -- ===========================
 -- 8. 유지보수 기록
@@ -532,33 +465,23 @@ CREATE TABLE `inspections` (
 CREATE TABLE `maintenance_records` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
     `id` VARCHAR(64) NOT NULL COMMENT '시스템 고유 식별자',
-
     `bridge_no` BIGINT NOT NULL COMMENT '유지보수 대상 교량 번호',
     `corp_no` BIGINT NOT NULL COMMENT '유지보수 기록 소유 기업 번호',
-
     `title` VARCHAR(255) NOT NULL COMMENT '유지보수 기록명',
     `maintenance_type` VARCHAR(50) NOT NULL COMMENT '유지보수 분류',
     `memo` TEXT DEFAULT NULL COMMENT '담당자 메모',
-    `status` ENUM('진행 대기', '진행 중', '완료')
-        NOT NULL DEFAULT '진행 대기' COMMENT '유지보수 진행 상태',
-
+    `status` ENUM('진행 대기', '진행 중', '완료') NOT NULL DEFAULT '진행 대기' COMMENT '유지보수 진행 상태',
     `maintenance_date` DATE DEFAULT NULL COMMENT '실제 유지보수 작업일',
     `manager_no` BIGINT NOT NULL COMMENT '유지보수 담당자 번호',
-
     `result` TEXT DEFAULT NULL COMMENT '유지보수 결과',
     `completed_at` DATETIME DEFAULT NULL COMMENT '완료 일시',
-
     `created_by` BIGINT NOT NULL COMMENT '기록 생성 사용자 번호',
     `updated_by` BIGINT DEFAULT NULL COMMENT '최종 수정 사용자 번호',
-
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일시',
-    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
-
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
     PRIMARY KEY (`no`),
     UNIQUE KEY `uk_maintenance_no_corp` (`no`, `corp_no`),
     UNIQUE KEY `uk_maintenance_records_id` (`id`),
-
     KEY `idx_maintenance_bridge_corp` (`bridge_no`, `corp_no`),
     KEY `idx_maintenance_corp` (`corp_no`),
     KEY `idx_maintenance_status` (`status`),
@@ -566,33 +489,19 @@ CREATE TABLE `maintenance_records` (
     KEY `idx_maintenance_manager` (`manager_no`),
     KEY `idx_maintenance_created_by` (`created_by`),
     KEY `idx_maintenance_updated_by` (`updated_by`),
-    KEY `idx_maintenance_bridge_date` (`bridge_no`, `maintenance_date`),
-
-    CONSTRAINT `fk_maintenance_bridge_corp`
-        FOREIGN KEY (`bridge_no`, `corp_no`)
-        REFERENCES `bridges` (`no`, `corp_no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT `fk_maintenance_manager`
-        FOREIGN KEY (`manager_no`) REFERENCES `users` (`no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT `fk_maintenance_created_by`
-        FOREIGN KEY (`created_by`) REFERENCES `users` (`no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT `fk_maintenance_updated_by`
-        FOREIGN KEY (`updated_by`) REFERENCES `users` (`no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci
-  COMMENT='교량 유지보수 기록';
+    KEY `idx_maintenance_bridge_date` (
+        `bridge_no`,
+        `maintenance_date`
+    ),
+    CONSTRAINT `fk_maintenance_bridge_corp` FOREIGN KEY (`bridge_no`, `corp_no`) REFERENCES `bridges` (`no`, `corp_no`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_maintenance_manager` FOREIGN KEY (`manager_no`) REFERENCES `users` (`no`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_maintenance_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`no`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_maintenance_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`no`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '교량 유지보수 기록';
 
 -- 유지보수 영상은 media 테이블에서 p_type='MAINTENANCE',
 -- p_id=maintenance_records.no로 연결합니다
 -- (별도의 maintenance_media 연결 테이블 없음).
-
 
 -- ===========================
 -- 9. 과거 담당자 이력 history 테이블
@@ -611,65 +520,86 @@ CREATE TABLE `maintenance_records` (
 
 CREATE TABLE `manager_history` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
-
     `bridge_no` BIGINT NOT NULL COMMENT '담당자가 변경된 교량 번호',
     `corp_no` BIGINT NOT NULL COMMENT '소속 기업 번호',
-
     `previous_manager_no` BIGINT DEFAULT NULL COMMENT '변경 전 담당자 번호',
     `new_manager_no` BIGINT NOT NULL COMMENT '변경 후 담당자 번호',
-
     `changed_by` BIGINT NOT NULL COMMENT '담당자를 변경한 사용자 번호',
+    `changed_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '담당자 변경 일시',
+    PRIMARY KEY (`no`),
+    KEY `idx_manager_history_bridge_date` (
+        `bridge_no`,
+        `corp_no`,
+        `changed_at`
+    ),
+    KEY `idx_manager_history_previous` (
+        `previous_manager_no`,
+        `corp_no`
+    ),
+    KEY `idx_manager_history_new` (`new_manager_no`, `corp_no`),
+    KEY `idx_manager_history_changed_by` (`changed_by`, `corp_no`),
+    CONSTRAINT `fk_manager_history_bridge_corp` FOREIGN KEY (`bridge_no`, `corp_no`) REFERENCES `bridges` (`no`, `corp_no`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_manager_history_previous_corp` FOREIGN KEY (
+        `previous_manager_no`,
+        `corp_no`
+    ) REFERENCES `users` (`no`, `corp_no`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT `fk_manager_history_new_corp` FOREIGN KEY (`new_manager_no`, `corp_no`) REFERENCES `users` (`no`, `corp_no`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT `fk_manager_history_changed_by_corp` FOREIGN KEY (`changed_by`, `corp_no`) REFERENCES `users` (`no`, `corp_no`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `chk_manager_history_different` CHECK (
+        `previous_manager_no` IS NULL
+        OR `previous_manager_no` <> `new_manager_no`
+    )
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '교량 담당자 변경 이력';
 
-    `changed_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        COMMENT '담당자 변경 일시',
+-- ===========================
+-- 10. 가장 최근 관리된 교량 열람
+-- 사용자별 "최근 작업한 교량" 목록.
+-- (user_no, bridge_no)당 1행만 유지하고, 다시 열람하면
+-- viewed_at만 갱신(upsert)합니다. 열람 로그/통계 테이블이 아닙니다.
+--
+-- user_no + corp_no  : 사용자가 해당 기업 소속인지 복합 FK로 검증
+-- bridge_no + corp_no: 교량이 해당 기업 소유인지 복합 FK로 검증
+-- → 두 FK가 같은 corp_no를 공유하므로 "다른 기업 교량을 열람한 기록"이
+--   DB 레벨에서 불가능합니다.
+--
+-- 임시성 데이터이므로 사용자/교량 삭제 시 함께 삭제(CASCADE)합니다.
+-- 최근 N건 초과분 정리는 애플리케이션(또는 스케줄러)에서 처리합니다.
+-- ===========================
+
+CREATE TABLE `bridge_recent` (
+    `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
+    `user_no` BIGINT NOT NULL COMMENT '열람한 사용자 번호',
+    `bridge_no` BIGINT NOT NULL COMMENT '열람한 업무용 교량 번호',
+    `corp_no` BIGINT NOT NULL COMMENT '소속 기업 번호',
+    `viewed_at` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '마지막 열람 일시',
 
     PRIMARY KEY (`no`),
+    UNIQUE KEY `uk_bridge_recent_user_bridge` (`user_no`, `bridge_no`),
+    KEY `idx_bridge_recent_user_corp_viewed` (
+        `user_no`,
+        `corp_no`,
+        `viewed_at` DESC
+    ),
 
-    KEY `idx_manager_history_bridge_date`
-        (`bridge_no`, `corp_no`, `changed_at`),
+    KEY `idx_bridge_recent_bridge_corp` (`bridge_no`, `corp_no`),
 
-    KEY `idx_manager_history_previous`
-        (`previous_manager_no`, `corp_no`),
+    CONSTRAINT `fk_bridge_recent_user_corp`
+        FOREIGN KEY (`user_no`, `corp_no`)
+        REFERENCES `users` (`no`, `corp_no`)
+        ON DELETE CASCADE ON UPDATE CASCADE,
 
-    KEY `idx_manager_history_new`
-        (`new_manager_no`, `corp_no`),
-
-    KEY `idx_manager_history_changed_by`
-        (`changed_by`, `corp_no`),
-
-    CONSTRAINT `fk_manager_history_bridge_corp`
+    CONSTRAINT `fk_bridge_recent_bridge_corp`
         FOREIGN KEY (`bridge_no`, `corp_no`)
         REFERENCES `bridges` (`no`, `corp_no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT `fk_manager_history_previous_corp`
-        FOREIGN KEY (`previous_manager_no`, `corp_no`)
-        REFERENCES `users` (`no`, `corp_no`)
-        ON DELETE RESTRICT ON UPDATE RESTRICT,
-
-    CONSTRAINT `fk_manager_history_new_corp`
-        FOREIGN KEY (`new_manager_no`, `corp_no`)
-        REFERENCES `users` (`no`, `corp_no`)
-        ON DELETE RESTRICT ON UPDATE RESTRICT,
-
-    CONSTRAINT `fk_manager_history_changed_by_corp`
-        FOREIGN KEY (`changed_by`, `corp_no`)
-        REFERENCES `users` (`no`, `corp_no`)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT `chk_manager_history_different`
-        CHECK (
-            `previous_manager_no` IS NULL
-            OR `previous_manager_no` <> `new_manager_no`
-        )
-
+        ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci
-  COMMENT='교량 담당자 변경 이력';
+  COMMENT='사용자별 최근 작업 교량';
+
 
 -- ===========================
--- 10. 외래키 검사 복원
+-- 11. 외래키 검사 복원
 -- ===========================
 
 SET FOREIGN_KEY_CHECKS = 1;

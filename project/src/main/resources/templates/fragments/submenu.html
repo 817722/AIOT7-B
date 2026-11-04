@@ -1,23 +1,111 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <body>
-<!-- 공통 사이드바: th:replace="~{fragments/sidebar :: sidebar}" -->
-<aside th:fragment="submenu" class="app-submenu" aria-label="업무 관리 메뉴">
-    <div class="app-submenu">업무 관리</div>
-    <nav class="app-submenu" aria-label="주 메뉴">
+<!-- 공통 서브메뉴: th:replace="~{fragments/submenu :: submenu}" -->
+<div th:fragment="submenu(activeMenu)" class="app-submenu-container" aria-label="교량 관리 메뉴">
+    <!-- 교량 관리 서브메뉴 -->
+    <div class="app-submenu" th:if="${currentMenuGroup == 'bridges'}">
+        <div class="app-submenu__heading">업무 관리 <span>|</span> 교량 관리 <span>|</span></div>
         <!-- 2단계: 교량 목록 실제 화면 경로 -->
-        <a class="app-sidebar__link"
-           th:classappend="${activeMenu == 'bridges'} ? 'is-active' : ''"
-           th:href="@{/bridges}">교량 관리</a>
+        <nav class="app-submenu__nav" aria-label="교량 메뉴">
+            <ul>
+            <li><a class="app-submenu__link"
+            th:classappend="${activeMenu == '/bridges'} ? 'is-active' : ''"
+            th:href="@{/bridges}" href="/bridges">교량 목록</a></li>
+            <li><a class="app-submenu__link"
+            th:classappend="${activeMenu == '/bridges/new'} ? 'is-active' : ''"
+            th:href="@{/bridges/new}" href="/bridges/new">교량 등록 · 수정</a></li>
+            <!-- no가 controller에서 넘어왔을 때만 이 li 태그 전체가 화면에 나타납니다 -->
+            <!-- th:if 속성을 사용하여 현재 페이지가 교량상세 페이지일 때만 <li> 태그가 노출됨 -->
+            <li th:if="${#strings.startsWith(activeMenu, '/bridges/')} and !${#strings.equals(activeMenu, '/bridges/new')}">
+                <a class="app-submenu__link"
+                th:classappend="${#strings.startsWith(activeMenu, '/bridges/')} and !${#strings.equals(activeMenu, '/bridges/new')} ? 'is-active' : ''"
+                th:href="@{/bridges/{no}(no=${bridgeNo})}" href="/bridges/detail">교량 상세</a>
+            </li>
+            <!-- 아래 메뉴는 각 담당자의 페이지/URL이 확정되면 a 태그로 전환 -->
+            <!-- <li><span class="app-submenu app-submenu--pending"
+                aria-disabled="true" title="교량 상세(/bridges/detail) 화면 준비 중">교량 상세(준비 중)</span></li> -->
+        </ul>
+        </nav>
+    </div>
 
-        <!-- 아래 메뉴는 각 담당자의 페이지/URL이 확정되면 a 태그로 전환 -->
-        <span class="app-submenu app-submenu--pending"
-              aria-disabled="true" title="점검 관리 화면 준비 중">점검 목록</span>
-        <span class="app-submenu app-submenu--pending"
-              aria-disabled="true" title="결함 관리 화면 준비 중">점검 등록 · 기록 작성</span>
-        <span class="app-submenu app-submenu--pending"
-              aria-disabled="true" title="유지보수 관리 화면 준비 중">점검 상세</span>
-    </nav>
-</aside>
+    <!-- 점검 관리 서브메뉴 -->
+    <div class="app-submenu" th:if="${currentMenuGroup == 'inspections'}">
+        <div class="app-submenu__heading">업무 관리 <span>|</span> 점검 관리 <span>|</span></div>
+        <!-- 2단계: 교량 목록 실제 화면 경로 -->
+        <nav class="app-submenu__nav" aria-label="교량 메뉴">
+            <ul>
+            <li><a class="app-submenu__link"
+            th:classappend="${activeMenu == '/inspections'} ? 'is-active' : ''"
+            th:href="@{/inspections}" href="/inspections">점검 목록</a></li>
+            <li><a class="app-submenu__link"
+            th:classappend="${activeMenu == '/inspections/new'} ? 'is-active' : ''"
+            th:href="@{/inspections/new}" href="/inspections/new">점검 등록 · 기록 작성</a></li>
+            <!-- no가 controller에서 넘어왔을 때만 이 li 태그 전체가 화면에 나타납니다 -->
+            <!-- th:if 속성을 사용하여 현재 페이지가 교량상세 페이지일 때만 <li> 태그가 노출됨 -->
+            <li th:if="${#strings.startsWith(activeMenu, '/inspections/')} and !${#strings.equals(activeMenu, '/inspections/new')}">
+                <a class="app-submenu__link"
+                th:classappend="${#strings.startsWith(activeMenu, '/inspections/')} and !${#strings.equals(activeMenu, '/inspections/new')} ? 'is-active' : ''"
+                th:href="@{/inspections/{no}(no=${inspectionNo})}" href="/inspections/detail">점검 상세</a>
+            </li>
+            <!-- 아래 메뉴는 각 담당자의 페이지/URL이 확정되면 a 태그로 전환 -->
+            <!-- <li><span class="app-submenu app-submenu--pending"
+                aria-disabled="true" title="교량 상세(/inspections/detail) 화면 준비 중">교량 상세(준비 중)</span></li> -->
+        </ul>
+        </nav>
+    </div>
+
+    <!-- 유지보수 관리 서브메뉴 -->
+    <div class="app-submenu" th:if="${currentMenuGroup == 'maintenances'}">
+        <div class="app-submenu__heading">업무 관리 <span>|</span> 유지보수 관리 <span>|</span></div>
+        <!-- 2단계: 교량 목록 실제 화면 경로 -->
+        <nav class="app-submenu__nav" aria-label="교량 메뉴">
+            <ul>
+            <li><a class="app-submenu__link"
+            th:classappend="${activeMenu == '/maintenances'} ? 'is-active' : ''"
+            th:href="@{/maintenances}" href="/maintenances">유지 보수 목록</a></li>
+            <li><a class="app-submenu__link"
+            th:classappend="${activeMenu == '/maintenances/new'} ? 'is-active' : ''"
+            th:href="@{/maintenances/new}" href="/maintenances/new">유지 보수 등록 · 기록 작성</a></li>
+            <!-- no가 controller에서 넘어왔을 때만 이 li 태그 전체가 화면에 나타납니다 -->
+            <!-- th:if 속성을 사용하여 현재 페이지가 교량상세 페이지일 때만 <li> 태그가 노출됨 -->
+            <li th:if="${#strings.startsWith(activeMenu, '/maintenances/')} and !${#strings.equals(activeMenu, '/maintenances/new')}">
+                <a class="app-submenu__link"
+                th:classappend="${#strings.startsWith(activeMenu, '/maintenances/')} and !${#strings.equals(activeMenu, '/maintenances/new')} ? 'is-active' : ''"
+                th:href="@{/maintenances/{no}(no=${maintenanceNo})}" href="/maintenances/detail">유지 보수 상세</a>
+            </li>
+            <!-- 아래 메뉴는 각 담당자의 페이지/URL이 확정되면 a 태그로 전환 -->
+            <!-- <li><span class="app-submenu app-submenu--pending"
+                aria-disabled="true" title="교량 상세(/maintenances/detail) 화면 준비 중">교량 상세(준비 중)</span></li> -->
+        </ul>
+        </nav>
+    </div>
+
+     <!-- 관리자 검수 서브메뉴 -->
+    <div class="app-submenu" th:if="${currentMenuGroup == 'users'}">
+        <div class="app-submenu__heading">업무 관리 <span>|</span> 관리자 검수 <span>|</span></div>
+        <!-- 2단계: 교량 목록 실제 화면 경로 -->
+        <nav class="app-submenu__nav" aria-label="교량 메뉴">
+            <ul>
+            <li><a class="app-submenu__link"
+            th:classappend="${activeMenu == '/users'} ? 'is-active' : ''"
+            th:href="@{/users}" href="/users">관리자 권한 · 검수</a></li>
+            <!-- <li><a class="app-submenu__link"
+            th:classappend="${activeMenu == '/users/new'} ? 'is-active' : ''"
+            th:href="@{/users/new}" href="/users/new">유지 보수 등록 · 기록 작성</a></li> -->
+            <!-- no가 controller에서 넘어왔을 때만 이 li 태그 전체가 화면에 나타납니다 -->
+            <!-- th:if 속성을 사용하여 현재 페이지가 교량상세 페이지일 때만 <li> 태그가 노출됨 -->
+                <li th:if="${#strings.startsWith(activeMenu, '/users/')} and !${#strings.equals(activeMenu, '/users/new')}">
+                    <a class="app-submenu__link"
+                    th:classappend="${#strings.startsWith(activeMenu, '/users/')} and !${#strings.equals(activeMenu, '/users/new')} ? 'is-active' : ''"
+                    th:href="@{/users/{no}(no=${userNo})}" href="/users/detail">관리자 권한 · 검수 상세</a>
+                </li>
+                <!-- 아래 메뉴는 각 담당자의 페이지/URL이 확정되면 a 태그로 전환 -->
+                <!-- <li><span class="app-submenu app-submenu--pending"
+                    aria-disabled="true" title="교량 상세(/users/detail) 화면 준비 중">관리자 권한 · 검수</span></li> -->
+        </ul>
+        </nav>
+    </div>
+</div>
 </body>
 </html>

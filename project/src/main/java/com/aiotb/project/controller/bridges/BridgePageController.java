@@ -92,6 +92,8 @@ public class BridgePageController {
             .mapToObj(m -> String.format(Locale.ROOT, "%02d", m)).toList());
         model.addAttribute("provinceOptions", provinces);
         model.addAttribute("cityOptions", cities);
+        // 서브메뉴 관련
+        model.addAttribute("currentMenuGroup", "bridges" );
         return "page/bridges/list";
     }
 

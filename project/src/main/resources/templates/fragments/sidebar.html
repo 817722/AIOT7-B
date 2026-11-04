@@ -8,14 +8,23 @@
         <a class="app-sidebar__link"
            th:classappend="${activeMenu == 'bridges'} ? 'is-active' : ''"
            th:href="@{/bridges}" href="/bridges">교량 관리</a>
+        <a class="app-sidebar__link"
+           th:classappend="${activeMenu == 'inspections'} ? 'is-active' : ''"
+           th:href="@{/inspections}" href="/inspections">점검 관리</a>
+        <a class="app-sidebar__link"
+           th:classappend="${activeMenu == 'maintenances'} ? 'is-active' : ''"
+           th:href="@{/maintenances}" href="/maintenances">유지보수 관리</a>
+        <a class="app-sidebar__link"
+           th:classappend="${activeMenu == 'users'} ? 'is-active' : ''"
+           th:href="@{/users}" href="/users">관리자 검수</a>
 
         <!-- 다음 세 페이지의 실제 Controller URL은 팀원의 라우트 확인 후 연결 -->
-        <span class="app-sidebar__link app-sidebar__link--pending"
+        <!-- <span class="app-sidebar__link app-sidebar__link--pending"
               aria-disabled="true" title="점검 관리 URL 연동 대기">점검 관리</span>
         <span class="app-sidebar__link app-sidebar__link--pending"
               aria-disabled="true" title="유지보수 관리 URL 연동 대기">유지보수 관리</span>
         <span class="app-sidebar__link app-sidebar__link--pending"
-              aria-disabled="true" title="관리자 검수 URL 연동 대기">관리자 검수</span>
+              aria-disabled="true" title="관리자 검수 URL 연동 대기">관리자 검수</span> -->
     </nav>
 </aside>
 </body>

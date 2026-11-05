@@ -15,8 +15,8 @@
 
     <!-- 비로그인 상태(로그인/회원가입 페이지)에는 계정 메뉴를 표시하지 않음 -->
     <div class="app-header__account" th:if="${currentWorkerName != null}">
-        <span class="app-header__worker" aria-label="현재 로그인한 작업자">
-            <span class="app-header__worker-label">작업자</span>
+        <span class="app-header__worker" aria-label="현재 로그인한 사용자">
+            <span class="app-header__worker-label" th:text="${currentWorkerRoleLabel != null ? currentWorkerRoleLabel : '작업자'}">작업자</span>
             <strong class="app-header__worker-name" th:text="${currentWorkerName}">김가람</strong>
         </span>
         <!-- CSRF를 유지하는 POST 로그아웃: SecurityConfig의 /users/logout과 일치 -->

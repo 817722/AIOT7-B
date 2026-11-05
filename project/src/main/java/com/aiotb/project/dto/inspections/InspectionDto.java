@@ -1,5 +1,6 @@
 package com.aiotb.project.dto.inspections;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import com.aiotb.project.domain.inspections.Inspection;
@@ -73,5 +74,21 @@ public class InspectionDto {
             this.memo = inspection.getInspectionMemo();
             this.overallResult = inspection.getOverallResult();
         }
+    }
+
+    // 기준 CSV의 검색 결과 응답
+    public record CatalogInspection(
+            String catalogId,
+            String name,
+            String facilityType,
+            String roadType,
+            String roadName,
+            String province,
+            String city,
+            String address,
+            BigDecimal inspectionLength,
+            BigDecimal inspectionWidth,
+            String managementAgency,
+            LocalDate sourceDataDate) {
     }
 }

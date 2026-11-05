@@ -15,7 +15,9 @@
   <div th:replace="~{fragments/sidebar :: sidebar}"></div>
   <main class="app-main bridge-v2" id="main-content">
     <div class="app-container">
-      <p class="bv-crumb">업무 관리 / 교량 관리 / <strong>교량 목록</strong></p>
+      <!-- <p class="bv-crumb">업무 관리 / 교량 관리 / <strong>교량 목록</strong></p> -->
+      <!-- 서브메뉴 수정 -->
+      <div th:replace="~{fragments/submenu :: submenu(activeMenu='/bridges')}"></div> 
       <h1 class="bv-title">교량 목록</h1>
       <p class="bv-subtitle">교량을 조회하고 등록된 교량의 점검 현황을 확인합니다.</p>
       <div class="bv-demo" th:if="${demoMode}">현재 표시 중인 교량과 점검 상태는 화면 테스트용 샘플입니다. 실제 DB 조회는 백엔드 연결 후 적용됩니다.</div>
@@ -58,7 +60,9 @@
         <div class="bv-section-heading"><div><h2 id="cards-title" class="bv-panel-title">교량 목록</h2><p class="bv-help" th:text="|검색 결과 ${resultCount}건 · ${pageNo}/${totalPages}페이지|">검색 결과 5건</p></div><a th:href="@{/bridges/new}" href="/bridges/new" class="bv-btn bv-btn-primary">신규 교량 등록</a></div>
         <div class="bv-blank" th:if="${totalCount == 0}"><strong>등록된 교량이 없습니다.</strong><p>신규 등록을 통해 등록하여 관리해 보세요.</p></div>
         <div class="bv-card-grid" th:if="${resultCount > 0}">
-          <a class="bv-bridge-card" th:each="bridge,iter : ${rows}" th:href="@{/bridges/{no}(no=${bridge.no})}" href="/bridges/1">
+          <!-- <a class="bv-bridge-card" th:each="bridge,iter : ${rows}" th:href="@{/bridges/{no}(no=${bridge.no})}" href="/bridges/1"> -->
+          <!-- 서브메뉴 관련 코드 -->
+          <a class="bv-bridge-card" th:each="bridge,iter : ${rows}" th:href="@{/bridges/{no}(no=${bridge.no ?: 0})}" href="/bridges/1">
             <div class="bv-card-visual" th:classappend="| bv-card-visual--${iter.index % 5}|" aria-hidden="true"><img class="bv-card-photo" th:if="${bridge.representativeImageUrl != null}" th:src="${bridge.representativeImageUrl}" alt="교량 대표 이미지"><span th:unless="${bridge.representativeImageUrl != null}" class="bv-card-bridge"></span><span th:unless="${bridge.representativeImageUrl != null}" class="bv-card-deck"></span></div>
             <div class="bv-card-info"><strong th:text="${bridge.name}">가람교</strong><span th:text="|${bridge.province} ${bridge.city} · ${bridge.facilityType}|">경기도 가평군 · 제1종</span><span class="bv-card-footer"><time th:text="${bridge.lastInspectionDate != null ? #temporals.format(bridge.lastInspectionDate,'yyyy-MM-dd') : '최종안전점검일 없음'}">최종안전점검일 없음</time><em class="bv-state" th:classappend="${bridge.status == '완료'} ? ' bv-state--done' : ''" th:text="${bridge.status}">진행 중</em></span></div>
           </a>

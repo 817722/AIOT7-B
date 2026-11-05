@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
 import com.aiotb.project.service.users.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
@@ -19,30 +20,77 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/login", "/join", "/users/join", "/users/login", "/api/business/verify", "/error",
-                        "/css/**", "/js/**", "/img/**", "/images/**", "/favicon.ico").permitAll()
-                .requestMatchers("/api/maintenance", "/api/maintenance/**", "/api/inspections", "/api/inspections/**").authenticated()
-                .anyRequest().authenticated());
+    // @Bean // 👈 기존 SecurityFilterChain Bean
+    // public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    //     http
 
-        http.authenticationProvider(authenticationProvider());
-        http.formLogin(login -> login
-                .loginPage("/login")
-                .loginProcessingUrl("/users/login")
-                .usernameParameter("username")
-                .passwordParameter("password")
-                .defaultSuccessUrl("/bridges", true)
-                .failureUrl("/login?error=true")
-                .permitAll());
-        http.logout(logout -> logout
-                .logoutUrl("/users/logout")
-                .logoutSuccessUrl("/login?logout=true")
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID"));
-        return http.build();
+    //     // (Postman 테스트용) REST API 테스트를 위해 CSRF 보안을 잠시 꺼둡니다. 
+    //     .csrf(csrf -> csrf.disable())
+        
+    //     .authorizeHttpRequests(auth -> auth
+    //             .requestMatchers("/", "/login", "/join", "/users/join", "/users/login", "/api/business/verify", "/error",
+    //                     "/css/**", "/js/**", "/img/**", "/images/**", "/favicon.ico").permitAll()
+    //             .requestMatchers("/api/maintenance", "/api/maintenance/**", "/api/inspections", "/api/inspections/**").permitAll()
+    //             .anyRequest().authenticated());
+
+    //     http.authenticationProvider(authenticationProvider());
+    //     http.formLogin(login -> login
+    //             .loginPage("/login")
+    //             .loginProcessingUrl("/users/login")
+    //             .usernameParameter("username")
+    //             .passwordParameter("password")
+    //             .defaultSuccessUrl("/bridges", true)
+    //             .failureUrl("/login?error=true")
+    //             .permitAll());
+    //     http.logout(logout -> logout
+    //             .logoutUrl("/users/logout")
+    //             .logoutSuccessUrl("/login?logout=true")
+    //             .invalidateHttpSession(true)
+    //             .deleteCookies("JSESSIONID"));
+    //     return http.build();
+    // }
+
+    @Bean  // 👈 위에 있는 Bean 주석으로 놓고 새로 추가(11/04)
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+    http.authorizeHttpRequests(auth -> auth
+            .requestMatchers(
+                "/", "/login", "/join", "/users/join",
+                "/users/login", "/api/business/verify", "/error",
+                "/css/**", "/js/**", "/img/**", "/images/**",
+                "/favicon.ico"
+            ).permitAll()
+
+            .requestMatchers(
+                "/api/maintenance", "/api/maintenance/**",
+                "/api/inspections", "/api/inspections/**"
+            ).permitAll()
+
+            .anyRequest().authenticated()
+        );
+
+    http.authenticationProvider(authenticationProvider());
+
+    http.formLogin(login -> login
+        .loginPage("/login")
+        .loginProcessingUrl("/users/login")
+        .usernameParameter("username")
+        .passwordParameter("password")
+        .defaultSuccessUrl("/bridges", true)
+        .failureUrl("/login?error=true")
+        .permitAll()
+    );
+
+    http.logout(logout -> logout
+        .logoutUrl("/users/logout")
+        .logoutSuccessUrl("/login?logout=true")
+        .invalidateHttpSession(true)
+        .deleteCookies("JSESSIONID")
+    );
+
+    return http.build();
     }
+
 
     @Bean
     public AuthenticationProvider authenticationProvider() {

@@ -12,11 +12,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+// 👈 코드 4개 추가 (10/29)
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
+//
+
 import com.aiotb.project.dto.inspections.InspectionDto;
 import com.aiotb.project.service.inspections.InspectionService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import tools.jackson.databind.ObjectMapper; // 👈 코드 추가 (10/29)
 
 @RestController
 @RequestMapping("/api/inspections")
@@ -25,11 +33,32 @@ public class InspectionController {
 
     private final InspectionService inspectionService;
 
-    // 점검 기록 등록 API
-    @PostMapping
-    public ResponseEntity<String> createInspection(@RequestBody @Valid InspectionDto.Request request) {
-        String inspectionId = inspectionService.createInspection(request);
-        return ResponseEntity.ok(inspectionId);
+    // // 점검 기록 등록 API 👈 이전 코드 백업
+    // @PostMapping
+    // public ResponseEntity<String> createInspection(@RequestBody @Valid InspectionDto.Request request) {
+    //     String inspectionId = inspectionService.createInspection(request);
+    //     return ResponseEntity.ok(inspectionId);
+    // }
+    //
+
+    // 점검 기록 등록 API (드론 영상 파일 첨부 지원) 👈 현재 코드 생성 (10/29)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> createInspection(
+            @RequestParam("request") String requestJson, // 👈 객체가 아니라 String으로 받습니다.
+            @RequestPart(value = "file", required = false) MultipartFile file
+    ) {
+        try {
+            // String으로 받은 JSON 문자열을 객체로 변환
+            ObjectMapper objectMapper = new ObjectMapper();
+            InspectionDto.Request request = objectMapper.readValue(requestJson, InspectionDto.Request.class);
+
+            // 서비스로 데이터와 파일 전달
+            String inspectionId = inspectionService.createInspection(request, file);
+            return ResponseEntity.ok(inspectionId);
+            
+        } catch (Exception e) {
+            throw new RuntimeException("점검 등록 및 업로드 실패: " + e.getMessage());
+        }
     }
 
     // 특정 교량별 점검 목록 조회 API

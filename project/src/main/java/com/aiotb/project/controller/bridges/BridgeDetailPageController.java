@@ -37,6 +37,9 @@ public class BridgeDetailPageController {
         model.addAttribute("recents", bridgeListViewService.recentWork(inspections, maintenances));
         model.addAttribute("inspectionCount", inspections.size());
         model.addAttribute("maintenanceCount", maintenances.size());
+        // 서브메뉴 관련
+        model.addAttribute("currentMenuGroup", "bridges" );
+        model.addAttribute("bridgeNo", no);
         return "page/bridges/detail";
     }
 }

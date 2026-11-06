@@ -1,35 +1,200 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>교량점검 시스템</title>
-    <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
-    <link rel="stylesheet" th:href="@{/css/maintenance-v2.css}" href="/css/maintenance-v2.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+  <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+  <title th:text="${editMode} ? '유지보수 수정 | 교량점검 시스템' : '유지보수 등록 | 교량점검 시스템'">유지보수 등록</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
+  <link rel="stylesheet" th:href="@{/css/maintenance-v2.css}" href="/css/maintenance-v2.css">
+  <script defer th:src="@{/js/maintenance-form.js}" src="/js/maintenance-form.js"></script>
 </head>
 <body>
-    <div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="app-layout" th:with="activeMenu='maintenances'">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="app-main maintenance-v2 mv-figma" id="main-content"
+        th:attr="data-edit-mode=${editMode},data-record-no=${editMode ? maintenance.no : ''}">
+    <div class="app-container">
+      <div th:replace="~{fragments/submenu :: submenu(activeMenu='/maintenances')}"></div>
+      <h1 class="bv-title" th:text="${editMode} ? '유지보수 기록 수정' : '유지보수 등록·기록 작성'">유지보수 등록·기록 작성</h1>
+      <p class="bv-subtitle">대상 및 연결 기록을 확인한 뒤 현장 기록과 유지보수 영상을 관리합니다.</p>
 
-    <div class="app-layout" th:with="activeMenu='maintenances'">
-        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-        <main class="app-main maintenance-v2" id="main-content">
-            <div class="app-container">
-                <!-- 서브메뉴 -->
-                <div th:replace="~{fragments/submenu :: submenu(activeMenu='/maintenances/new')}"></div>
-                <h1 class="bv-title">점검 등록·기록 작성</h1>
-                <p class="app-page-description">공통 헤더와 사이드바 연결 테스트 화면입니다.</p>
-
-                <section class="app-grid" aria-label="화면 구성 미리보기">
-                    <div class="app-card"><div class="app-stat-label">등록 교량</div><div class="app-stat-value">--</div></div>
-                    <div class="app-card"><div class="app-stat-label">점검 진행 중</div><div class="app-stat-value">--</div></div>
-                    <div class="app-card"><div class="app-stat-label">점검 완료</div><div class="app-stat-value">--</div></div>
-                </section>
-                <section class="app-card" style="margin-top:20px">
-                    <h2 class="app-card__title">교량 목록</h2>
-                    <p>공통 레이아웃이 정상적으로 표시된다면 1단계가 완료된 것입니다.</p>
-                </section>
+      <form id="mv-maintenance-form" novalidate>
+        <section class="bv-panel mv-figma-panel" aria-labelledby="mv-target-title">
+          <h2 id="mv-target-title" class="bv-panel-title">대상 및 연결 기록</h2>
+          <div class="mv-figma-target-grid">
+            <div class="mv-figma-readfield mv-target-field">
+              <span>대상 교량 <b class="mv-required">*</b></span>
+              <div class="mv-target-search" th:if="${!editMode}">
+                <input id="mv-bridge-query" type="search" aria-label="대상 교량 검색" placeholder="교량명 또는 등록번호 검색" autocomplete="off">
+                <button type="button" id="mv-search-bridge" class="bv-btn bv-btn-light">교량 검색</button>
+              </div>
+              <div class="mv-selected-bridge" id="mv-selected-bridge">
+                <strong id="mv-selected-name" th:text="${selectedBridge != null ? selectedBridge.name : '교량 미선택'}">교량 미선택</strong>
+                <span id="mv-selected-location" th:text="${selectedBridge != null ? selectedBridge.province + ' ' + selectedBridge.city : '교량 검색 후 선택해 주세요.'}">교량 위치</span>
+                <span id="mv-selected-number" th:text="${selectedBridge != null ? '등록번호 #' + selectedBridge.no : ''}"></span>
+              </div>
+              <input type="hidden" id="mv-bridge-no" th:value="${selectedBridge != null ? selectedBridge.no : ''}">
+              <div class="mv-bridge-results" id="mv-bridge-results" th:if="${!editMode}" aria-live="polite"></div>
+              <small th:if="${editMode}" class="bv-help">등록 후 대상 교량은 변경할 수 없습니다.</small>
             </div>
-        </main>
+            <div class="mv-figma-readfield">
+              <span>연결 점검 (참고)</span>
+              <ul id="mv-inspection-list" class="mv-inspection-list">
+                <li th:each="inspection : ${referenceInspections}"
+                    th:text="|#${inspection.no} · ${inspection.title} · ${inspection.status}|">최근 점검</li>
+                <li th:if="${#lists.isEmpty(referenceInspections)}" class="bv-muted">최근 점검 기록이 없습니다.</li>
+              </ul>
+              <small class="bv-help">점검 기록은 같은 교량 기준 참고 조회이며, 직접 연결로 저장되지 않습니다.</small>
+            </div>
+          </div>
+        </section>
+
+        <section class="bv-panel mv-figma-panel" aria-labelledby="mv-basic-title">
+          <h2 id="mv-basic-title" class="bv-panel-title">유지보수 기본정보</h2>
+          <div class="mv-figma-basic-grid">
+            <label class="bv-field mv-wide" for="mv-type">
+              <span>보수 유형 <b class="mv-required">*</b></span>
+              <select id="mv-type" name="maintenanceType" required>
+                <option value="">보수 유형을 선택해 주세요</option>
+                <option value="균열 보수기록" th:selected="${editMode and maintenance.maintenanceType == '균열 보수기록'}">균열 보수기록</option>
+                <option value="단면 복구기록" th:selected="${editMode and maintenance.maintenanceType == '단면 복구기록'}">단면 복구기록</option>
+                <option value="구조 보강기록" th:selected="${editMode and maintenance.maintenanceType == '구조 보강기록'}">구조 보강기록</option>
+                <option value="하자보수 관리" th:selected="${editMode and maintenance.maintenanceType == '하자보수 관리'}">하자보수 관리</option>
+                <option value="기타" th:selected="${editMode and maintenance.maintenanceType == '기타'}">기타</option>
+              </select>
+              <small class="bv-help">균열 보수 / 단면 복구 / 구조 보강 / 하자보수 등</small>
+            </label>
+            <label class="bv-field mv-wide" for="mv-category">
+              <span>기록 분류</span>
+              <select id="mv-category" name="recordCategory">
+                <option value="사후 보수 기록">사후 보수 기록</option>
+                <option value="정기 보수 기록">정기 보수 기록</option>
+                <option value="긴급 보수 기록">긴급 보수 기록</option>
+                <option value="기타">기타</option>
+              </select>
+              <small class="bv-help">기록 분류는 기존 DB의 현장 메모에 함께 저장됩니다.</small>
+            </label>
+            <label class="bv-field mv-wide" for="mv-title">
+              <span>유지보수 기록명 <b class="mv-required">*</b></span>
+              <input id="mv-title" name="title" type="text" maxlength="255" required
+                     placeholder="예: 교각 P2 균열 보수작업"
+                     th:value="${editMode ? maintenance.title : ''}">
+            </label>
+            <div class="mv-figma-three">
+              <label class="bv-field" for="mv-date">
+                <span>진행 날짜 <b class="mv-required">*</b></span>
+                <input id="mv-date" name="maintenanceDate" type="date" required
+                       th:value="${editMode and maintenance.maintenanceDate != null ? #temporals.format(maintenance.maintenanceDate, 'yyyy-MM-dd') : ''}">
+              </label>
+              <label class="bv-field" for="mv-manager">
+                <span>담당자 <b class="mv-required">*</b></span>
+                <select id="mv-manager" name="managerNo" required>
+                  <option value="">담당자 선택</option>
+                  <option th:each="manager : ${managers}" th:value="${manager.no}" th:text="${manager.name}"
+                          th:selected="${editMode and maintenance.managerNo == manager.no}">작업자</option>
+                </select>
+              </label>
+              <label class="bv-field" for="mv-status">
+                <span>진행 상태 <b class="mv-required">*</b></span>
+                <select id="mv-status" name="status" required>
+                  <option value="진행 대기" th:selected="${!editMode or maintenance.status == '진행 대기'}">진행 대기</option>
+                  <option value="진행 중" th:selected="${editMode and maintenance.status == '진행 중'}">진행 중</option>
+                  <option value="완료" th:selected="${editMode and maintenance.status == '완료'}">완료</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="bv-panel mv-figma-panel" aria-labelledby="mv-field-title">
+          <h2 id="mv-field-title" class="bv-panel-title">현장 기록</h2>
+          <div class="mv-figma-field-top">
+            <label class="bv-field" for="mv-safety">
+              <span>안전 교육 여부</span>
+              <select id="mv-safety" name="safetyEducation">
+                <option value="미기록">미기록</option>
+                <option value="실시">실시</option>
+                <option value="미실시">미실시</option>
+              </select>
+            </label>
+            <label class="bv-field" for="mv-education-memo">
+              <span>교육 메모</span>
+              <input id="mv-education-memo" name="educationMemo" maxlength="1000" type="text" placeholder="교육 내용과 작업 주의사항 공유">
+            </label>
+          </div>
+          <label class="bv-field mv-figma-memo-field" for="mv-memo">
+            <span>현장 일지</span>
+            <textarea id="mv-memo" name="memo" rows="4" maxlength="18000" placeholder="작업 위치, 상태 확인 및 보수 과정을 기록하세요." th:text="${editMode ? maintenance.memo : ''}"></textarea>
+          </label>
+          <label class="bv-field mv-figma-memo-field" for="mv-result">
+            <span>작업 결과</span>
+            <textarea id="mv-result" name="result" rows="3" maxlength="20000" placeholder="작업 결과와 완료 사항을 입력하세요." th:text="${editMode ? maintenance.result : ''}"></textarea>
+          </label>
+          <div class="mv-figma-evidence">
+            <div><span class="mv-small-heading">증거 사진</span><p class="bv-help">사진 업로드는 백엔드 연결이 필요합니다. 현재는 기존 영상 업로드만 실제 저장됩니다.</p></div>
+            <button class="bv-btn bv-btn-light" type="button" disabled title="증거 사진 저장 API 개발 후 사용 가능">증거 사진 선택 (연동 대기)</button>
+          </div>
+        </section>
+
+        <section class="bv-panel mv-figma-panel" aria-labelledby="mv-video-title">
+          <h2 id="mv-video-title" class="bv-panel-title">영상 업로드</h2>
+          <div class="mv-dropzone" id="mv-video-dropzone">
+            <p>유지보수 영상 파일을 선택하거나 이 영역에 놓으세요.</p>
+            <small>MP4 / WebM · 최대 200MB · 업로드 시 기업별 접근 권한 확인</small>
+            <label for="mv-video-file" class="bv-btn bv-btn-light mv-file-picker">파일 선택</label>
+            <input id="mv-video-file" type="file" accept=".mp4,.webm,video/mp4,video/webm" class="mv-sr-only">
+          </div>
+          <div class="mv-upload-progress" id="mv-upload-progress-wrap" hidden>
+            <span id="mv-upload-status" role="status">업로드 대기</span>
+            <progress id="mv-upload-progress" max="100" value="0"></progress>
+          </div>
+          <div class="mv-figma-video-layout">
+            <div class="mv-figma-video-left">
+              <h3 class="bv-minor-heading">영상 목록 <small th:if="${!editMode}">저장 후 등록됩니다.</small></h3>
+              <ul id="mv-edit-video-list" class="mv-edit-video-list" aria-live="polite" th:if="${editMode}"><li>연결 영상을 조회하고 있습니다.</li></ul>
+              <p class="bv-help" th:unless="${editMode}">신규 기록을 등록한 뒤 연결된 영상이 이곳에 표시됩니다.</p>
+            </div>
+            <div class="mv-figma-video-right">
+              <div class="mv-video-preview" id="mv-video-preview" hidden>
+                <strong id="mv-video-filename">선택한 영상</strong>
+                <video id="mv-video-local" controls playsinline preload="metadata"></video>
+              </div>
+              <div class="mv-video-player-panel" id="mv-edit-video-player-panel" hidden>
+                <strong>연결된 영상 미리보기</strong>
+                <video id="mv-edit-video-player" controls playsinline preload="metadata"></video>
+              </div>
+              <p class="mv-figma-video-empty" id="mv-video-idle">영상을 선택하면 이곳에 미리보기가 표시됩니다.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="bv-panel mv-figma-panel" aria-labelledby="mv-video-delete-title">
+          <h2 id="mv-video-delete-title" class="bv-panel-title">유지보수 영상 삭제</h2>
+          <p class="bv-help">삭제할 영상을 목록에서 선택하세요. 영상 삭제는 저장된 유지보수 기록에서만 가능합니다.</p>
+          <div id="mv-form-delete-confirm" class="mv-delete-confirm" hidden>
+            <strong>선택한 영상을 삭제하시겠습니까?</strong>
+            <p id="mv-form-delete-file">삭제한 영상은 복구할 수 없습니다.</p>
+            <div class="bv-form-actions">
+              <button type="button" class="bv-btn bv-btn-light" id="mv-cancel-video-delete">취소</button>
+              <button type="button" class="bv-btn bv-btn-danger" id="mv-confirm-video-delete">삭제 확인</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="bv-panel mv-figma-panel mv-save-panel" aria-labelledby="mv-save-title">
+          <h2 id="mv-save-title" class="bv-panel-title">유지보수 기록 저장</h2>
+          <div id="mv-form-message" class="mv-form-message" role="status" aria-live="polite" hidden></div>
+          <div class="bv-form-actions">
+            <button id="mv-save" class="bv-btn bv-btn-primary" type="submit" th:text="${editMode} ? '변경사항 저장' : '유지보수 기록 생성'">유지보수 기록 생성</button>
+            <a class="bv-btn bv-btn-light" th:href="${editMode} ? @{/maintenances/{no}(no=${maintenance.no})} : @{/maintenances}">취소</a>
+          </div>
+        </section>
+      </form>
     </div>
+  </main>
+</div>
 </body>
 </html>

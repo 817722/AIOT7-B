@@ -1,51 +1,124 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>교량점검 시스템</title>
-    <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
-    <link rel="stylesheet" th:href="@{/css/maintenance-v2.css}" href="/css/maintenance-v2.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>유지보수 목록 | 교량점검 시스템</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
+  <link rel="stylesheet" th:href="@{/css/maintenance-v2.css}" href="/css/maintenance-v2.css">
 </head>
 <body>
-    <div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="app-layout" th:with="activeMenu='maintenances'">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="app-main maintenance-v2 mv-figma" id="main-content">
+    <div class="app-container">
+      <div th:replace="~{fragments/submenu :: submenu(activeMenu='/maintenances')}"></div>
+      <h1 class="bv-title">유지보수 목록</h1>
+      <p class="bv-subtitle">유지보수 진행 현황과 등록된 기록을 조회합니다.</p>
 
-    <div class="app-layout" th:with="activeMenu='maintenances'">
-        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-        <main class="app-main maintenance-v2" id="main-content">
-            <div class="app-container">
-                <!-- 서브메뉴 -->
-                <div th:replace="~{fragments/submenu :: submenu(activeMenu='/maintenances')}"></div>
-                <h1 class="bv-title">유지보수 목록</h1>
-                <p class="app-page-description">공통 헤더와 사이드바 연결 테스트 화면입니다.</p>
+      <section class="bv-panel mv-recent mv-figma-panel" aria-labelledby="mv-recent-title">
+        <h2 id="mv-recent-title" class="bv-panel-title">최근 확인한 교량</h2>
+        <p class="bv-help" th:if="${#lists.isEmpty(recentBridges)}">최근 확인한 교량이 없습니다. 교량 상세 화면을 확인해 보세요.</p>
+        <ul class="mv-recent-list" th:unless="${#lists.isEmpty(recentBridges)}">
+          <li th:each="recent : ${recentBridges}">
+            <a th:href="@{/bridges/{no}(no=${recent.no})}">
+              <strong th:text="${recent.name}">교량명</strong>
+              <span th:text="|/ 등록번호 ${recent.displayCode} / ${recent.province} ${recent.city} / ${recent.facilityType} / ${recent.manager}|">교량 정보</span>
+            </a>
+          </li>
+        </ul>
+      </section>
 
-                <section class="app-grid" aria-label="화면 구성 미리보기">
-                    <div class="app-card"><div class="app-stat-label">등록 교량</div><div class="app-stat-value">--</div></div>
-                    <div class="app-card"><div class="app-stat-label">점검 진행 중</div><div class="app-stat-value">--</div></div>
-                    <div class="app-card"><div class="app-stat-label">점검 완료</div><div class="app-stat-value">--</div></div>
-                </section>
-                <section class="app-card" style="margin-top:20px">
-                    <h2 class="app-card__title">점검 목록</h2>
-                    <p>공통 레이아웃이 정상적으로 표시된다면 1단계가 완료된 것입니다.</p>
-                </section>
-                <section class="bv-panel" aria-labelledby="cards-title">
-        <div class="bv-section-heading"><div><h2 id="cards-title" class="bv-panel-title">점검 목록</h2><p class="bv-help" th:text="|검색 결과 ${resultCount}건 · ${pageNo}/${totalPages}페이지|">검색 결과 5건</p></div><a th:href="@{/maintenances/new}" href="/maintenances/new" class="bv-btn bv-btn-primary">신규 교량 등록</a></div>
-        <div class="bv-blank" th:if="${totalCount == 0}"><strong>등록된 점검이 없습니다.</strong><p>신규 등록을 통해 등록하여 관리해 보세요.</p></div>
-        <div class="bv-card-grid" th:if="${resultCount > 0}">
-          <a class="bv-maintenance-card" th:each="maintenance,iter : ${rows}" th:href="@{/maintenances/{no}(no=${maintenance.no})}" href="/maintenances/1">
-            <div class="bv-card-visual" th:classappend="| bv-card-visual--${iter.index % 5}|" aria-hidden="true"><span class="bv-card-maintenance"></span><span class="bv-card-deck"></span></div>
-            <div class="bv-card-info"><strong th:text="${maintenance.name}">점검1</strong><span th:text="|${maintenance.province} ${maintenance.city} · ${maintenance.facilityType}|">경기도 가평군 · 제1종</span><span class="bv-card-footer"><time th:text="${#temporals.format(maintenance.lastMaintenanceDate,'yyyy-MM-dd')}">2026-10-16</time><em class="bv-state" th:classappend="${maintenance.status == '완료'} ? ' bv-state--done' : ''" th:text="${maintenance.status}">진행 중</em></span></div>
+      <section class="bv-panel mv-figma-panel" aria-labelledby="mv-filters-title">
+        <h2 id="mv-filters-title" class="bv-panel-title">유지보수 조회</h2>
+        <form method="get" th:action="@{/maintenances}" class="mv-filter-form">
+          <div class="mv-figma-filter-grid">
+            <label class="bv-field" for="mv-filter-keyword">
+              <span>교량명</span>
+              <input id="mv-filter-keyword" type="search" name="keyword" th:value="${keyword}" placeholder="전체 교량 / 교량명·기록명">
+            </label>
+            <div class="bv-field">
+              <span id="mv-filter-range-title">진행 날짜</span>
+              <div class="mv-date-range" role="group" aria-labelledby="mv-filter-range-title">
+                <input type="date" name="startDate" aria-label="진행 시작일" th:value="${startDate}">
+                <span aria-hidden="true">~</span>
+                <input type="date" name="endDate" aria-label="진행 종료일" th:value="${endDate}">
+              </div>
+            </div>
+            <label class="bv-field" for="mv-filter-manager">
+              <span>담당자</span>
+              <select id="mv-filter-manager" name="managerNo">
+                <option value="">전체</option>
+                <option th:each="manager : ${managers}" th:value="${manager.no}" th:text="${manager.name}"
+                        th:selected="${managerNo != null and managerNo == manager.no}">작업자</option>
+              </select>
+            </label>
+          </div>
+          <!-- Figma의 상태 탭은 아래 현황 영역에서 제공합니다. 현재 탭 상태는 조회 시 유지됩니다. -->
+          <input type="hidden" name="status" th:value="${status}">
+          <div class="bv-form-actions mv-figma-filter-actions">
+            <button type="submit" class="bv-btn bv-btn-primary">조회</button>
+            <a class="bv-btn bv-btn-light" th:href="@{/maintenances}">초기화</a>
+          </div>
+        </form>
+      </section>
+
+      <section class="bv-panel mv-figma-panel" aria-labelledby="mv-overview-title">
+        <div class="bv-section-heading mv-figma-section-heading">
+          <h2 id="mv-overview-title" class="bv-panel-title">유지보수 현황</h2>
+          <a class="bv-btn bv-btn-primary" th:href="@{/maintenances/new}">유지보수 등록</a>
+        </div>
+        <nav class="mv-tabs mv-figma-tabs" aria-label="유지보수 상태별 목록">
+          <a th:classappend="${status == ''} ? ' is-active' : ''"
+             th:href="@{/maintenances(keyword=${keyword},startDate=${startDate},endDate=${endDate},managerNo=${managerNo})}">전체 <strong th:text="${totalCount}">0</strong></a>
+          <a th:classappend="${status == '진행 중'} ? ' is-active' : ''"
+             th:href="@{/maintenances(keyword=${keyword},startDate=${startDate},endDate=${endDate},managerNo=${managerNo},status='진행 중')}">진행 중 <strong th:text="${progressCount}">0</strong></a>
+          <a th:classappend="${status == '완료'} ? ' is-active' : ''"
+             th:href="@{/maintenances(keyword=${keyword},startDate=${startDate},endDate=${endDate},managerNo=${managerNo},status='완료')}">완료 <strong th:text="${completedCount}">0</strong></a>
+          <a th:classappend="${status == '진행 대기'} ? ' is-active' : ''"
+             th:href="@{/maintenances(keyword=${keyword},startDate=${startDate},endDate=${endDate},managerNo=${managerNo},status='진행 대기')}">진행 대기 <strong th:text="${pendingCount}">0</strong></a>
+        </nav>
+
+        <div class="bv-blank mv-figma-empty" th:if="${resultCount == 0}">
+          <strong th:text="${totalCount == 0} ? '등록된 유지보수 내역이 없습니다.' : '검색 결과가 없습니다.'">검색 결과 없음</strong>
+          <p th:text="${totalCount == 0} ? '신규 유지보수 항목을 등록하여 관리해 보세요.' : '검색 조건을 바꾸거나 필터를 초기화해 주세요.'">안내</p>
+          <a class="bv-btn bv-btn-light" th:if="${totalCount > 0}" th:href="@{/maintenances}">검색 초기화</a>
+        </div>
+
+        <div class="bv-card-grid mv-card-grid mv-figma-card-grid" th:if="${resultCount > 0}">
+          <a class="bv-maintenance-card" th:each="maintenance,iter : ${rows}"
+             th:href="@{/maintenances/{no}(no=${maintenance.no})}">
+            <div class="bv-card-visual" th:classappend="| bv-card-visual--${iter.index % 5}|">
+              <img class="mv-cover" th:if="${maintenance.hasRepresentativeImage}"
+                   th:src="@{/api/bridge-ui/{bridgeNo}/image(bridgeNo=${maintenance.bridgeNo})}"
+                   th:alt="|${maintenance.name} 대표 이미지|" loading="lazy">
+              <span class="bv-card-maintenance" th:unless="${maintenance.hasRepresentativeImage}" aria-hidden="true"></span>
+              <span class="bv-card-deck" th:unless="${maintenance.hasRepresentativeImage}" aria-hidden="true"></span>
+            </div>
+            <div class="bv-card-info">
+              <strong th:text="${maintenance.name}">교량명</strong>
+              <span class="mv-card-type" th:text="${maintenance.maintenanceType}">단면 복구기록</span>
+              <span class="mv-card-title" th:text="${maintenance.title}">유지보수 기록명</span>
+              <span class="mv-card-meta" th:text="|담당 ${maintenance.manager}|">담당자</span>
+              <span class="bv-card-footer">
+                <time th:text="${maintenance.maintenanceDate == null ? '작업일 미지정' : #temporals.format(maintenance.maintenanceDate, 'yyyy-MM-dd')}">2026-10-16</time>
+                <em class="bv-state" th:classappend="${maintenance.status == '완료'} ? ' bv-state--done' : ''" th:text="${maintenance.status}">진행 중</em>
+              </span>
+            </div>
           </a>
         </div>
-        <div class="bv-blank" th:if="${totalCount > 0 and resultCount == 0}"><strong>검색 결과 없음</strong><p>다른 조건으로 검색하거나 필터를 초기화해 주세요.</p><a class="bv-btn bv-btn-light" th:href="@{/maintenances}" href="/maintenances">검색 초기화</a></div>
-        <nav class="bv-pager" aria-label="교량 페이지 이동" th:if="${resultCount > 0}">
-          <a th:if="${hasPrev}" th:href="@{/maintenances(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo - 1})}">이전</a><span th:unless="${hasPrev}" class="bv-disabled">이전</span>
+        <nav class="bv-pager" aria-label="유지보수 목록 페이지 이동" th:if="${resultCount > 0}">
+          <a th:if="${hasPrev}" th:href="@{/maintenances(keyword=${keyword},startDate=${startDate},endDate=${endDate},managerNo=${managerNo},status=${status},page=${pageNo - 1})}">이전</a>
+          <span th:unless="${hasPrev}" class="bv-disabled">이전</span>
           <span th:text="|${pageNo} / ${totalPages}|">1 / 1</span>
-          <a th:if="${hasNext}" th:href="@{/maintenances(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo + 1})}">다음</a><span th:unless="${hasNext}" class="bv-disabled">다음</span>
+          <a th:if="${hasNext}" th:href="@{/maintenances(keyword=${keyword},startDate=${startDate},endDate=${endDate},managerNo=${managerNo},status=${status},page=${pageNo + 1})}">다음</a>
+          <span th:unless="${hasNext}" class="bv-disabled">다음</span>
         </nav>
       </section>
-            </div>
-        </main>
+      <p class="mv-figma-footnote">조회 결과는 로그인한 소속 기업의 실제 유지보수 기록을 기준으로 표시됩니다.</p>
     </div>
+  </main>
+</div>
 </body>
 </html>

@@ -6,28 +6,224 @@
     <title>교량점검 시스템</title>
     <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
     <link rel="stylesheet" th:href="@{/css/inspection-v2.css}" href="/css/inspection-v2.css">
+    <script th:src="@{/js/inspection-v2-form.js}" src="/js/inspection-v2-form.js defer"></script>
+    <style>
+        .inspection-v2 .bv-table-scroll {
+        overflow-x: hidden}
+        .inspection-v2 .bv-table {
+        min-width: 0; }
+        .inspection-v2 .bv-table th {
+        white-space:nomal;}
+        .bv-field {margin-top: 16px;}
+    </style>
 </head>
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
-
+    
     <div class="app-layout" th:with="activeMenu='inspections'">
         <div th:replace="~{fragments/sidebar :: sidebar}"></div>
         <main class="app-main inspection-v2" id="main-content">
             <div class="app-container">
                 <!-- 서브메뉴 -->
                 <div th:replace="~{fragments/submenu :: submenu(activeMenu='/inspections/new')}"></div>
-                <h1 class="bv-title">점검 등록·기록 작성</h1>
-                <p class="app-page-description">공통 헤더와 사이드바 연결 테스트 화면입니다.</p>
+                
+                <h1 class="bv-title" th:text="${editMode} ? '교량 정보 수정' : '점검 등록·기록 작성'">점검 등록·기록 작성</h1>
+                <p class="bv-subtitle">등록 시 DB에 적재된 전국교량 원본을 선택합니다. 기존 교량의 담당자 변경·삭제는 관리자 권한이 필요합니다.</p>
+                <div class="bv-demo" th:if="${demoMode}">화면 시연용 샘플 검색 결과입니다. 실제 CSV 원본 조회와 DB 저장·삭제, 담당자 이력은 아직 연결되지 않았습니다.</div>
+                
+                <section class="bv-panel" aria-labelledby="csv-title" th:if="${!editMode}">
+                    <h2 class="bv-panel-title" id="csv-title">전국교량 원본 검색</h2>
+                    <div class="bv-lookup-line"><label for="bv-csv-query" class="bv-sr-only">교량명 검색</label><input id="bv-csv-query" type="search" placeholder="DB 교량명을 입력하세요. 예) 진위교"><button type="button" class="bv-btn bv-btn-light" id="bv-csv-search">검색</button></div>
+                    <div class="bv-table-scroll"><table class="bv-table bv-csv-table"><thead><tr><th>선택</th><th>교량명</th><th>CSV 식별자</th><th>지역</th><th>시설물 종류</th><th>등록 상태</th><th>현재 담당자</th></tr></thead>
+                        <tbody id="bv-csv-results"><tr><td colspan="7">교량명을 입력한 뒤 검색해 주세요.</td></tr></tbody></table></div>
+                        <p class="bv-help" id="bv-csv-empty" hidden>검색된 교량이 없습니다. 검색어를 변경해 주세요.</p>
+                        <div id="bv-registered-info" class="bv-registered-info" hidden aria-live="polite">
+                            <strong>이미 우리 기업에 등록된 교량입니다.</strong>
+                            <div class="bv-registered-details">
+                                <span>교량명: <b id="bv-existing-name">-</b></span>
+                                <span>등록번호: <b id="bv-existing-no">-</b></span>
+                                <span>지역: <b id="bv-existing-region">-</b></span>
+                                <span>시설물 종류: <b id="bv-existing-facility">-</b></span>
+                                <span>현재 담당자: <b id="bv-existing-manager">-</b></span>
+                            </div>
+                            <a id="bv-existing-edit" class="bv-btn bv-btn-primary" href="/inspections">기존 교량 수정 화면으로 이동</a>
+                            <small>같은 기업에서 동일한 원본 교량은 다시 등록할 수 없습니다.</small>
+                        </div>
+                    <div class="bv-form-actions"><button type="button" id="bv-choose-bridge" class="bv-btn bv-btn-primary">선택한 교량 정보 불러오기</button><span class="bv-help" id="bv-selection-message" aria-live="polite">교량을 선택해 주세요.</span></div>
+                </section>
+                        
+                <form id="bv-search" th:action="@{/inspections/new}" action="/inspections" method="post" enctype="multipart/form-data">
+                    <div class="bv-form-layout">
+                        <section class="bv-panel" aria-labelledby="recent-work-title">
+                            <h2 id="recent-work-title" class="bv-panel-title">검측 체크리스트</h2>
+                            <div class="bv-table-scroll">
+                                <table class="bv-table">
+                                    <thead>
+                                        <tr>
+                                            <th>기록 번호</th>
+                                            <th>관련 업무</th>
+                                            <th>요약</th>
+                                            <th>상태</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="item : ${recents}">
+                                            <td th:text="${item.displayCode}">DF-2026-016</td>
+                                            <td th:text="${item.category}">결함</td>
+                                            <td th:text="${item.description}">교각 균열</td>
+                                            <td th:text="${item.status}">조치 중</td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(recents)}">
+                                            <td colspan="4">최근 기록이 없습니다.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="bv-blank" th:if="${totalCount > 0 and resultCount == 0}"><strong>검색 결과 없음</strong><p>다른 조건으로 검색하거나 필터를 초기화해 주세요.</p><a class="bv-btn bv-btn-light" th:href="@{/inspections}" href="/inspections">검색 초기화</a></div>
+                            <nav class="bv-pager" aria-label="점검표 페이지 이동" th:if="${resultCount > 0}">
+                                <a th:if="${hasPrev}" th:href="@{/inspections(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo - 1})}">이전</a><span th:unless="${hasPrev}" class="bv-disabled">이전</span>
+                                <span th:text="|${pageNo} / ${totalPages}|">1 / 1</span>
+                                <a th:if="${hasNext}" th:href="@{/inspections(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo + 1})}">다음</a><span th:unless="${hasNext}" class="bv-disabled">다음</span>
+                            </nav>
+                        </section>
+                            
+                        <aside class="bv-panel" aria-labelledby="recent-work-title">
+                            <h2 id="recent-work-title" class="bv-panel-title">안전 점검표</h2>
+                            <div class="bv-table-scroll">
+                                <table class="bv-table">
+                                    <thead>
+                                        <tr>
+                                            <th>안전 확인 항목</th>
+                                            <th>점검 결과</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>개인 보호구 착용</td>
+                                            <td>◎ 확인</td>
+                                        </tr>
+                                        <tr>
+                                            <td>현장 출입 통제</td>
+                                            <td>◎ 확인</td>
+                                        </tr>
+                                        <tr>
+                                            <td>작업 전 안전 교육</td>
+                                            <td>◎ 확인</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="bv-field">
+                                <span>안전 점검 메모</span>
+                                <input style="height: 135px;" type="search" name="keyword" placeholder="EX) 교각 접근 구간 통제를 확인함" th:value="${keyword}"></label>
+                            </div>
+                        </aside>
+                    </div>
+                            
+                    <section class="bv-panel" aria-labelledby="save-title">
+                        <h2 class="bv-panel-title" id="save-title">검토 의견</h2>
+                        <div class="bv-form-actions">
+                            <button type="button" id="bv-save" class="bv-btn bv-btn-primary" th:if="${!editMode or canManage}" th:text="${editMode} ? '담당자 변경 저장' : '선택한 교량 등록'">선택한 교량 등록</button>
+                            <a class="bv-btn bv-btn-light" th:href="@{/inspections}" href="/inspections">취소</a>
+                            <button th:if="${editMode and canManage}" type="button" id="bv-delete" class="bv-btn bv-btn-danger">교량 삭제</button>
+                        </div>
+                        <p id="bv-save-message" class="bv-help" aria-live="polite"></p>
+                        <p class="bv-help">형식·용량·보관 기간은 정책 확인 후 안내</p>
+                    </section>
+                        
+                    <section class="bv-panel" aria-labelledby="save-title">
+                        <h2 class="bv-panel-title" id="save-title">드론 영상 업로드</h2>
+                        <div class="bv-form-layout">
+                            <div class="bv-field">
+                                <input type="file" id="videoInputSingle" name="videoFile" accept="video/*" onchange="previewVideo(this)" style="display: none;">
+                                <button type="button" id="bv-save-single" class="bv-btn bv-btn-primary" onclick="document.getElementById('videoInputSingle').click()">
+                                영상 검색
+                                </button>
+                            </div>
+                            <div class="bv-field">
+                                <input type="file" id="videoInputMultiple" name="videoFiles" accept="video/*" multiple onchange="appendVideoToTable(this)" style="display: none;">
+                                <button type="button" id="bv-save-multiple" class="bv-btn bv-btn-primary" onclick="document.getElementById('videoInputMultiple').click()">
+                                + 파일 추가
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bv-form-layout">
+                            <div class="bv-field">
+                                <span>영상 미리보기 / 재생</span>
+                                <!-- 
+                                - th:src: 서버에 저장된 영상 URL이 있다면 플레이어에 표시
+                                - controls: 재생, 일시정지, 볼륨 조절 등의 제어 바를 표시 
+                                -->
+                                <video id="videoPlayer" th:src="${savedVideoUrl}" controls width="100%" style="max-width: 500px; display: block; margin-top: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                                브라우저가 비디오 태그를 지원하지 않습니다.
+                                </video>
+                            </div>
 
-                <section class="app-grid" aria-label="화면 구성 미리보기">
-                    <div class="app-card"><div class="app-stat-label">등록 교량</div><div class="app-stat-value">--</div></div>
-                    <div class="app-card"><div class="app-stat-label">점검 진행 중</div><div class="app-stat-value">--</div></div>
-                    <div class="app-card"><div class="app-stat-label">점검 완료</div><div class="app-stat-value">--</div></div>
-                </section>
-                <section class="app-card" style="margin-top:20px">
-                    <h2 class="app-card__title">교량 목록</h2>
-                    <p>공통 레이아웃이 정상적으로 표시된다면 1단계가 완료된 것입니다.</p>
-                </section>
+                            <aside class="bv-field" aria-labelledby="video-list">
+                                <span>영상 목록</span>
+                                <div class="bv-table-scroll">
+                                    <table class="bv-table">
+                                        <thead>
+                                            <tr>
+                                                <th>파일명</th>
+                                                <th>상태</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="videoTableBody">
+                                            <tr th:each="item : ${recents}">
+                                                <td th:text="${item.displayCode}">가람교_P2_검측</td>
+                                                <td>업로드 완료</td>
+                                            </tr>
+                                            <tr th:each="item : ${recents}">
+                                                <td th:text="${item.displayCode}">가람교_상판_점검</td>
+                                                <td>업로드 완료</td>
+                                            </tr>
+                                            <tr id="emptyRow" th:if="${#lists.isEmpty(recents)}">
+                                                <td colspan="2">추가된 파일이 없습니다.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="bv-blank" th:if="${totalCount > 0 and resultCount == 0}">
+                                    <strong>검색 결과 없음</strong>
+                                    <p>다른 조건으로 검색하거나 필터를 초기화해 주세요.</p>
+                                    <a class="bv-btn bv-btn-light" th:href="@{/inspections}" href="/inspections">검색 초기화</a>
+                                </div>
+                                <nav class="bv-pager" aria-label="영상 목록 페이지 이동" th:if="${resultCount > 0}">
+                                    <a th:if="${hasPrev}" th:href="@{/inspections(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo - 1})}">이전</a>
+                                    <span th:unless="${hasPrev}" class="bv-disabled">이전</span>
+                                    <span th:text="|${pageNo} / ${totalPages}|">1 / 1</span>
+                                    <a th:if="${hasNext}" th:href="@{/inspections(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo + 1})}">다음</a>
+                                    <span th:unless="${hasNext}" class="bv-disabled">다음</span>
+                                </nav>
+                            </aside>
+                        </div>
+                        <p id="bv-save-message" class="bv-help" aria-live="polite"></p>
+                        <p class="bv-help">영상명 예시) 가람교_P2_검측, 가람교_상판_점검</p>
+                    </section>
+                    
+                    <section class="bv-panel" aria-labelledby="save-title">
+                        <h2 class="bv-panel-title" id="save-title">삭제 확인 상태창</h2>
+                        <div class="bv-form-actions">
+                            <button type="button" id="bv-save" class="bv-btn bv-btn-primary" th:if="${!editMode or canManage}" th:text="${editMode} ? '담당자 변경 저장' : '선택한 교량 등록'">선택한 교량 등록</button>
+                            <a class="bv-btn bv-btn-light" th:href="@{/inspections}" href="/inspections">취소</a>
+                            <button th:if="${editMode and canManage}" type="button" id="bv-delete" class="bv-btn bv-btn-danger">교량 삭제</button>
+                        </div>
+                        <p id="bv-save-message" class="bv-help" aria-live="polite"></p>
+                        <p class="bv-help">새 교량 등록은 bridge_master의 실제 PK로 처리됩니다. 대표 이미지는 저장 버튼을 눌렀을 때 함께 업로드됩니다. 담당자를 실제로 변경하면 변경 이력이 자동 저장됩니다. 동일 담당자 재선택은 이력에 남지 않습니다.</p>
+                    </section>
+                    
+                    <section class="bv-panel" aria-labelledby="recent-work-title">
+                        <h2 id="recent-work-title" class="bv-panel-title">검측 체크리스트</h2>
+                        <div class="bv-table-scroll">
+                            <button type="submit" id="bv-save" class="bv-btn bv-btn-primary" th:if="${!editMode or canManage}" th:text="${editMode} ? '담당자 변경 저장' : '선택한 교량 등록'">선택한 교량 등록</button>
+                            <a class="bv-btn bv-btn-light" th:href="@{/inspections}" href="/inspections">취소</a>
+                            <button th:if="${editMode and canManage}" type="button" id="bv-delete" class="bv-btn bv-btn-danger">교량 삭제</button>
+                        </div>
+                        <div class="bv-form-actions"><button class="bv-btn bv-btn-primary" type="submit">제출</button><a class="bv-btn bv-btn-light" th:href="@{/inspections}" href="/inspections">초기화</a></div>
+                    </section>
+                </form>
             </div>
         </main>
     </div>

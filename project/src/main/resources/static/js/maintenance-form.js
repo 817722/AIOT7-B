@@ -23,19 +23,33 @@
   const UPLOAD_BAR = document.getElementById('mv-upload-progress');
   const UPLOAD_STATUS = document.getElementById('mv-upload-status');
   const DELETE_CONFIRM = document.getElementById('mv-form-delete-confirm');
-  const EXTRA_MARKER = '\n\n[유지보수 화면 부가정보 v1]\n';
+  // 기록 분류/안전 교육/교육 메모는 DB memo의 구분된 마지막 블록에 저장합니다.
+  // v4는 빈 메모에 두 개의 선행 줄바꿈을 붙였으나, <textarea>는 첫 줄바꿈을
+  // 제거할 수 있습니다. 구 버전(0/1/2개 줄바꿈) 모두 읽어 데이터 노출을 막습니다.
+  const EXTRA_TAG = '[유지보수 화면 부가정보 v1]';
+  const DEFAULT_CATEGORY = '사후 보수 기록';
+  const DEFAULT_SAFETY = '미기록';
 
-  // DDL에 별도 컬럼이 없는 기록 분류·안전교육 메모는 기존 memo 끝에
-  // 명시적인 JSON 블록으로 추가합니다. 기존 memo는 그대로 읽을 수 있습니다.
   function readMemo(value) {
-    const idx = value.lastIndexOf(EXTRA_MARKER);
-    if (idx < 0) return { notes: value, extras: null };
+    const raw = String(value ?? '').replace(/\r\n?/g, '\n');
+    const idx = raw.lastIndexOf(EXTRA_TAG);
+    if (idx < 0) return { notes: raw, extras: null };
+    // 일반 사용자가 본문에 우연히 같은 문자열을 쓴 경우를 보호합니다.
+    if (idx > 0 && raw[idx - 1] !== '\n') return { notes: raw, extras: null };
     try {
-      const extras = JSON.parse(value.slice(idx + EXTRA_MARKER.length));
-      if (!extras || typeof extras !== 'object' || Array.isArray(extras)) throw new Error('형식 오류');
-      return { notes: value.slice(0, idx), extras };
-    } catch (_) { return { notes: value, extras: null }; }
+      const extras = JSON.parse(raw.slice(idx + EXTRA_TAG.length).trim());
+      if (!extras || typeof extras !== 'object' || Array.isArray(extras) ||
+          !['recordCategory', 'safetyEducation', 'educationMemo'].some(k =>
+            Object.prototype.hasOwnProperty.call(extras, k))) {
+        throw new Error('부가정보 형식이 아닙니다.');
+      }
+      return { notes: raw.slice(0, idx).replace(/\n+$/, ''), extras };
+    } catch (_) {
+      // 손상된 메모를 임의로 지우거나 변형하지 않습니다.
+      return { notes: raw, extras: null };
+    }
   }
+
   const memoElement = document.getElementById('mv-memo');
   if (memoElement && editMode) {
     const parsed = readMemo(memoElement.value);
@@ -49,14 +63,20 @@
       if (eduMemo) eduMemo.value = typeof parsed.extras.educationMemo === 'string' ? parsed.extras.educationMemo : '';
     }
   }
+
   function packMemo() {
     const notes = memoElement?.value.trim() || '';
     const extras = {
-      recordCategory: document.getElementById('mv-category')?.value || '사후 보수 기록',
-      safetyEducation: document.getElementById('mv-safety')?.value || '미기록',
+      recordCategory: document.getElementById('mv-category')?.value || DEFAULT_CATEGORY,
+      safetyEducation: document.getElementById('mv-safety')?.value || DEFAULT_SAFETY,
       educationMemo: document.getElementById('mv-education-memo')?.value.trim() || ''
     };
-    return notes + EXTRA_MARKER + JSON.stringify(extras);
+    // 사용자가 현장 일지/교육 정보에 아무것도 기록하지 않았다면 빈 메모로 저장.
+    // 기본 선택값만으로 '부가정보' JSON이 생기는 버그를 방지합니다.
+    if (!notes && extras.recordCategory === DEFAULT_CATEGORY &&
+        extras.safetyEducation === DEFAULT_SAFETY && !extras.educationMemo) return '';
+    const prefix = notes ? `${notes}\n\n` : '';
+    return `${prefix}${EXTRA_TAG}\n${JSON.stringify(extras)}`;
   }
   const reference = document.getElementById('mv-inspection-list');
   const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;

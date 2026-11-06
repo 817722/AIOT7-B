@@ -1,25 +1,27 @@
-/* 유지보수 상세 v4: Figma형 좌우 영상 미리보기, 삭제 확인, 메모 부가정보 표시 */
+/* 유지보수 상세 v5: Figma형 영상 UI 유지 + 기존 메모 부가정보 복원 오류 보정 */
 (() => {
   'use strict';
   const memo = document.getElementById('mv-stored-memo');
-  const marker = '\n\n[유지보수 화면 부가정보 v1]\n';
+  const marker = '[유지보수 화면 부가정보 v1]';
   if (memo) {
-    const raw = memo.textContent || '';
+    const raw = (memo.textContent || '').replace(/\r\n?/g, '\n');
     const index = raw.lastIndexOf(marker);
     let notes = raw;
     let extras = null;
-    if (index >= 0) {
+    if (index >= 0 && (index === 0 || raw[index - 1] === '\n')) {
       try {
-        const obj = JSON.parse(raw.slice(index + marker.length));
-        if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+        const obj = JSON.parse(raw.slice(index + marker.length).trim());
+        if (obj && typeof obj === 'object' && !Array.isArray(obj) &&
+            ['recordCategory', 'safetyEducation', 'educationMemo'].some(k =>
+              Object.prototype.hasOwnProperty.call(obj, k))) {
           extras = obj;
-          notes = raw.slice(0, index);
+          notes = raw.slice(0, index).replace(/\n+$/, '');
         }
-      } catch (_) { /* 이전 버전의 일반 메모는 변경하지 않습니다. */ }
+      } catch (_) { /* 손상된 메모는 원문을 그대로 보존합니다. */ }
     }
-    const set = (id, text) => {
+    const set = (id, value) => {
       const element = document.getElementById(id);
-      if (element) element.textContent = text;
+      if (element) element.textContent = value;
     };
     set('mv-field-notes', notes.trim() || '기록된 현장 일지가 없습니다.');
     if (extras) {

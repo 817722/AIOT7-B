@@ -164,17 +164,17 @@
    기존 공통 레이아웃과 v1~v3 기능 CSS를 보존하고 maintenance 내부에서만 변경
    ============================================================== */
 .maintenance-v2.mv-figma {--mv-field:#bfcfd6;--mv-ink:#24535f;--mv-soft:#f8fbfc}
-.maintenance-v2.mv-figma .app-container{max-width:1120px}
-.maintenance-v2.mv-figma .bv-title{margin:15px 0 1px;font-size:27px;color:#245260;letter-spacing:-.5px}
-.maintenance-v2.mv-figma .bv-subtitle{margin:0 0 19px;color:#718b95;font-size:12px}
-.maintenance-v2.mv-figma .mv-figma-panel{padding:19px 21px;margin-bottom:13px;border-color:#cedde3;border-radius:8px;box-shadow:0 1px 1px rgba(29,68,77,.03)}
-.maintenance-v2.mv-figma .bv-panel-title{font-size:15px;color:#285b68;margin:0 0 12px}
-.maintenance-v2.mv-figma .bv-btn{min-height:34px;font-size:12px;padding:8px 13px}
+.maintenance-v2.mv-figma .app-container{max-width:1260px}
+.maintenance-v2.mv-figma .bv-title{margin:0 0 2px;font-size:28px;color:#245260;letter-spacing:-.8px}
+.maintenance-v2.mv-figma .bv-subtitle{margin:0 0 20px;color:#718b95;font-size:13px}
+.maintenance-v2.mv-figma .mv-figma-panel{padding:22px 23px;margin-bottom:16px;border-color:#cedde3;border-radius:8px;box-shadow:0 1px 1px rgba(29,68,77,.03)}
+.maintenance-v2.mv-figma .bv-panel-title{font-size:16px;color:#285b68;margin:0 0 14px}
+.maintenance-v2.mv-figma .bv-btn{min-height:38px;font-size:12px;padding:9px 16px}
 .maintenance-v2.mv-figma .bv-btn-primary{background:#07858a}
 .maintenance-v2.mv-figma .mv-figma-section-heading{align-items:center}
 .maintenance-v2.mv-figma .mv-figma-section-heading .bv-panel-title{margin:0}
-.maintenance-v2.mv-figma .mv-recent{padding-top:17px;padding-bottom:15px}
-.maintenance-v2.mv-figma .mv-recent-list a{gap:4px;padding:7px 0;font-size:12px}
+.maintenance-v2.mv-figma .mv-recent{padding-top:18px;padding-bottom:18px}
+.maintenance-v2.mv-figma .mv-recent-list a{gap:6px;padding:9px 0;font-size:13px}
 .maintenance-v2.mv-figma .mv-recent-list a strong{font-weight:750}
 
 /* 목록: 설계서처럼 교량 / 기간 / 담당자 3영역 + 진행상태 탭  */
@@ -188,10 +188,10 @@
 .maintenance-v2.mv-figma .mv-figma-tabs a{display:inline-flex;align-items:center;gap:5px;padding:9px 2px;font-size:12px}
 .maintenance-v2.mv-figma .mv-figma-tabs strong{font-size:11px;font-weight:800;color:inherit}
 .maintenance-v2.mv-figma .mv-figma-empty{padding:24px 15px}
-.maintenance-v2.mv-figma .mv-card-grid{gap:14px}
-.maintenance-v2.mv-figma .mv-card-grid .bv-card-info{padding:9px 10px;gap:3px;min-height:137px}
+.maintenance-v2.mv-figma .mv-card-grid{gap:17px}
+.maintenance-v2.mv-figma .mv-card-grid .bv-card-info{padding:12px;gap:3px;min-height:140px}
 .maintenance-v2.mv-figma .mv-card-grid .bv-card-info strong{font-size:19px}
-.maintenance-v2.mv-figma .mv-card-grid .bv-card-visual{height:145px}
+.maintenance-v2.mv-figma .mv-card-grid .bv-card-visual{height:143px}
 .maintenance-v2.mv-figma .mv-card-type{color:#526c73;font-size:11px}
 .maintenance-v2.mv-figma .mv-card-title{color:#526c73;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .maintenance-v2.mv-figma .mv-card-meta{font-size:11px;color:#6a8189}
@@ -200,26 +200,26 @@
 .maintenance-v2.mv-figma .mv-figma-footnote{font-size:11px;color:#879da5;text-align:right}
 
 /* 등록/수정: 대상/연결 → 기본정보 → 현장기록 → 영상 → 삭제 → 저장 */
-.maintenance-v2.mv-figma .mv-figma-target-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.maintenance-v2.mv-figma .mv-figma-target-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .maintenance-v2.mv-figma .mv-figma-readfield{border:1px solid #d3e0e5;border-radius:5px;padding:12px;min-width:0;background:#fff;display:flex;flex-direction:column;gap:8px}
-.maintenance-v2.mv-figma .mv-figma-readfield>span{font-size:11px;font-weight:700;color:#8aa1a8}
+.maintenance-v2.mv-figma .mv-figma-readfield>span{font-size:12px;font-weight:700;color:#7896a0}
 .maintenance-v2.mv-figma .mv-target-search{display:flex;gap:5px}
-.maintenance-v2.mv-figma .mv-target-search input{width:100%;min-width:0;border:1px solid #d4e1e5;border-radius:5px;min-height:36px;font-size:12px;padding:0 10px}
+.maintenance-v2.mv-figma .mv-target-search input{width:100%;min-width:0;border:1px solid #d4e1e5;border-radius:6px;min-height:44px;font-size:13px;padding:0 12px}
 .maintenance-v2.mv-figma .mv-target-search button{flex-shrink:0}
-.maintenance-v2.mv-figma .mv-selected-bridge{padding:9px;border:none;background:#f6fafa}
+.maintenance-v2.mv-figma .mv-selected-bridge{padding:12px;border:none;background:#f6fafa}
 .maintenance-v2.mv-figma .mv-selected-bridge strong{font-size:13px}
 .maintenance-v2.mv-figma .mv-selected-bridge span{font-size:11px}
 .maintenance-v2.mv-figma .mv-bridge-results{margin:0;max-height:160px}
 .maintenance-v2.mv-figma .mv-inspection-list{margin:0;max-height:160px;border:none}
 .maintenance-v2.mv-figma .mv-inspection-list li{border-bottom:1px solid #e7eef1;padding:7px 2px}
-.maintenance-v2.mv-figma .bv-field{font-size:11px;gap:5px}
-.maintenance-v2.mv-figma .bv-field>span{font-size:11px;color:#829aa3}
-.maintenance-v2.mv-figma .bv-field input,.maintenance-v2.mv-figma .bv-field select{height:42px;border-color:#d1dfe5;border-radius:5px}
+.maintenance-v2.mv-figma .bv-field{font-size:12px;gap:5px}
+.maintenance-v2.mv-figma .bv-field>span{font-size:12px;color:#648b97}
+.maintenance-v2.mv-figma .bv-field input,.maintenance-v2.mv-figma .bv-field select{height:44px;border-color:#d1dfe5;border-radius:6px}
 .maintenance-v2.mv-figma .mv-figma-basic-grid{display:grid;grid-template-columns:1fr;gap:12px}
-.maintenance-v2.mv-figma .mv-figma-three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
-.maintenance-v2.mv-figma .mv-figma-field-top{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:13px}
+.maintenance-v2.mv-figma .mv-figma-three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.maintenance-v2.mv-figma .mv-figma-field-top{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
 .maintenance-v2.mv-figma .mv-figma-memo-field{margin:13px 0}
-.maintenance-v2.mv-figma textarea{box-sizing:border-box;width:100%;padding:11px 12px;border:1px solid #d1dfe5;border-radius:5px;background:#fff;color:#304f5b;font:inherit;font-size:13px;resize:vertical;line-height:1.65}
+.maintenance-v2.mv-figma textarea{box-sizing:border-box;width:100%;padding:12px 14px;border:1px solid #d1dfe5;border-radius:6px;background:#fff;color:#304f5b;font:inherit;font-size:14px;resize:vertical;line-height:1.65}
 .maintenance-v2.mv-figma textarea:focus{outline:2px solid rgba(8,126,133,.2);border-color:#078b90}
 .maintenance-v2.mv-figma .mv-figma-evidence{display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid #d7e3e7;border-radius:5px;padding:11px 13px}
 .maintenance-v2.mv-figma .mv-figma-evidence p{margin:3px 0 0}
@@ -253,14 +253,14 @@
 .maintenance-v2.mv-figma .mv-save-panel .bv-form-actions{margin-top:8px}
 
 /* 상세: 설계서의 3열 정보 필드, 결과/현장자료, 좌우 영상 레이아웃 */
-.maintenance-v2.mv-figma .mv-detail-figma-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.maintenance-v2.mv-figma .mv-detail-figma-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .maintenance-v2.mv-figma .mv-detail-figma-grid .bv-readonly,.maintenance-v2.mv-figma .mv-detail-result-grid .bv-readonly{padding:12px;gap:9px;min-height:56px;background:#fff}
-.maintenance-v2.mv-figma .bv-readonly span{font-size:11px;color:#8ca2ab}
-.maintenance-v2.mv-figma .bv-readonly strong{font-size:12px;color:#4e8490;font-weight:650}
+.maintenance-v2.mv-figma .bv-readonly span{font-size:12px;color:#8197a0}
+.maintenance-v2.mv-figma .bv-readonly strong{font-size:13px;color:#4e8490;font-weight:650}
 .maintenance-v2.mv-figma .mv-preline{white-space:pre-line;line-height:1.65}
 .maintenance-v2.mv-figma .mv-detail-record-name{margin:13px 0 0;font-size:12px;color:#708c96}
 .maintenance-v2.mv-figma .mv-detail-record-name strong{color:#315d6b}
-.maintenance-v2.mv-figma .mv-detail-result-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.maintenance-v2.mv-figma .mv-detail-result-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .maintenance-v2.mv-figma .mv-detail-result-grid .mv-grid-full{grid-column:1/-1}
 .maintenance-v2.mv-figma .mv-detail-inspection-list{list-style:none;margin:7px 0;padding:0;border:1px solid #d7e3e8;border-radius:5px}
 .maintenance-v2.mv-figma .mv-detail-inspection-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid #e3ecef;font-size:12px;color:#4e7581}

@@ -1,35 +1,113 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>교량점검 시스템</title>
-    <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
-    <link rel="stylesheet" th:href="@{/css/maintenance-v2.css}" href="/css/maintenance-v2.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+  <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+  <title>유지보수 상세 | 교량점검 시스템</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
+  <link rel="stylesheet" th:href="@{/css/maintenance-v2.css(v=5)}" href="/css/maintenance-v2.css?v=5">
+  <script defer th:src="@{/js/maintenance-detail.js(v=5)}" src="/js/maintenance-detail.js?v=5"></script>
 </head>
 <body>
-    <div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="app-layout" th:with="activeMenu='maintenances'">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="app-main maintenance-v2 mv-figma" id="main-content">
+    <div class="app-container">
+      <div th:replace="~{fragments/submenu :: submenu(activeMenu='/maintenances')}"></div>
+      <h1 class="bv-title">유지보수 상세</h1>
+      <p class="bv-subtitle">유지보수의 기본정보, 현장 결과 및 연결 영상을 확인합니다.</p>
 
-    <div class="app-layout" th:with="activeMenu='maintenances'">
-        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-        <main class="app-main maintenance-v2" id="main-content">
-            <div class="app-container">
-                <!-- 서브메뉴 -->
-                <div th:replace="~{fragments/submenu :: submenu(activeMenu='/maintenances/5')}"></div>
-                <h1 class="bv-title">점검 상세</h1>
-                <p class="app-page-description">공통 헤더와 사이드바 연결 테스트 화면입니다.</p>
+      <section class="bv-panel mv-figma-panel" aria-labelledby="md-basic-title">
+        <h2 id="md-basic-title" class="bv-panel-title">기본 정보</h2>
+        <div class="mv-detail-figma-grid">
+          <div class="bv-readonly"><span>대상 교량</span><strong th:text="|${maintenance.name} · 등록번호 #${maintenance.bridgeNo}|">교량명</strong></div>
+          <div class="bv-readonly"><span>소재지 / 시설물 종류</span><strong th:text="|${maintenance.province} ${maintenance.city} / ${maintenance.facilityType}|">지역</strong></div>
+          <div class="bv-readonly"><span>담당자</span><strong th:text="${maintenance.manager}">담당자</strong></div>
+          <div class="bv-readonly"><span>진행 날짜</span><strong th:text="${maintenance.maintenanceDate == null ? '미지정' : #temporals.format(maintenance.maintenanceDate, 'yyyy-MM-dd')}">진행 날짜</strong></div>
+          <div class="bv-readonly"><span>보수 유형</span><strong th:text="${maintenance.maintenanceType}">균열 보수기록</strong></div>
+          <div class="bv-readonly"><span>진행 상태</span><strong th:text="${maintenance.status}">진행 중</strong></div>
+        </div>
+        <p class="mv-detail-record-name">유지보수 기록명: <strong th:text="${maintenance.title}">교각 보수 작업</strong></p>
+      </section>
 
-                <section class="app-grid" aria-label="화면 구성 미리보기">
-                    <div class="app-card"><div class="app-stat-label">등록 교량</div><div class="app-stat-value">--</div></div>
-                    <div class="app-card"><div class="app-stat-label">점검 진행 중</div><div class="app-stat-value">--</div></div>
-                    <div class="app-card"><div class="app-stat-label">점검 완료</div><div class="app-stat-value">--</div></div>
-                </section>
-                <section class="app-card" style="margin-top:20px">
-                    <h2 class="app-card__title">교량 목록</h2>
-                    <p>공통 레이아웃이 정상적으로 표시된다면 1단계가 완료된 것입니다.</p>
-                </section>
+      <section class="bv-panel mv-figma-panel" aria-labelledby="md-result-title">
+        <h2 id="md-result-title" class="bv-panel-title">결과 및 현장 자료</h2>
+        <div class="mv-detail-result-grid">
+          <div class="bv-readonly mv-grid-full"><span>유지보수 결과</span><strong class="mv-preline" th:text="${maintenance.result == null or maintenance.result == '' ? '등록된 작업 결과가 없습니다.' : maintenance.result}">작업 결과</strong></div>
+          <div class="bv-readonly"><span>안전 교육 여부</span><strong id="mv-field-education">미기록</strong></div>
+          <div class="bv-readonly"><span>교육 메모</span><strong id="mv-field-education-memo">등록된 교육 메모 없음</strong></div>
+          <div class="bv-readonly"><span>기록 분류</span><strong id="mv-field-category">미기록</strong></div>
+          <div class="bv-readonly"><span>증거 사진 업로드</span><strong>사진 파일 연결 기능 준비 중</strong></div>
+          <div class="bv-readonly mv-grid-full"><span>현장 일지</span><strong id="mv-field-notes" class="mv-preline">기록된 현장 일지가 없습니다.</strong></div>
+          <pre id="mv-stored-memo" th:text="${maintenance.memo == null ? '' : maintenance.memo}" hidden></pre>
+        </div>
+        <h3 class="bv-minor-heading">관련 점검 기록 (참고용)</h3>
+        <ul class="mv-detail-inspection-list" th:if="${!#lists.isEmpty(referenceInspections)}">
+          <li th:each="inspection : ${referenceInspections}">
+            <strong th:text="|점검 #${inspection.no} · ${inspection.title}|">관련 점검</strong>
+            <span th:text="${inspection.status}">상태</span>
+          </li>
+        </ul>
+        <p class="mv-inline-note" th:if="${#lists.isEmpty(referenceInspections)}">이 교량에 등록된 점검 기록이 없습니다.</p>
+        <p class="bv-help">현재 유지보수와 점검 기록은 교량 기준으로 조회되며, DB에 직접 연결 관계를 저장하지는 않습니다.</p>
+      </section>
+
+      <section class="bv-panel mv-figma-panel" aria-labelledby="md-video-title">
+        <h2 id="md-video-title" class="bv-panel-title">드론 영상</h2>
+        <div id="mv-detail-video-panel" th:attr="data-maintenance-no=${maintenance.no},data-can-edit=${canEdit}">
+          <div class="mv-figma-video-layout mv-detail-video-layout">
+            <div class="mv-figma-video-left">
+              <h3 class="bv-minor-heading">선택 재생 · 연결 영상</h3>
+              <p id="mv-detail-video-empty" class="bv-help" th:if="${#lists.isEmpty(videos)}">연결된 영상이 없습니다.</p>
+              <ul class="mv-video-list" id="mv-detail-video-list" th:if="${!#lists.isEmpty(videos)}">
+                <li th:each="video : ${videos}" th:attr="data-video-no=${video.no}">
+                  <button type="button" class="mv-figma-video-item mv-play-video" th:attr="data-video-no=${video.no}">
+                    <strong th:text="${video.name}">영상 파일명</strong>
+                    <small>클릭하여 재생</small>
+                  </button>
+                  <button type="button" class="bv-btn bv-btn-danger mv-remove-video" th:if="${canEdit}"
+                          th:attr="data-video-no=${video.no}">영상 삭제</button>
+                </li>
+              </ul>
             </div>
-        </main>
+            <div class="mv-figma-video-right">
+              <div id="mv-video-player-panel" class="mv-video-player-panel" hidden>
+                <video id="mv-video-player" controls playsinline preload="metadata"></video>
+              </div>
+              <div class="mv-figma-player-placeholder" id="mv-detail-video-placeholder">
+                <span aria-hidden="true">▶</span>
+                <strong>영상을 선택해 주세요</strong>
+                <small>연결된 영상 목록에서 재생할 항목을 선택합니다.</small>
+              </div>
+            </div>
+          </div>
+          <div id="mv-video-detail-message" class="mv-form-message" hidden role="status" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="bv-panel mv-figma-panel" aria-labelledby="md-delete-title" th:if="${canEdit}">
+        <h2 id="md-delete-title" class="bv-panel-title">유지보수 영상 삭제</h2>
+        <p class="bv-help">영상 목록에서 삭제를 선택한 후 확인해 주세요. 영상만 삭제되며 유지보수 기록은 유지됩니다.</p>
+        <div id="mv-detail-delete-confirm" class="mv-delete-confirm" hidden>
+          <strong>선택한 유지보수 영상을 삭제하시겠습니까?</strong>
+          <p id="mv-detail-delete-filename">삭제한 영상은 복구할 수 없습니다.</p>
+          <div class="bv-form-actions">
+            <button type="button" id="mv-detail-delete-cancel" class="bv-btn bv-btn-light">취소</button>
+            <button type="button" id="mv-detail-delete-accept" class="bv-btn bv-btn-danger">삭제 확인</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="bv-form-actions mv-figma-bottom-actions">
+        <a class="bv-btn bv-btn-primary" th:if="${canEdit}" th:href="@{/maintenances/{no}/edit(no=${maintenance.no})}">유지보수 기록 수정</a>
+        <a class="bv-btn bv-btn-light" th:href="@{/bridges/{no}(no=${maintenance.bridgeNo})}">교량 상세</a>
+        <a class="bv-btn bv-btn-light" th:href="@{/maintenances}">유지보수 목록</a>
+      </div>
     </div>
+  </main>
+</div>
 </body>
 </html>

@@ -1,4 +1,4 @@
--- Active: 1788828751938@@127.0.0.1@3306@project
+-- Active: 1788828728652@@127.0.0.1@3306@project
 -- =========================================================
 -- 드론 영상 기반 교량 점검 업무 지원 시스템
 -- MySQL 8.0.46 / 초기 구축용 DDL
@@ -626,10 +626,9 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- 7. created_by는 최초 등록 이후 변경하지 않으며,
 --    updated_by는 수정할 때마다 실제 로그인 사용자의
 --    users.no로 갱신해야 합니다.
--- 8. [외래키 간소화] bridges/inspections/defects/maintenance_records/
---    defect_actions의 담당자·등록자·수정자(manager_no, inspector_no,
---    created_by, updated_by)는 users.no만 참조하는 단일 FK로
---    단순화했습니다. 로그인 사용자가 가리키는 사용자의 corp_no가
+-- 8. [외래키 간소화] bridges/inspections/maintenance_records/ 는
+--    users.no만 참조하는 단일 FK로 단순화했습니다. 
+--    로그인 사용자가 가리키는 사용자의 corp_no가
 --    레코드의 corp_no와 같은 기업인지는 더 이상 DB가 보장하지
 --    않으므로, 서비스 레이어(예: 공통 검증 유틸/AOP)에서 반드시
 --    검증해야 합니다. 교량·점검·결함·유지보수의 "소유 기업" 자체를

@@ -11,25 +11,15 @@ USE project;
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS `bridge_recent`;
-
 DROP TABLE IF EXISTS `manager_history`;
-
 DROP TABLE IF EXISTS `maintenance_records`;
-
 DROP TABLE IF EXISTS `inspections`;
-
 DROP TABLE IF EXISTS `media`;
-
 DROP TABLE IF EXISTS `bridges`;
-
 DROP TABLE IF EXISTS `user_auth`;
-
 DROP TABLE IF EXISTS `users`;
-
 DROP TABLE IF EXISTS `bridge_master`;
-
 DROP TABLE IF EXISTS `corps`;
-
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ===========================
@@ -43,11 +33,16 @@ CREATE TABLE `corps` (
     `opened_at` DATE NOT NULL COMMENT '개업일자',
     `bis_verified` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '기업 인증 완료 여부',
     `verified_at` DATETIME DEFAULT NULL COMMENT '기업 인증 일시',
+    `status` ENUM('PENDING', 'ACTIVE', 'REJECTED', 'SUSPENDED') NOT NULL DEFAULT 'PENDING' COMMENT '기업 승인 상태: 승인대기/활성/반려/정지 (SUPER_ADMIN이 변경)',
+    `status_by` BIGINT DEFAULT NULL COMMENT '승인·반려·정지 처리한 SUPER_ADMIN 사용자 번호',
+    `status_at` DATETIME DEFAULT NULL COMMENT '승인·반려·정지 처리 일시',
+    `reject` VARCHAR(500) DEFAULT NULL COMMENT '반려·정지 사유',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일자',
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자',
     PRIMARY KEY (`no`),
     UNIQUE KEY `uk_corps_bis_no` (`bis_no`),
     KEY `idx_corps_ceo` (`ceo_name`),
+    KEY `idx_corps_status` (`status`),
     CONSTRAINT `chk_corps_bis_verified` CHECK (`bis_verified` IN (0, 1))
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '기업 정보 및 인증 정보';
 
@@ -64,7 +59,10 @@ CREATE TABLE `users` (
     `password` VARCHAR(255) NOT NULL COMMENT '비밀번호 해시',
     `manager_name` VARCHAR(100) NOT NULL COMMENT '담당자명',
     `phone` VARCHAR(100) NOT NULL COMMENT '담당자 연락망',
-    `enabled` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    `status` ENUM('PENDING', 'ACTIVE', 'REJECTED', 'DISABLED') NOT NULL DEFAULT 'PENDING' COMMENT '계정 상태: 승인대기/활성/반려/비활성 (기업 ADMIN이 변경). 로그인은 users.status와 corps.status가 모두 ACTIVE여야 함',
+    `status_by` BIGINT DEFAULT NULL COMMENT '승인·반려·비활성 처리한 같은 기업 ADMIN 사용자 번호',
+    `status_at` DATETIME DEFAULT NULL COMMENT '승인·반려·비활성 처리 일시',
+    `reject` VARCHAR(500) DEFAULT NULL COMMENT '반려·비활성 사유',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일자',
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자',
     PRIMARY KEY (`no`),
@@ -73,14 +71,19 @@ CREATE TABLE `users` (
     UNIQUE KEY `uk_users_no_corp` (`no`, `corp_no`),
     KEY `idx_users_corp` (`corp_no`),
     KEY `idx_users_name` (`manager_name`),
+    KEY `idx_users_corp_status` (`corp_no`, `status`),
     CONSTRAINT `fk_users_corp` FOREIGN KEY (`corp_no`) REFERENCES `corps` (`no`) ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT `chk_users_enabled` CHECK (`enabled` IN (0, 1))
+    CONSTRAINT `fk_users_status_by_corp` FOREIGN KEY (`status_by`, `corp_no`) REFERENCES `users` (`no`, `corp_no`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '시스템 사용자';
+
+-- corps.status_by -> users.no : corps가 users보다 먼저 만들어지므로 반드시!!! users 생성 후 추가되어야 함.
+ALTER TABLE `corps`
+    ADD CONSTRAINT `fk_corps_status_by` FOREIGN KEY (`status_by`) REFERENCES `users` (`no`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- ==================
 -- 3. 사용자 권한
--- SUPER_ADMIN : 웹 관리자
--- ADMIN : 기업
+-- SUPER_ADMIN : 웹 관리자 (운영자)
+-- ADMIN : 기업 관리자(새 기업을 최초 등록한 가입자. 같은 기업 직원 가입을 승인)
 -- INSPECTOR : 담당자(=직원)
 -- ==================
 CREATE TABLE `user_auth` (
@@ -644,4 +647,16 @@ SET FOREIGN_KEY_CHECKS = 1;
 --    1건이 부모 레코드 1건에만 연결되며(기존 M:N 연결 테이블과
 --    달리 동일 파일을 여러 부모에 공유할 수 없음), 공유가 필요하면
 --    파일을 복제하거나 별도 연결 테이블을 다시 도입해야 합니다.
+-- 10. [가입 승인 흐름]
+--    새 기업(bis_no 없음): corps.status='PENDING' + 최초 가입자는 ADMIN(users.status='ACTIVE').
+--      SUPER_ADMIN이 승인하면 corps.status='ACTIVE'. 로그인은 corps.status='ACTIVE'일 때만 가능.
+--    기존 기업(bis_no 있음): 가입자는 INSPECTOR + users.status='PENDING'.
+--      같은 기업 ADMIN이 승인하면 'ACTIVE', 반려하면 'REJECTED'.
+--    users.enabled는 users.status로 대체되었습니다(둘을 같이 두면 의미가 겹쳐 혼란).
+--    로그인 허용 = users.status='ACTIVE' AND corps.status='ACTIVE'.
+--    ADMIN의 승인·반려 대상이 자기 기업 사용자인지, 마지막 ADMIN을 강등/비활성하지
+--    않는지, 자기 자신의 권한을 바꾸지 않는지는 서비스 레이어에서 검증해야 합니다.
+--    SUPER_ADMIN 계정은 화면에서 만들 수 없고 SQL로만 생성합니다.
+--    users.corp_no가 NOT NULL이므로 SUPER_ADMIN도 어떤 기업에 소속되어야 하며,
+--    이를 위해 '운영사 기업' 1건을 시드로 넣습니다(migration_corp_user_approval.sql 참고).
 -- ===========================

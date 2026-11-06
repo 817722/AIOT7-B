@@ -38,4 +38,22 @@ public class CurrentUserViewAdvice {
                 .filter(name -> !name.isBlank())
                 .orElse(username);
     }
+
+    /** Spring Security 권한에 따라 공통 헤더에 표시할 직책을 결정한다. */
+    @ModelAttribute("currentWorkerRoleLabel")
+    public String currentWorkerRoleLabel() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
+            return null;
+        }
+
+        boolean superAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_SUPER_ADMIN".equals(authority.getAuthority()));
+        if (superAdmin) return "최고관리자";
+
+        boolean admin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+        return admin ? "관리자" : "작업자";
+    }
 }

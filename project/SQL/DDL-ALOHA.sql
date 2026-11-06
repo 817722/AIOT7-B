@@ -11,29 +11,20 @@ USE project;
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS `bridge_recent`;
-
 DROP TABLE IF EXISTS `manager_history`;
-
 DROP TABLE IF EXISTS `maintenance_records`;
-
 DROP TABLE IF EXISTS `inspections`;
-
 DROP TABLE IF EXISTS `media`;
-
 DROP TABLE IF EXISTS `bridges`;
-
 DROP TABLE IF EXISTS `user_auth`;
-
 DROP TABLE IF EXISTS `users`;
-
 DROP TABLE IF EXISTS `bridge_master`;
-
 DROP TABLE IF EXISTS `corps`;
-
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ===========================
 -- 1. 기업
+--
 -- ===========================
 CREATE TABLE `corps` (
     `no` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'PK',
@@ -43,11 +34,16 @@ CREATE TABLE `corps` (
     `opened_at` DATE NOT NULL COMMENT '개업일자',
     `bis_verified` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '기업 인증 완료 여부',
     `verified_at` DATETIME DEFAULT NULL COMMENT '기업 인증 일시',
+    `status` ENUM('PENDING', 'ACTIVE', 'REJECTED', 'SUSPENDED') NOT NULL DEFAULT 'PENDING' COMMENT '기업 승인 상태: 승인대기/활성/반려/정지 (SUPER_ADMIN이 변경)',
+    `status_by` BIGINT DEFAULT NULL COMMENT '승인·반려·정지 처리한 SUPER_ADMIN 사용자 번호',
+    `status_at` DATETIME DEFAULT NULL COMMENT '승인·반려·정지 처리 일시',
+    `reject` VARCHAR(500) DEFAULT NULL COMMENT '반려·정지 사유',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일자',
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자',
     PRIMARY KEY (`no`),
     UNIQUE KEY `uk_corps_bis_no` (`bis_no`),
     KEY `idx_corps_ceo` (`ceo_name`),
+    KEY `idx_corps_status` (`status`),
     CONSTRAINT `chk_corps_bis_verified` CHECK (`bis_verified` IN (0, 1))
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '기업 정보 및 인증 정보';
 

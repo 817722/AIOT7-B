@@ -16,6 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,13 +30,16 @@ import org.springframework.web.server.ResponseStatusException;
 public class MaintenanceVideoService {
     private final JdbcTemplate jdbc;
     private final Path root;
+    private final Path mediaRoot;
     private final long maxBytes;
 
     public MaintenanceVideoService(JdbcTemplate jdbc,
             @Value("${maintenance.videos.storage-dir:./uploads/maintenance-videos}") String directory,
-            @Value("${maintenance.videos.max-bytes:209715200}") long maxBytes) {
+            @Value("${maintenance.videos.max-bytes:209715200}") long maxBytes,
+            @Value("${media.storage-dir:./uploads/media}") String mediaDirectory) {
         this.jdbc = jdbc;
         this.root = Paths.get(directory).toAbsolutePath().normalize();
+        this.mediaRoot = Paths.get(mediaDirectory).toAbsolutePath().normalize();
         this.maxBytes = maxBytes;
     }
 
@@ -63,12 +67,22 @@ public class MaintenanceVideoService {
     }
 
     private MaintenanceAccess requireRecord(Actor actor, long maintenanceNo) {
-        List<Map<String, Object>> rows = jdbc.queryForList("""
+        return requireRecord(actor, maintenanceNo, false);
+    }
+
+    /** 업로드·영상 삭제는 유지보수 기록 삭제와 동일한 순서로 부모 행을 잠급니다. */
+    private MaintenanceAccess requireRecordForUpdate(Actor actor, long maintenanceNo) {
+        return requireRecord(actor, maintenanceNo, true);
+    }
+
+    private MaintenanceAccess requireRecord(Actor actor, long maintenanceNo, boolean forUpdate) {
+        String sql = """
                 SELECT m.manager_no, m.created_by
                   FROM maintenance_records m
                   JOIN bridges b ON b.no = m.bridge_no AND b.corp_no = m.corp_no
                  WHERE m.no = ? AND m.corp_no = ?
-                """, maintenanceNo, actor.corpNo());
+                """ + (forUpdate ? " FOR UPDATE" : "");
+        List<Map<String, Object>> rows = jdbc.queryForList(sql, maintenanceNo, actor.corpNo());
         if (rows.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "유지보수 기록을 찾을 수 없습니다.");
         Map<String, Object> data = rows.get(0);
         return new MaintenanceAccess(((Number) data.get("manager_no")).longValue(),
@@ -104,7 +118,7 @@ public class MaintenanceVideoService {
     @Transactional
     public long upload(Authentication auth, long maintenanceNo, MultipartFile file) {
         Actor actor = actor(auth);
-        requireEdit(actor, requireRecord(actor, maintenanceNo));
+        requireEdit(actor, requireRecordForUpdate(actor, maintenanceNo));
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "영상 파일을 선택해 주세요.");
         }
@@ -166,7 +180,7 @@ public class MaintenanceVideoService {
     @Transactional
     public void delete(Authentication auth, long maintenanceNo, long mediaNo) {
         Actor actor = actor(auth);
-        requireEdit(actor, requireRecord(actor, maintenanceNo));
+        requireEdit(actor, requireRecordForUpdate(actor, maintenanceNo));
         Map<String, Object> row = requireMedia(actor, maintenanceNo, mediaNo);
         // 레거시 파일 경로의 경우 파일 삭제는 건너뛰고 메타데이터만 삭제합니다.
         Path file = safeStoredPath(row.get("path"));
@@ -178,6 +192,51 @@ public class MaintenanceVideoService {
         if (file != null) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override public void afterCommit() { deleteQuietly(file); }
+            });
+        }
+    }
+
+    /** 같은 DB 트랜잭션에서 유지보수와 증거사진·영상 미디어를 함께 삭제합니다.
+     * 알 수 없는 저장 경로의 파일은 안전을 위해 삭제를 차단합니다.
+     * 호출자는 maintenance_records 행을 FOR UPDATE로 먼저 잠가야 합니다.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void removeLinkedMediaForRecord(long corpNo, long maintenanceNo) {
+        List<Map<String, Object>> attached = jdbc.queryForList("""
+                SELECT no, type, path FROM media
+                 WHERE p_type = 'MAINTENANCE' AND p_id = ? AND corp_no = ?
+                 FOR UPDATE
+                """, maintenanceNo, corpNo);
+        List<Path> removeAfterCommit = new java.util.ArrayList<>();
+        for (Map<String, Object> item : attached) {
+            String kind = String.valueOf(item.get("type"));
+            Path safeFile = safeAttachedPath(kind, item.get("path"));
+            if (safeFile == null) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "관리되지 않는 사진 또는 영상 경로가 있어 기록 삭제를 보류했습니다. 저장 경로를 확인해 주세요.");
+            }
+            Integer shared = jdbc.queryForObject("""
+                    SELECT COUNT(*) FROM media
+                     WHERE path = ? AND NOT (p_type = 'MAINTENANCE' AND p_id = ? AND corp_no = ?)
+                    """, Integer.class, String.valueOf(item.get("path")), maintenanceNo, corpNo);
+            if (shared != null && shared > 0) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "다른 기록에서 공유하는 사진 또는 영상 파일이 있어 삭제를 보류했습니다.");
+            }
+            removeAfterCommit.add(safeFile);
+        }
+        if (!attached.isEmpty()) {
+            int removed = jdbc.update("""
+                    DELETE FROM media WHERE p_type = 'MAINTENANCE' AND p_id = ? AND corp_no = ?
+                    """, maintenanceNo, corpNo);
+            if (removed != attached.size()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "첨부파일 목록이 변경되어 기록 삭제를 보류했습니다. 다시 시도해 주세요.");
+            }
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() {
+                    for (Path file : removeAfterCommit) deleteQuietly(file);
+                }
             });
         }
     }
@@ -196,6 +255,25 @@ public class MaintenanceVideoService {
         Path candidate = safeStoredPath(name);
         if (candidate == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "지원하지 않는 영상 저장 경로입니다.");
         return candidate;
+    }
+
+    /** 새 공통 media 폴더와 이전 maintenance-videos 폴더를 함께 인정합니다. */
+    private Path safeAttachedPath(String type, Object name) {
+        if (name == null) return null;
+        String value = String.valueOf(name);
+        boolean image = "IMAGE".equals(type);
+        boolean video = "VIDEO".equals(type);
+        if (!image && !video) return null;
+        if (!value.matches(image ? "[0-9a-f-]{36}\\.(jpg|png|webp)"
+                                 : "[0-9a-f-]{36}\\.(mp4|webm)")) return null;
+        Path media = mediaRoot.resolve(value).normalize();
+        if (!media.startsWith(mediaRoot)) return null;
+        if (image) return media;
+        Path legacy = root.resolve(value).normalize();
+        if (!legacy.startsWith(root)) return null;
+        // UUID 충돌로 양쪽 저장소에 동일한 이름이 존재하면 어느 쪽인지 불명확하므로 삭제 보류.
+        if (Files.isRegularFile(media) && Files.isRegularFile(legacy)) return null;
+        return Files.isRegularFile(media) ? media : legacy;
     }
 
     private Path safeStoredPath(Object name) {

@@ -112,6 +112,153 @@
     return bytes > 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)}MB` : `${Math.ceil(bytes / 1024)}KB`;
   }
 
+  // 증거 사진은 공통 MediaService에 연결하되 영상과 별도 API/화면을 사용합니다.
+  const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
+  const PHOTO_MAX_COUNT = 20;
+  const photoInput = document.getElementById('mv-photo-file');
+  const pendingPhotoWrap = document.getElementById('mv-photo-pending-wrap');
+  const pendingPhotoList = document.getElementById('mv-photo-pending-list');
+  const savedPhotoList = document.getElementById('mv-photo-saved-list');
+  const photoDeleteConfirm = document.getElementById('mv-photo-delete-confirm');
+  const photoDeleteCancel = document.getElementById('mv-photo-delete-cancel');
+  const photoDeleteAccept = document.getElementById('mv-photo-delete-accept');
+  let selectedPhotos = [];
+  let selectedPhotoUrls = [];
+  let savedPhotoCount = 0;
+  let pendingDeletePhotoNo = null;
+
+  const photoEndpoint = no => `/api/maintenance-ui/records/${encodeURIComponent(no)}/photos`;
+  const photoFileUrl = no => `/api/media/file/${encodeURIComponent(no)}`;
+
+  function clearPreviewPhotoUrls() {
+    selectedPhotoUrls.forEach(url => URL.revokeObjectURL(url));
+    selectedPhotoUrls = [];
+  }
+
+  function photoCard(name, url, onRemove) {
+    const card = document.createElement('div');
+    card.className = 'mv-evidence-card';
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.title = `${name} · 새 창에서 보기`;
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = name;
+    img.loading = 'lazy';
+    link.appendChild(img);
+    const label = document.createElement('span');
+    label.textContent = name;
+    card.append(link, label);
+    if (onRemove) {
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'bv-btn bv-btn-light mv-evidence-remove';
+      remove.textContent = '삭제';
+      remove.setAttribute('aria-label', `${name} 삭제`);
+      remove.addEventListener('click', onRemove);
+      card.appendChild(remove);
+    }
+    return card;
+  }
+
+  function renderPendingPhotos() {
+    if (!pendingPhotoList || !pendingPhotoWrap) return;
+    clearPreviewPhotoUrls();
+    pendingPhotoList.replaceChildren();
+    pendingPhotoWrap.hidden = selectedPhotos.length === 0;
+    selectedPhotos.forEach((file, i) => {
+      const url = URL.createObjectURL(file);
+      selectedPhotoUrls.push(url);
+      pendingPhotoList.append(photoCard(`${file.name} · ${bytesLabel(file.size)}`, url, () => {
+        selectedPhotos.splice(i, 1);
+        renderPendingPhotos();
+      }));
+    });
+  }
+
+  photoInput?.addEventListener('change', () => {
+    const incoming = Array.from(photoInput.files || []);
+    photoInput.value = '';
+    if (selectedPhotos.length + savedPhotoCount + incoming.length > PHOTO_MAX_COUNT) {
+      showMessage('증거 사진은 기록당 최대 20장까지 선택할 수 있습니다.');
+      return;
+    }
+    for (const file of incoming) {
+      if (!/\.(jpe?g|png|webp)$/i.test(file.name) || !file.size || file.size > PHOTO_MAX_BYTES) {
+        showMessage('JPG·PNG·WebP 파일만 선택할 수 있고 사진 1장당 최대 5MB입니다.');
+        return;
+      }
+    }
+    selectedPhotos.push(...incoming);
+    renderPendingPhotos();
+  });
+
+  async function loadSavedPhotos() {
+    if (!editMode || !savedPhotoList) return;
+    try {
+      const photos = await request(photoEndpoint(recordNo));
+      savedPhotoCount = photos.length;
+      savedPhotoList.replaceChildren();
+      if (!photos.length) {
+        const empty = document.createElement('p');
+        empty.className = 'bv-help';
+        empty.textContent = '등록된 증거 사진이 없습니다.';
+        savedPhotoList.appendChild(empty);
+      }
+      for (const photo of photos) {
+        savedPhotoList.append(photoCard(photo.originName || `증거 사진 #${photo.no}`,
+          photoFileUrl(photo.no), () => {
+            pendingDeletePhotoNo = photo.no;
+            document.getElementById('mv-photo-delete-name').textContent =
+              `${photo.originName || '사진'} · 삭제 후 복구할 수 없습니다.`;
+            photoDeleteConfirm.hidden = false;
+          }));
+      }
+    } catch (error) {
+      savedPhotoList.textContent = `증거 사진을 조회하지 못했습니다: ${error.message}`;
+    }
+  }
+  photoDeleteCancel?.addEventListener('click', () => {
+    pendingDeletePhotoNo = null;
+    photoDeleteConfirm.hidden = true;
+  });
+  photoDeleteAccept?.addEventListener('click', async () => {
+    if (!pendingDeletePhotoNo) return;
+    photoDeleteAccept.disabled = true;
+    try {
+      await request(`${photoEndpoint(recordNo)}/${pendingDeletePhotoNo}`, 'DELETE');
+      showMessage('증거 사진을 삭제했습니다.', false);
+      pendingDeletePhotoNo = null;
+      photoDeleteConfirm.hidden = true;
+      await loadSavedPhotos();
+    } catch (error) { showMessage(error.message); }
+    finally { photoDeleteAccept.disabled = false; }
+  });
+  loadSavedPhotos();
+  if (new URLSearchParams(window.location.search).get('photoUploadFailed') === '1') {
+    showMessage('유지보수 정보는 저장되었지만 일부 증거 사진 업로드에 실패했습니다. 사진을 다시 선택해 저장해 주세요.');
+  }
+  window.addEventListener('beforeunload', clearPreviewPhotoUrls);
+
+  async function uploadPhotos(no) {
+    for (const file of selectedPhotos) {
+      const data = new FormData();
+      data.append('file', file);
+      const headers = { Accept: 'application/json' };
+      if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
+      const response = await fetch(photoEndpoint(no), {
+        method: 'POST', credentials: 'same-origin', headers, body: data
+      });
+      if (!response.ok) {
+        let reason = '';
+        try { const body = await response.json(); reason = body.message || body.detail || ''; } catch (_) {}
+        throw new Error(reason || `증거 사진 업로드 실패 (HTTP ${response.status})`);
+      }
+    }
+  }
+
   function previewVideo(file) {
     if (videoObjectUrl) URL.revokeObjectURL(videoObjectUrl);
     videoObjectUrl = null;
@@ -379,11 +526,14 @@
         throw new Error('수정할 유지보수 번호가 올바르지 않습니다.');
       }
       const saved = await request(path, editMode ? 'PUT' : 'POST', payload);
-      try {
-        await uploadVideo(saved.no);
-      } catch (videoError) {
-        // 기록 등록은 성공했습니다. 재등록 시 중복 생성되지 않도록 수정 화면으로 이동합니다.
-        window.location.assign(`/maintenances/${encodeURIComponent(saved.no)}/edit?videoUploadFailed=1`);
+      const uploadFailures = [];
+      try { await uploadPhotos(saved.no); }
+      catch (photoError) { uploadFailures.push('photoUploadFailed=1'); }
+      try { await uploadVideo(saved.no); }
+      catch (videoError) { uploadFailures.push('videoUploadFailed=1'); }
+      if (uploadFailures.length) {
+        // 본문 저장에 성공한 뒤 첨부 업로드가 실패한 경우 신규 기록을 중복 생성하지 않습니다.
+        window.location.assign(`/maintenances/${encodeURIComponent(saved.no)}/edit?${uploadFailures.join('&')}`);
         return;
       }
       window.location.assign(`/maintenances/${encodeURIComponent(saved.no)}`);

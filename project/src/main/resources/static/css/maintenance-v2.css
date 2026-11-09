@@ -296,3 +296,26 @@
  .maintenance-v2.mv-figma .mv-figma-evidence{flex-direction:column;align-items:flex-start}
  .maintenance-v2.mv-figma .mv-figma-tabs{gap:7px}
 }
+
+/* v6: 유지보수 기록 전체 삭제 영역 (영상 단건 삭제와 구분) */
+.maintenance-v2.mv-figma .mv-record-delete-section{border-color:#e7c9c9}
+.maintenance-v2.mv-figma .mv-record-delete-section>.bv-panel-title{color:#9d4145}
+.maintenance-v2.mv-figma .mv-record-delete-section .bv-btn-danger{background:#fffafa}
+.maintenance-v2.mv-figma .mv-record-delete-section .mv-form-message.is-error{color:#b43f43}
+
+
+/* v7 증거 사진: 기존 교량 화면 너비·입력 크기를 유지하면서 유지보수 영역에만 적용 */
+.maintenance-v2.mv-figma .mv-evidence-picker{cursor:pointer;flex-shrink:0}
+.maintenance-v2.mv-figma .mv-evidence-wrap{margin:12px 0 2px}
+.maintenance-v2.mv-figma .mv-evidence-gallery{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:8px 0}
+.maintenance-v2.mv-figma .mv-evidence-card{display:flex;flex-direction:column;gap:8px;min-width:0;padding:10px;border:1px solid #d7e3e8;border-radius:7px;background:#f9fcfc;overflow:hidden}
+.maintenance-v2.mv-figma .mv-evidence-card>a{display:block;aspect-ratio:4/3;border-radius:5px;overflow:hidden;background:#eaf1f3}
+.maintenance-v2.mv-figma .mv-evidence-card img{width:100%;height:100%;object-fit:cover;display:block}
+.maintenance-v2.mv-figma .mv-evidence-card span{font-size:12px;color:#426a74;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.maintenance-v2.mv-figma .mv-evidence-remove{align-self:flex-start;min-height:32px;font-size:11px;padding:5px 11px}
+.maintenance-v2.mv-figma .mv-evidence-detail{align-items:stretch}
+.maintenance-v2.mv-figma .mv-evidence-detail>.mv-evidence-gallery{width:100%}
+.maintenance-v2.mv-figma .mv-evidence-detail .mv-delete-confirm{width:100%}
+@media(max-width:960px){.maintenance-v2.mv-figma .mv-evidence-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:680px){.maintenance-v2.mv-figma .mv-evidence-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:390px){.maintenance-v2.mv-figma .mv-evidence-gallery{grid-template-columns:1fr}}

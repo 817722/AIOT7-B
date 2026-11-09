@@ -7,8 +7,8 @@
   <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
   <title th:text="${editMode} ? '유지보수 수정 | 교량점검 시스템' : '유지보수 등록 | 교량점검 시스템'">유지보수 등록</title>
   <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
-  <link rel="stylesheet" th:href="@{/css/maintenance-v2.css(v=5)}" href="/css/maintenance-v2.css?v=5">
-  <script defer th:src="@{/js/maintenance-form.js(v=5)}" src="/js/maintenance-form.js?v=5"></script>
+  <link rel="stylesheet" th:href="@{/css/maintenance-v2.css(v=7)}" href="/css/maintenance-v2.css?v=7">
+  <script defer th:src="@{/js/maintenance-form.js(v=7)}" src="/js/maintenance-form.js?v=7"></script>
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
@@ -133,10 +133,30 @@
             <span>작업 결과</span>
             <textarea id="mv-result" name="result" rows="3" maxlength="20000" placeholder="작업 결과와 완료 사항을 입력하세요." th:text="${editMode ? maintenance.result : ''}"></textarea>
           </label>
-          <div class="mv-figma-evidence">
-            <div><span class="mv-small-heading">증거 사진</span><p class="bv-help">증거 사진 업로드는 준비 중입니다. 현재는 영상만 등록할 수 있습니다.</p></div>
-            <button class="bv-btn bv-btn-light" type="button" disabled title="추후 제공 예정">증거 사진 선택 (준비 중)</button>
-          </div>
+           <div class="mv-figma-evidence">
+             <div>
+               <span class="mv-small-heading">증거 사진</span>
+               <p class="bv-help">JPG · PNG · WebP / 한 장당 최대 5MB / 기록당 최대 20장. 저장 시 함께 업로드합니다.</p>
+             </div>
+             <label for="mv-photo-file" class="bv-btn bv-btn-light mv-evidence-picker">증거 사진 선택</label>
+             <input id="mv-photo-file" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple class="mv-sr-only">
+           </div>
+           <div id="mv-photo-pending-wrap" class="mv-evidence-wrap" hidden>
+             <h3 class="bv-minor-heading">선택한 사진 (기록 저장 시 업로드)</h3>
+             <div id="mv-photo-pending-list" class="mv-evidence-gallery" aria-live="polite"></div>
+           </div>
+           <div id="mv-photo-saved-wrap" class="mv-evidence-wrap" th:if="${editMode}">
+             <h3 class="bv-minor-heading">저장된 증거 사진</h3>
+             <div id="mv-photo-saved-list" class="mv-evidence-gallery" aria-live="polite">사진 목록을 불러오고 있습니다.</div>
+             <div id="mv-photo-delete-confirm" class="mv-delete-confirm" hidden>
+               <strong>선택한 증거 사진을 삭제하시겠습니까?</strong>
+               <p id="mv-photo-delete-name">삭제한 사진은 복구할 수 없습니다.</p>
+               <div class="bv-form-actions">
+                 <button type="button" id="mv-photo-delete-cancel" class="bv-btn bv-btn-light">취소</button>
+                 <button type="button" id="mv-photo-delete-accept" class="bv-btn bv-btn-danger">사진 삭제 확인</button>
+               </div>
+             </div>
+           </div>
         </section>
 
         <section class="bv-panel mv-figma-panel" aria-labelledby="mv-video-title">

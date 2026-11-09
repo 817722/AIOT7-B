@@ -29,6 +29,7 @@ public class MaintenanceUiWriteService {
             "균열 보수기록", "단면 복구기록", "구조 보강기록", "하자보수 관리", "기타");
     private static final Set<String> VALID_STATUSES = Set.of("진행 대기", "진행 중", "완료");
     private final JdbcTemplate jdbc;
+    private final MaintenanceVideoService videoService;
 
     public record Payload(Long bridgeNo, String title, String maintenanceType,
                           String memo, LocalDate maintenanceDate, Long managerNo,
@@ -141,6 +142,45 @@ public class MaintenanceUiWriteService {
                 """, maintenanceNo, actor.corpNo());
         if (rows.isEmpty()) return false;
         return permitted(actor, rows.get(0));
+    }
+
+    /** 기업 관리자만 유지보수 기록을 삭제할 수 있습니다. (SUPER_ADMIN은 자기 소속 기업 범위만) */
+    @Transactional(readOnly = true)
+    public boolean canDelete(Authentication auth, long maintenanceNo) {
+        Actor actor = actor(auth);
+        if (!actor.admin()) return false;
+        Integer count = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM maintenance_records
+                 WHERE no = ? AND corp_no = ?
+                """, Integer.class, maintenanceNo, actor.corpNo());
+        return count != null && count == 1;
+    }
+
+    /** 유지보수 기록과 연결 사진·영상을 같은 DB 트랜잭션에서 정리합니다.
+     *  실제 파일은 DB 커밋 후 안전한 저장 경로 내에서 삭제합니다.
+     */
+    @Transactional
+    public void delete(Authentication auth, long maintenanceNo) {
+        Actor actor = actor(auth);
+        if (!actor.admin()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "기업 관리자만 유지보수 기록을 삭제할 수 있습니다.");
+        }
+        // 쓰기/영상업로드와 충돌하지 않도록 유지보수 행을 잠급니다.
+        List<Map<String, Object>> rows = jdbc.queryForList("""
+                SELECT no FROM maintenance_records
+                 WHERE no = ? AND corp_no = ? FOR UPDATE
+                """, maintenanceNo, actor.corpNo());
+        if (rows.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "소속 기업의 유지보수 기록을 찾을 수 없습니다.");
+        }
+        // 지원하는 증거 사진·영상은 함께 정리하고 미지원 저장 경로는 삭제 차단.
+        videoService.removeLinkedMediaForRecord(actor.corpNo(), maintenanceNo);
+        int deleted = jdbc.update("""
+                DELETE FROM maintenance_records WHERE no = ? AND corp_no = ?
+                """, maintenanceNo, actor.corpNo());
+        if (deleted != 1) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "기록 삭제에 실패했습니다. 다시 시도해 주세요.");
+        }
     }
 
     @Transactional

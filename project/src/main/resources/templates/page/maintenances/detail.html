@@ -7,8 +7,8 @@
   <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
   <title>유지보수 상세 | 교량점검 시스템</title>
   <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
-  <link rel="stylesheet" th:href="@{/css/maintenance-v2.css(v=5)}" href="/css/maintenance-v2.css?v=5">
-  <script defer th:src="@{/js/maintenance-detail.js(v=5)}" src="/js/maintenance-detail.js?v=5"></script>
+  <link rel="stylesheet" th:href="@{/css/maintenance-v2.css(v=7)}" href="/css/maintenance-v2.css?v=7">
+  <script defer th:src="@{/js/maintenance-detail.js(v=7)}" src="/js/maintenance-detail.js?v=7"></script>
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
@@ -40,7 +40,21 @@
           <div class="bv-readonly"><span>안전 교육 여부</span><strong id="mv-field-education">미기록</strong></div>
           <div class="bv-readonly"><span>교육 메모</span><strong id="mv-field-education-memo">등록된 교육 메모 없음</strong></div>
           <div class="bv-readonly"><span>기록 분류</span><strong id="mv-field-category">미기록</strong></div>
-          <div class="bv-readonly"><span>증거 사진 업로드</span><strong>증거 사진 기능 준비 중</strong></div>
+           <div class="bv-readonly mv-grid-full mv-evidence-detail">
+             <span>증거 사진</span>
+             <div id="mv-detail-photo-gallery" class="mv-evidence-gallery" th:attr="data-maintenance-no=${maintenance.no},data-can-edit=${canEdit}">
+               사진 목록을 불러오고 있습니다.
+             </div>
+             <div id="mv-detail-photo-message" class="mv-form-message" hidden role="status" aria-live="polite"></div>
+             <div id="mv-detail-photo-confirm" class="mv-delete-confirm" hidden th:if="${canEdit}">
+               <strong>이 증거 사진을 삭제하시겠습니까?</strong>
+               <p id="mv-detail-photo-filename">삭제 후 복구할 수 없습니다.</p>
+               <div class="bv-form-actions">
+                 <button type="button" id="mv-detail-photo-cancel" class="bv-btn bv-btn-light">취소</button>
+                 <button type="button" id="mv-detail-photo-accept" class="bv-btn bv-btn-danger">삭제 확인</button>
+               </div>
+             </div>
+           </div>
           <div class="bv-readonly mv-grid-full"><span>현장 일지</span><strong id="mv-field-notes" class="mv-preline">기록된 현장 일지가 없습니다.</strong></div>
           <pre id="mv-stored-memo" th:text="${maintenance.memo == null ? '' : maintenance.memo}" hidden></pre>
         </div>
@@ -99,6 +113,23 @@
             <button type="button" id="mv-detail-delete-accept" class="bv-btn bv-btn-danger">삭제 확인</button>
           </div>
         </div>
+      </section>
+
+      <!-- 영상 한 건 삭제와 유지보수 기록 전체 삭제는 서로 다른 작업입니다. -->
+      <section class="bv-panel mv-figma-panel mv-record-delete-section" th:if="${canDelete}" aria-labelledby="mv-record-delete-title">
+        <h2 class="bv-panel-title" id="mv-record-delete-title">유지보수 기록 삭제</h2>
+        <p class="bv-help">관리자만 기록을 삭제할 수 있습니다. 연결된 증거 사진·영상도 함께 정리되며 복구할 수 없습니다.</p>
+        <button type="button" id="mv-record-delete-open" class="bv-btn bv-btn-danger" aria-expanded="false"
+                aria-controls="mv-record-delete-confirm">유지보수 기록 삭제</button>
+        <div id="mv-record-delete-confirm" class="mv-delete-confirm" hidden role="group" aria-labelledby="mv-record-delete-question">
+          <strong id="mv-record-delete-question">이 유지보수 기록을 영구 삭제하시겠습니까?</strong>
+          <p>기록과 연결 사진·영상이 함께 삭제됩니다. 이 작업은 취소할 수 없습니다.</p>
+          <div class="bv-form-actions">
+            <button type="button" id="mv-record-delete-cancel" class="bv-btn bv-btn-light">취소</button>
+            <button type="button" id="mv-record-delete-accept" class="bv-btn bv-btn-danger">기록 삭제 확인</button>
+          </div>
+        </div>
+        <div id="mv-record-delete-message" class="mv-form-message" hidden role="status" aria-live="polite"></div>
       </section>
 
       <div class="bv-form-actions mv-figma-bottom-actions">

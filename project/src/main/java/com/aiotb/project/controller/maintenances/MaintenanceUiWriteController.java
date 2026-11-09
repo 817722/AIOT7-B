@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -51,6 +52,12 @@ public class MaintenanceUiWriteController {
             @RequestBody Payload request, Authentication auth) {
         service.update(auth, no, request);
         return Map.of("no", no);
+    }
+
+    @DeleteMapping("/records/{no}")
+    public ResponseEntity<Void> delete(@PathVariable("no") long no, Authentication auth) {
+        service.delete(auth, no);
+        return ResponseEntity.noContent().build();
     }
 
     @ExceptionHandler(ResponseStatusException.class)

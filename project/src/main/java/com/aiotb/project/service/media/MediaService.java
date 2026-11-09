@@ -52,6 +52,12 @@ public class MediaService {
     @Value("${maintenance.videos.storage-dir:./uploads/maintenance-videos}")
     private String maintenanceVideoDir;
 
+    // 사진은 개별 파일당 5MB, 한 유지보수 기록당 20장으로 제한합니다.
+    @Value("${maintenance.photos.max-bytes:5242880}")
+    private long maxPhotoBytes;
+    private static final int MAX_MAINTENANCE_PHOTOS = 20;
+
+
     /** 화면/API 응답용. 서버 저장 경로는 포함하지 않는다. */
     public record MediaInfo(Long no, String id, String parentType, Long parentId, String type,
                             String originName, String mimeType, Long fileSize, Long uploadedBy,
@@ -80,9 +86,28 @@ public class MediaService {
             // 교량 대표 이미지는 /api/bridge-ui/{no}/image 에서 관리한다.
             throw new IllegalArgumentException("점검(INSPECTION) 또는 유지보수(MAINTENANCE) 기록에만 첨부할 수 있습니다.");
         }
-        requireParent(parentType, parentId, corpNo);
+        // 유지보수 첨부는 기록 삭제와 같은 행 잠금 순서로 접근합니다.
+        // 공통 /api/media 경로로 요청해도 작성자/담당자/관리자만 업로드할 수 있습니다.
+        if (parentType == Media.ParentType.MAINTENANCE) {
+            requireMaintenanceEditorForUpdate(parentId, corpNo, uploadedBy);
+        } else {
+            requireParent(parentType, parentId, corpNo);
+        }
 
         Detected detected = detect(file);
+        if (parentType == Media.ParentType.MAINTENANCE
+                && detected.type() == Media.MediaType.IMAGE && file.getSize() > maxPhotoBytes) {
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "이미지는 5MB 이하로 업로드해 주세요.");
+        }
+        if (parentType == Media.ParentType.MAINTENANCE && detected.type() == Media.MediaType.IMAGE) {
+            Integer currentPhotos = jdbc.queryForObject("""
+                    SELECT COUNT(*) FROM media WHERE p_type = 'MAINTENANCE'
+                      AND p_id = ? AND corp_no = ? AND type = 'IMAGE'
+                    """, Integer.class, parentId, corpNo);
+            if (currentPhotos != null && currentPhotos >= MAX_MAINTENANCE_PHOTOS) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "증거 사진은 최대 20장까지 등록할 수 있습니다.");
+            }
+        }
         String storedName = UUID.randomUUID() + "." + detected.ext();
         Path root = root();
         Path target = root.resolve(storedName);
@@ -108,6 +133,60 @@ public class MediaService {
                 storedName, safeOriginalName(file.getOriginalFilename()), detected.mime(),
                 file.getSize(), uploadedBy);
         return mediaRepository.save(media).getNo();
+    }
+
+    /** 유지보수 증거 사진 전용: 영상이 사진 API로 등록되지 않도록 실제 헤더로 검사합니다. */
+    @Transactional
+    public Long saveMaintenancePhoto(MultipartFile file, Actor actor, Long maintenanceNo) {
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "증거 사진 파일을 선택해 주세요.");
+        }
+        if (file.getSize() > maxPhotoBytes) {
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "사진 1장당 5MB 이하만 허용됩니다.");
+        }
+        Detected detected = detect(file);
+        if (detected.type() != Media.MediaType.IMAGE) {
+            throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    "JPG·PNG·WebP 이미지 파일만 선택해 주세요.");
+        }
+        return saveFile(file, actor.corpNo(), Media.ParentType.MAINTENANCE, maintenanceNo, actor.userNo());
+    }
+
+    /** 삭제 대상이 같은 기업·같은 유지보수의 사진인지 검증한 후 개별 삭제합니다. */
+    @Transactional
+    public void deleteMaintenancePhoto(Long maintenanceNo, Long photoNo, Actor actor) {
+        requireMaintenanceEditorForUpdate(maintenanceNo, actor.corpNo(), actor.userNo());
+        Media photo = find(photoNo, actor);
+        if (photo.getParentType() != Media.ParentType.MAINTENANCE
+                || !maintenanceNo.equals(photo.getParentId())
+                || photo.getType() != Media.MediaType.IMAGE) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "이 유지보수에 등록된 사진을 찾을 수 없습니다.");
+        }
+        deleteMedia(photoNo, actor);
+    }
+
+    /** 부모 레코드를 잠가 전체 기록 삭제와 이미지 업로드/개별 삭제 충돌을 방지합니다. */
+    private void requireMaintenanceEditorForUpdate(Long maintenanceNo, Long corpNo, Long userNo) {
+        if (maintenanceNo == null || corpNo == null || userNo == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유지보수 기록 또는 사용자 정보가 없습니다.");
+        }
+        var records = jdbc.queryForList("""
+                SELECT manager_no, created_by FROM maintenance_records
+                 WHERE no = ? AND corp_no = ? FOR UPDATE
+                """, maintenanceNo, corpNo);
+        if (records.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "소속 기업의 유지보수 기록을 찾을 수 없습니다.");
+        }
+        long managerNo = ((Number) records.get(0).get("manager_no")).longValue();
+        long createdBy = ((Number) records.get(0).get("created_by")).longValue();
+        Integer isAdmin = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM user_auth
+                 WHERE user_no = ? AND auth IN ('ADMIN','SUPER_ADMIN')
+                """, Integer.class, userNo);
+        if (userNo != managerNo && userNo != createdBy && (isAdmin == null || isAdmin == 0)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "유지보수 작성자·담당자·관리자만 사진을 변경할 수 있습니다.");
+        }
     }
 
     /** 특정 기록의 첨부파일 목록 (소속 기업 기록만) */

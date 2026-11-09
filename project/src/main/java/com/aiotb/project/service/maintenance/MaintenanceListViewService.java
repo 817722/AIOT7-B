@@ -40,6 +40,8 @@ public class MaintenanceListViewService {
               JOIN bridges b ON b.no = m.bridge_no AND b.corp_no = m.corp_no
               JOIN users actor ON actor.corp_no = m.corp_no
                               AND actor.username = ? AND actor.status = 'ACTIVE'
+               JOIN corps actor_corp ON actor_corp.no = actor.corp_no
+                                    AND actor_corp.status = 'ACTIVE'
               LEFT JOIN users manager ON manager.no = m.manager_no
                                      AND manager.corp_no = m.corp_no
               LEFT JOIN (
@@ -65,6 +67,8 @@ public class MaintenanceListViewService {
               JOIN bridges b ON b.no = m.bridge_no AND b.corp_no = m.corp_no
               JOIN users actor ON actor.corp_no = m.corp_no
                               AND actor.username = ? AND actor.status = 'ACTIVE'
+               JOIN corps actor_corp ON actor_corp.no = actor.corp_no
+                                    AND actor_corp.status = 'ACTIVE'
               LEFT JOIN users manager ON manager.no = m.manager_no
                                      AND manager.corp_no = m.corp_no
               LEFT JOIN (
@@ -89,6 +93,8 @@ public class MaintenanceListViewService {
               FROM users candidate
               JOIN users actor ON actor.corp_no = candidate.corp_no
                               AND actor.username = ? AND actor.status = 'ACTIVE'
+               JOIN corps actor_corp ON actor_corp.no = actor.corp_no
+                                    AND actor_corp.status = 'ACTIVE'
              WHERE candidate.status = 'ACTIVE'
              ORDER BY candidate.manager_name, candidate.no
             """, (rs, index) -> {
@@ -109,6 +115,8 @@ public class MaintenanceListViewService {
                 ON m.no = f.p_id AND m.corp_no = f.corp_no
               JOIN users actor ON actor.corp_no = m.corp_no
                               AND actor.username = ? AND actor.status = 'ACTIVE'
+               JOIN corps actor_corp ON actor_corp.no = actor.corp_no
+                                    AND actor_corp.status = 'ACTIVE'
              WHERE f.p_type = 'MAINTENANCE' AND f.type = 'VIDEO' AND m.no = ?
              ORDER BY f.created_at DESC, f.no DESC
             """, (rs, index) -> {

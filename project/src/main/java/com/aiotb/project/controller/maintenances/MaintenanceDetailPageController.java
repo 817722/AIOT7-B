@@ -27,6 +27,7 @@ public class MaintenanceDetailPageController {
         model.addAttribute("referenceInspections", maintenanceWriteService.inspections(authentication, bridgeNo));
         model.addAttribute("videos", maintenanceViewService.videoMetadata(username, no));
         model.addAttribute("canEdit", maintenanceWriteService.canEdit(authentication, no));
+        model.addAttribute("canDelete", maintenanceWriteService.canDelete(authentication, no));
         model.addAttribute("activeMenu", "maintenances");
         model.addAttribute("currentMenuGroup", "maintenances");
         return "page/maintenances/detail";

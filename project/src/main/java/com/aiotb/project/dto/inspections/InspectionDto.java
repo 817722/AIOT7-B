@@ -20,7 +20,7 @@ public class InspectionDto {
         @NotNull(message = "교량 번호는 필수입니다.")
         private Long bridgeNo;
 
-        @NotNull(message = "기업 번호는 필수입니다.")
+        // 기존 클라이언트 호환을 위해 필드는 유지하지만 서버에서는 사용하지 않는다(로그인 사용자 기업 사용).
         private Long corpNo;
 
         @NotBlank(message = "점검 기록명은 필수입니다.")
@@ -41,7 +41,7 @@ public class InspectionDto {
         private String overallResult;
         private String reviewOpinion;
 
-        @NotNull(message = "등록자 번호는 필수입니다.")
+        // 서버에서 로그인 사용자 번호로 대체한다. (클라이언트 값 무시)
         private Long createdBy;
     }
 

@@ -11,7 +11,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AccountStatusException;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 
 import com.aiotb.project.service.users.CustomUserDetailsService;
@@ -20,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // @PreAuthorize 사용
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
@@ -35,12 +40,26 @@ public class SecurityConfig {
                 "/favicon.ico"
             ).permitAll()
 
-            // 2. 점검, 유지보수, 미디어 API 경로의 permitAll()을 제거하여 인증된 사용자만 접근 가능하도록 변경
-            // (.anyRequest().authenticated() 에 의해 자동으로 로그인이 필수가 됩니다)
+            // 2. 웹 관리자(SUPER_ADMIN) 전용 페이지
+            .requestMatchers("/admin/**").hasRole("SUPER_ADMIN")
 
-            // 3. 그 외 모든 요청은 반드시 로그인을 해야만 접근 가능
+            // 3. 기존 REST API: 기록/첨부파일 삭제는 기업 관리자(ADMIN)만 가능
+            //    (Controller의 @PreAuthorize와 Service의 기업 소유권 검사로 한 번 더 확인)
+            .requestMatchers(HttpMethod.DELETE,
+                "/api/inspections/**", "/api/maintenance/**", "/api/media/**").hasRole("ADMIN")
+
+            // 4. 그 외 API는 권한을 부여받은 사용자만 사용 가능
+            .requestMatchers("/api/**").hasAnyRole("ADMIN", "INSPECTOR", "SUPER_ADMIN")
+
+            // 5. 그 외 모든 요청은 반드시 로그인을 해야만 접근 가능
             .anyRequest().authenticated()
         );
+
+    // API 요청은 로그인 페이지로 리다이렉트하지 않고 401(미로그인) / 403(권한 없음) 상태 코드로 응답
+    http.exceptionHandling(ex -> ex.defaultAuthenticationEntryPointFor(
+        new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+        request -> request.getServletPath().startsWith("/api/")
+    ));
 
     http.authenticationProvider(authenticationProvider());
 

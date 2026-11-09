@@ -1,26 +1,18 @@
 package com.aiotb.project.controller;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
-import com.aiotb.project.service.users.UserService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 @Controller
-@RequiredArgsConstructor
 public class HomeController {
-    private final UserService userService;
 
-    @GetMapping({ "/", "/{page}" })
-    public String kmk(
-            @PathVariable(value = "page", required = false) String page,
-            Model model) {
-
-        return page == null ? "redirect:/login" : page;
+    /**
+     * 기존 "/{page}" 매핑은 URL 값을 그대로 뷰 이름으로 사용해
+     * 임의 템플릿 렌더링(템플릿 인젝션) 위험이 있었고,
+     * /favicon.ico 요청도 "favicon.ico" 뷰를 찾다가 500 오류를 냈으므로 제거했다.
+     */
+    @GetMapping("/")
+    public String home() {
+        return "redirect:/login";
     }
 }

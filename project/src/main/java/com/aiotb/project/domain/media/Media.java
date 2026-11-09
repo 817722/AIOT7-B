@@ -1,11 +1,16 @@
 package com.aiotb.project.domain.media;
 
-import com.aiotb.project.domain.BaseEntity;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -15,7 +20,18 @@ import lombok.NoArgsConstructor;
 @Table(name = "media")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Media extends BaseEntity {
+public class Media {
+    // 실제 media 테이블에는 updated_at 컬럼이 없으므로 BaseEntity(updated_at 포함)를 상속하지 않는다.
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long no;
+
+    @Column(name = "id", nullable = false, unique = true, length = 64)
+    private String id;
+
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private LocalDateTime createdAt; // DB 기본값(CURRENT_TIMESTAMP) 사용
+
     @Column(name = "corp_no")
     private Long corpNo;
 
@@ -47,6 +63,11 @@ public class Media extends BaseEntity {
 
     @Column(name = "uploaded_by", nullable = false)
     private Long uploadedBy;
+
+    @PrePersist
+    private void generateId() {
+        if (this.id == null) this.id = UUID.randomUUID().toString();
+    }
 
     public enum ParentType {
         BRIDGE, INSPECTION, MAINTENANCE

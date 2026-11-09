@@ -59,8 +59,8 @@ public class User extends BaseEntity {
     @Column(name = "status_at")
     private LocalDateTime statusAt;  // 처리 일시
 
-    @Column(name = "reject_reason", length = 500)
-    private String rejectReason;     // 반려·비활성 사유
+    @Column(name = "reject", length = 500)
+    private String reject;           // 반려·비활성 사유
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "corp_no", nullable = false)

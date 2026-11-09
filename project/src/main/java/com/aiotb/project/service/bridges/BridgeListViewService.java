@@ -159,6 +159,7 @@ public class BridgeListViewService {
             """, (rs, index) -> {
             Map<String, Object> item = new LinkedHashMap<>();
             long no = rs.getLong("no");
+            item.put("no", no); // 유지보수 상세 화면 링크용
             item.put("displayCode", "#" + no);
             item.put("type", nonNull(rs.getString("maintenance_type")));
             Date d = rs.getDate("maintenance_date");

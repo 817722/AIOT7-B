@@ -103,7 +103,7 @@
         const err = await response.json();
         msg = err.message || err.detail || err.error || '';
       } catch (_) {}
-      throw new Error(msg || `요청 실패 (HTTP ${response.status})`);
+      throw new Error(msg || '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.');
     }
     return response.status === 204 ? null : response.json();
   }
@@ -184,7 +184,7 @@
         } else {
           let text = '';
           try { const obj = JSON.parse(xhr.responseText); text = obj.message || obj.detail || ''; } catch (_) {}
-          reject(new Error(text || `영상 업로드 실패 (HTTP ${xhr.status})`));
+          reject(new Error(text || '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'));
         }
       };
       xhr.onerror = () => reject(new Error('영상 전송 중 네트워크 오류가 발생했습니다.'));
@@ -272,7 +272,7 @@
     document.getElementById('mv-selected-name').textContent = bridge.name || '교량';
     document.getElementById('mv-selected-location').textContent =
       [bridge.province, bridge.city].filter(Boolean).join(' ') || '위치 정보 없음';
-    document.getElementById('mv-selected-number').textContent = `업무용 등록번호 #${bridge.no}`;
+    document.getElementById('mv-selected-number').textContent = `등록번호 #${bridge.no}`;
     loadInspections(bridge.no);
   }
 

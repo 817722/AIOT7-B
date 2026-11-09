@@ -175,7 +175,7 @@ public class CorpManageService {
         if (userNo == actor.userNo()) throw new AccessDeniedException("본인 계정의 상태는 변경할 수 없습니다.");
         String auths = (String) rows.get(0).get("auths");
         if (!"INSPECTOR".equals(AdminLabels.primaryRole(auths))) {
-            throw new AccessDeniedException("담당자(INSPECTOR) 계정만 처리할 수 있습니다.");
+            throw new AccessDeniedException("담당자 계정만 처리할 수 있습니다.");
         }
         String previous = (String) rows.get(0).get("status");
         if (!action.from.contains(previous)) {

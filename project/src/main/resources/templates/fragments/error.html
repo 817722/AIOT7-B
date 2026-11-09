@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!--
+  오류 화면 공통 레이아웃 (error/403, error/404, error/500)
+  - Spring Boot 기본 오류 화면(Whitelabel Error Page) 대신 사용자용 안내를 표시한다.
+  - 예외 메시지·스택 트레이스 등 서버 내부 정보는 출력하지 않는다.
+  - 로그인 화면과 같은 auth-page 스타일을 재사용하고, 인라인 스크립트·외부 리소스를 쓰지 않는다.
+-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:fragment="page(code, heading, description, icon)">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${heading} + ' | 교량점검 시스템'">오류 | 교량점검 시스템</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
+  <link rel="stylesheet" th:href="@{/css/auth.css}" href="/css/auth.css">
+  <link rel="stylesheet" th:href="@{/css/error.css}" href="/css/error.css">
+</head>
+<body class="auth-page">
+  <div th:replace="~{fragments/header :: header}"></div>
+
+  <main class="auth-login-main">
+    <section class="auth-card error-card" aria-labelledby="error-title">
+      <span class="error-card__icon" aria-hidden="true" th:switch="${icon}">
+        <svg th:case="'lock'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <svg th:case="'search'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/></svg>
+        <svg th:case="*" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      </span>
+      <span class="auth-section-no" th:text="|오류 코드 ${code}|">오류 코드</span>
+      <h1 id="error-title" class="error-card__title" th:text="${heading}">오류가 발생했습니다</h1>
+      <p class="error-card__desc" th:text="${description}">잠시 후 다시 시도해 주세요.</p>
+      <div class="error-card__actions">
+        <!-- 로그인한 사용자는 권한별 첫 화면, 비로그인 사용자는 로그인 화면으로 이동 -->
+        <a class="auth-btn auth-btn--primary" th:if="${currentUserRole == 'SUPER_ADMIN'}" th:href="@{/admin}" href="/admin">첫 화면으로</a>
+        <a class="auth-btn auth-btn--primary" th:if="${currentUserRole != null and currentUserRole != 'SUPER_ADMIN'}" th:href="@{/bridges}" href="/bridges">첫 화면으로</a>
+        <a class="auth-btn auth-btn--primary" th:if="${currentUserRole == null}" th:href="@{/login}" href="/login">로그인 화면으로</a>
+      </div>
+    </section>
+  </main>
+  <footer class="auth-footer">드론 영상 기반 교량 점검 업무 지원 시스템</footer>
+</body>
+</html>

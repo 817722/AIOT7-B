@@ -75,7 +75,7 @@
                 <option value="긴급 보수 기록">긴급 보수 기록</option>
                 <option value="기타">기타</option>
               </select>
-              <small class="bv-help">기록 분류는 기존 DB의 현장 메모에 함께 저장됩니다.</small>
+              <small class="bv-help">기록 분류는 현장 일지와 함께 저장됩니다.</small>
             </label>
             <label class="bv-field mv-wide" for="mv-title">
               <span>유지보수 기록명 <b class="mv-required">*</b></span>
@@ -134,8 +134,8 @@
             <textarea id="mv-result" name="result" rows="3" maxlength="20000" placeholder="작업 결과와 완료 사항을 입력하세요." th:text="${editMode ? maintenance.result : ''}"></textarea>
           </label>
           <div class="mv-figma-evidence">
-            <div><span class="mv-small-heading">증거 사진</span><p class="bv-help">사진 업로드는 백엔드 연결이 필요합니다. 현재는 기존 영상 업로드만 실제 저장됩니다.</p></div>
-            <button class="bv-btn bv-btn-light" type="button" disabled title="증거 사진 저장 API 개발 후 사용 가능">증거 사진 선택 (연동 대기)</button>
+            <div><span class="mv-small-heading">증거 사진</span><p class="bv-help">증거 사진 업로드는 준비 중입니다. 현재는 영상만 등록할 수 있습니다.</p></div>
+            <button class="bv-btn bv-btn-light" type="button" disabled title="추후 제공 예정">증거 사진 선택 (준비 중)</button>
           </div>
         </section>
 

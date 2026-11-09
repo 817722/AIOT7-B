@@ -61,7 +61,7 @@
             <span class="bv-help" th:text="|점검 ${inspectionTotal}건 · 유지보수 ${maintenanceTotal}건|">점검 0건 · 유지보수 0건</span>
           </div>
         </div>
-        <p class="ad-note">담당자 가입 승인은 각 기업 관리자(ADMIN)가 처리합니다. 웹 관리자는 현황만 확인합니다.</p>
+        <p class="ad-note">담당자 가입 승인은 각 기업 관리자가 처리합니다. 웹 관리자는 현황만 확인합니다.</p>
       </section>
 
       <section class="bv-panel" aria-labelledby="ad-pending-title">
@@ -96,7 +96,7 @@
         <h2 id="ad-history-title" class="bv-panel-title"><svg th:replace="~{fragments/admin :: icon('history')}"></svg>최근 관리자 작업 이력</h2>
         <p class="ad-alert ad-alert--info" th:unless="${historyAvailable}">
           <svg th:replace="~{fragments/admin :: icon('alert')}"></svg>
-          <span>작업 이력 테이블(corp_status_history)이 아직 생성되지 않았습니다. SQL/corp_status_history.sql 실행 후 승인·반려·정지 이력이 기록됩니다.</span>
+          <span>작업 이력 기록 기능이 아직 준비되지 않았습니다. 시스템 담당자에게 문의해 주세요.</span>
         </p>
         <div class="bv-blank" th:if="${historyAvailable and #lists.isEmpty(recentHistory)}">
           <strong>아직 기록된 작업이 없습니다.</strong>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${member.name} + ' | 담당자 관리 | 교량점검 시스템'">담당자 상세 | 교량점검 시스템</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
+  <link rel="stylesheet" th:href="@{/css/admin-v2.css}" href="/css/admin-v2.css">
+  <script th:src="@{/js/admin.js}" src="/js/admin.js" defer></script>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="app-layout" th:with="activeMenu='corps'">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="app-main admin-v2" id="main-content">
+    <div class="app-container">
+      <div th:replace="~{fragments/submenu :: submenu(activeMenu='/corps/members/detail')}"></div>
+      <a class="ad-back" th:href="@{/corps/members}" href="/corps/members"><svg th:replace="~{fragments/admin :: icon('arrow-left')}"></svg>담당자 목록</a>
+      <h1 class="bv-title">
+        <svg th:replace="~{fragments/admin :: icon('users')}"></svg>
+        <span th:text="${member.name}">이름</span>
+        <span class="ad-badge" th:classappend="|ad-badge--${member.status}|" th:text="${member.statusLabel}">활성</span>
+      </h1>
+      <p class="bv-subtitle">소속 기업 사용자의 계정 정보와 업무 현황을 확인합니다.</p>
+
+      <div th:replace="~{fragments/admin :: alerts}"></div>
+
+      <div class="ad-detail-grid">
+        <section class="bv-panel" aria-labelledby="cp-member-info-title">
+          <h2 id="cp-member-info-title" class="bv-panel-title">계정 정보</h2>
+          <dl class="ad-fields">
+            <div><dt>이름</dt><dd th:text="${member.name}">이름</dd></div>
+            <div><dt>아이디</dt><dd th:text="${member.username}">아이디</dd></div>
+            <div><dt>연락처</dt><dd th:text="${member.phone}">010</dd></div>
+            <div><dt>권한</dt><dd><span class="ad-role" th:classappend="|ad-role--${member.role}|" th:text="${member.roleLabel}">담당자</span></dd></div>
+            <div><dt>가입일</dt><dd th:text="${member.createdAt != null ? #temporals.format(member.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">2026-11-01</dd></div>
+            <div><dt>최근 처리</dt>
+              <dd th:text="${member.statusAt != null} ? |${#temporals.format(member.statusAt, 'yyyy-MM-dd HH:mm')} · ${member.statusByName != null ? member.statusByName : '-'}| : '처리 이력 없음'">-</dd></div>
+            <div class="ad-fields__wide" th:if="${member.reject != null}"><dt>반려 · 비활성 사유</dt><dd th:text="${member.reject}">사유</dd></div>
+          </dl>
+        </section>
+
+        <section class="bv-panel" aria-labelledby="cp-member-action-title">
+          <h2 id="cp-member-action-title" class="bv-panel-title"><svg th:replace="~{fragments/admin :: icon('shield')}"></svg>계정 처리</h2>
+          <div th:replace="~{fragments/admin :: memberActions(${member}, 'detail', 'ad-actions')}"></div>
+          <p class="ad-note">승인하면 담당자로 로그인할 수 있고, 비활성하면 로그인이 차단됩니다. 업무 기록은 삭제되지 않습니다.</p>
+        </section>
+      </div>
+
+      <section aria-labelledby="cp-member-work-title">
+        <h2 id="cp-member-work-title" class="bv-panel-title">업무 현황</h2>
+        <div class="ad-stat-grid">
+          <a class="ad-stat" th:href="@{/bridges}" href="/bridges"><span class="ad-stat__label"><svg th:replace="~{fragments/admin :: icon('bridge')}"></svg>담당 교량</span>
+            <strong class="ad-stat__value"><span th:text="${member.managedBridges}">0</span><small>개</small></strong></a>
+          <div class="ad-stat"><span class="ad-stat__label"><svg th:replace="~{fragments/admin :: icon('file')}"></svg>담당 점검</span>
+            <strong class="ad-stat__value"><span th:text="${member.inspectionCount}">0</span><small>건</small></strong></div>
+          <a class="ad-stat" th:href="@{/maintenances(managerNo=${member.no})}" href="/maintenances"><span class="ad-stat__label"><svg th:replace="~{fragments/admin :: icon('file')}"></svg>담당 유지보수</span>
+            <strong class="ad-stat__value"><span th:text="${member.maintenanceCount}">0</span><small>건</small></strong></a>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</body>
+</html>

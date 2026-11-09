@@ -14,9 +14,14 @@
         <a class="app-sidebar__link"
            th:classappend="${activeMenu == 'maintenances'} ? 'is-active' : ''"
            th:href="@{/maintenances}" href="/maintenances">유지보수 관리</a>
-        <a class="app-sidebar__link"
-           th:classappend="${activeMenu == 'users'} ? 'is-active' : ''"
-           th:href="@{/users}" href="/users">관리자 검수</a>
+        <!-- 관리자 메뉴: 권한별로 표시(INSPECTOR는 표시하지 않음).
+             메뉴 숨김은 화면 표시용이며, 실제 접근 제한은 SecurityConfig(/admin/**, /corps/**)와 Controller/Service에서 검증 -->
+        <a class="app-sidebar__link" th:if="${currentUserRole == 'ADMIN'}"
+           th:classappend="${activeMenu == 'corps'} ? 'is-active' : ''"
+           th:href="@{/corps}" href="/corps">기업 관리 · 검수</a>
+        <a class="app-sidebar__link" th:if="${currentUserRole == 'SUPER_ADMIN'}"
+           th:classappend="${activeMenu == 'admin'} ? 'is-active' : ''"
+           th:href="@{/admin}" href="/admin">웹 관리자</a>
 
         <!-- 다음 세 페이지의 실제 Controller URL은 팀원의 라우트 확인 후 연결 -->
         <!-- <span class="app-sidebar__link app-sidebar__link--pending"

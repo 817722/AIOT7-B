@@ -707,5 +707,5 @@ SET FOREIGN_KEY_CHECKS = 1;
 --    않는지, 자기 자신의 권한을 바꾸지 않는지는 서비스 레이어에서 검증해야 합니다.
 --    SUPER_ADMIN 계정은 화면에서 만들 수 없고 SQL로만 생성합니다.
 --    users.corp_no가 NOT NULL이므로 SUPER_ADMIN도 어떤 기업에 소속되어야 하며,
---    이를 위해 '운영사 기업' 1건을 시드로 넣습니다(migration_corp_user_approval.sql 참고).
+--    이를 위해 '운영사 기업' 1건을 시드로 넣습니다(create_user.sql 참고).
 -- ===========================

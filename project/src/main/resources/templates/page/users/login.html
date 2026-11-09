@@ -30,8 +30,16 @@
           <p>계정 정보를 입력하여 업무를 시작하세요.</p>
         </div>
 
-        <div th:if="${param.error != null}" class="auth-alert auth-alert--error" role="alert">
-          로그인에 실패했습니다. 아이디와 비밀번호를 확인해 주세요.
+        <!-- error 값은 SecurityConfig 로그인 실패 핸들러가 정한 코드만 사용 (사용자 입력 아님) -->
+        <div th:if="${param.error != null}" class="auth-alert auth-alert--error" role="alert"
+             th:switch="${param.error[0]}">
+          <span th:case="'CORP_PENDING'">기업 가입 승인 대기 중입니다. 웹 관리자의 승인 후 이용할 수 있습니다.</span>
+          <span th:case="'CORP_REJECTED'">기업 가입 신청이 반려되었습니다. 웹 관리자에게 문의해 주세요.</span>
+          <span th:case="'CORP_SUSPENDED'">소속 기업의 서비스 이용이 정지되었습니다. 웹 관리자에게 문의해 주세요.</span>
+          <span th:case="'USER_PENDING'">담당자 가입 승인 대기 중입니다. 소속 기업 관리자의 승인 후 이용할 수 있습니다.</span>
+          <span th:case="'USER_REJECTED'">담당자 가입 요청이 반려되었습니다. 소속 기업 관리자에게 문의해 주세요.</span>
+          <span th:case="'USER_DISABLED'">비활성화된 계정입니다. 소속 기업 관리자에게 문의해 주세요.</span>
+          <span th:case="*">로그인에 실패했습니다. 아이디와 비밀번호를 확인해 주세요.</span>
         </div>
         <div th:if="${message != null}" class="auth-alert auth-alert--success" role="status" th:text="${message}"></div>
         <div th:if="${param.logout != null}" class="auth-alert auth-alert--success" role="status">

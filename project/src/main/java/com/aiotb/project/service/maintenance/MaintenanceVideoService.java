@@ -49,8 +49,8 @@ public class MaintenanceVideoService {
         }
         List<Map<String, Object>> rows = jdbc.queryForList("""
                 SELECT u.no, u.corp_no FROM users u
-                JOIN corps c ON c.no = u.corp_no AND c.bis_verified = 1
-                WHERE u.username = ? AND u.enabled = 1
+                JOIN corps c ON c.no = u.corp_no AND c.status = 'ACTIVE'
+                WHERE u.username = ? AND u.status = 'ACTIVE'
                 """, auth.getName());
         if (rows.isEmpty()) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자 정보를 확인할 수 없습니다.");
         long no = ((Number) rows.get(0).get("no")).longValue();

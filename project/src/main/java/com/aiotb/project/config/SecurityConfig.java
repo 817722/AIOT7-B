@@ -11,7 +11,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
+import org.springframework.security.authentication.AccountStatusException;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+
 import com.aiotb.project.service.users.CustomUserDetailsService;
+import com.aiotb.project.service.users.LoginStatusChecker;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -46,7 +50,7 @@ public class SecurityConfig {
         .usernameParameter("username")
         .passwordParameter("password")
         .defaultSuccessUrl("/bridges", true)
-        .failureUrl("/login?error=true")
+        .failureHandler(loginFailureHandler())
         .permitAll()
     );
 
@@ -65,7 +69,27 @@ public class SecurityConfig {
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
+        // 비밀번호 확인이 끝난 뒤 사용자/기업 승인 상태를 검사한다.
+        provider.setPostAuthenticationChecks(new LoginStatusChecker());
         return provider;
+    }
+
+    /**
+     * 로그인 실패 시 원인별 안내 코드로 이동한다.
+     * - 승인 상태 문제(AccountStatusException): CORP_PENDING, USER_PENDING 등
+     * - 그 외(아이디/비밀번호 불일치): true → 원인을 구분하지 않는 일반 메시지
+     */
+    @Bean
+    public AuthenticationFailureHandler loginFailureHandler() {
+        return (request, response, exception) -> {
+            String code = "true";
+            if (exception instanceof AccountStatusException
+                    && exception.getMessage() != null
+                    && exception.getMessage().matches("(CORP|USER)_[A-Z]+")) {
+                code = exception.getMessage();
+            }
+            response.sendRedirect(request.getContextPath() + "/login?error=" + code);
+        };
     }
 
     @Bean

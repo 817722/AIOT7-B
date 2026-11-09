@@ -55,7 +55,7 @@ public class InspectionListViewService {
         }
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new AccessDeniedException("사용자를 찾을 수 없습니다."));
-        if (!user.isEnabled() || user.getCorp() == null || !user.getCorp().isVerified()) {
+        if (!user.canUseService()) {
             throw new AccessDeniedException("기업 인증이 완료된 사용자만 접근할 수 있습니다.");
         }
         return user.getCorp().getNo();

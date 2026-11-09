@@ -23,8 +23,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Inspection extends BaseEntity {
 
-    @Column(nullable = false, length = 64, unique = true)
-    private String id; // 시스템 고유 식별자
+    // id(UUID)는 BaseEntity에서 관리합니다. (중복 선언 시 id 컬럼이 이중 매핑됨)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bridge_no", nullable = false)
@@ -63,11 +62,14 @@ public class Inspection extends BaseEntity {
     @Column(name = "created_by", nullable = false)
     private Long createdBy; // 기록 생성 사용자 번호
 
+    @Column(name = "updated_by")
+    private Long updatedBy; // 최종 수정 사용자 번호
+
     @Builder
     public Inspection(String id, Bridge bridge, Long corpNo, String title, String inspectionType, String status,
             LocalDate inspectionDate, Long inspectorNo, String inspectionMemo, String overallResult,
             String reviewOpinion, Long createdBy) {
-        this.id = id;
+        setId(id); // null이면 BaseEntity @PrePersist에서 UUID 생성
         this.bridge = bridge;
         this.corpNo = corpNo;
         this.title = title;
@@ -79,6 +81,7 @@ public class Inspection extends BaseEntity {
         this.overallResult = overallResult;
         this.reviewOpinion = reviewOpinion;
         this.createdBy = createdBy;
+        this.completedAt = "완료".equals(this.status) ? LocalDateTime.now() : null;
     }
 
     // 점검 정보 수정 메서드
@@ -91,5 +94,17 @@ public class Inspection extends BaseEntity {
         this.inspectionMemo = inspectionMemo;
         this.overallResult = overallResult;
         this.reviewOpinion = reviewOpinion;
+    }
+
+    /** 수정자 기록과 완료 일시를 함께 갱신하는 수정 메서드 */
+    public void updateInspection(String title, String inspectionType, String status, LocalDate inspectionDate,
+            String inspectionMemo, String overallResult, String reviewOpinion, Long updatedBy) {
+        updateInspection(title, inspectionType, status, inspectionDate, inspectionMemo, overallResult, reviewOpinion);
+        this.updatedBy = updatedBy;
+        if ("완료".equals(status)) {
+            if (this.completedAt == null) this.completedAt = LocalDateTime.now();
+        } else {
+            this.completedAt = null;
+        }
     }
 }

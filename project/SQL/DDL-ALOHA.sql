@@ -62,7 +62,7 @@ CREATE TABLE `users` (
     `status` ENUM('PENDING', 'ACTIVE', 'REJECTED', 'DISABLED') NOT NULL DEFAULT 'PENDING' COMMENT '계정 상태: 승인대기/활성/반려/비활성 (기업 ADMIN이 변경). 로그인은 users.status와 corps.status가 모두 ACTIVE여야 함',
     `status_by` BIGINT DEFAULT NULL COMMENT '승인·반려·비활성 처리한 같은 기업 ADMIN 사용자 번호',
     `status_at` DATETIME DEFAULT NULL COMMENT '승인·반려·비활성 처리 일시',
-    `reject` VARCHAR(500) DEFAULT NULL COMMENT '반려·비활성 사유',
+    `reject_reason` VARCHAR(500) DEFAULT NULL COMMENT '반려·비활성 사유',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일자',
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자',
     PRIMARY KEY (`no`),

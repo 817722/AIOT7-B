@@ -1,71 +1,91 @@
 package com.aiotb.project.controller.media;
 
-import com.aiotb.project.domain.media.Media;
-import com.aiotb.project.service.media.MediaService;
-import lombok.RequiredArgsConstructor;
+import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.util.List;
+import com.aiotb.project.domain.media.Media;
+import com.aiotb.project.service.media.MediaService;
+import com.aiotb.project.service.users.CurrentUserService;
 
+import lombok.RequiredArgsConstructor;
+
+/**
+ * 첨부파일(media) REST API.
+ * - 접근: 로그인 + 승인된 사용자 — SecurityConfig / @PreAuthorize
+ * - 삭제: ADMIN 전용
+ * - 데이터 범위: 로그인 사용자의 소속 기업 — MediaService
+ */
 @RestController
 @RequestMapping("/api/media")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'INSPECTOR', 'SUPER_ADMIN')")
 public class MediaApiController {
 
     private final MediaService mediaService;
+    private final CurrentUserService currentUserService;
 
-    // [GET] 특정 대상의 미디어 목록 조회 API
+    // [GET] 특정 대상의 첨부파일 목록 조회 (서버 저장 경로는 응답하지 않음)
     @GetMapping("/{parentType}/{parentId}")
-    public ResponseEntity<List<Media>> getMediaList(
+    public ResponseEntity<List<MediaService.MediaInfo>> getMediaList(
             @PathVariable("parentType") Media.ParentType parentType,
-            @PathVariable("parentId") Long parentId
-    ) {
-        List<Media> mediaList = mediaService.getMediaList(parentType, parentId);
-        return ResponseEntity.ok(mediaList);
+            @PathVariable("parentId") Long parentId) {
+        return ResponseEntity.ok(mediaService.getMediaList(parentType, parentId, currentUserService.current()));
     }
 
-    // [DELETE] 미디어 삭제 API (DB 기록 + 실제 파일 함께 삭제)
-    @DeleteMapping("/{mediaId}")
-    public ResponseEntity<String> deleteMedia(@PathVariable("mediaId") Long mediaId) {
-        try {
-            // 미디어 정보 조회
-            Media media = mediaService.getMediaById(mediaId); // (만약 서비스에 단건 조회가 없다면 아래 참고)
-
-            // 서버 디렉토리에 실제 저장된 파일 삭제
-            if (media.getPath() != null) {
-                File file = new File(media.getPath());
-                if (file.exists()) {
-                    file.delete();
-                }
-            }
-
-            // DB에서 미디어 데이터 삭제
-            mediaService.deleteMedia(mediaId);
-
-            return ResponseEntity.ok("미디어가 성공적으로 삭제되었습니다.");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("미디어 삭제 실패: " + e.getMessage());
-        }
+    // [GET] 첨부파일 보기/재생 (Range 요청 지원으로 영상 탐색 가능)
+    @GetMapping("/file/{mediaNo}")
+    public ResponseEntity<Resource> file(@PathVariable("mediaNo") Long mediaNo) throws MalformedURLException {
+        MediaService.StoredFile stored = mediaService.getFile(mediaNo, currentUserService.current());
+        MediaType type = stored.mimeType() == null
+                ? MediaType.APPLICATION_OCTET_STREAM : MediaType.parseMediaType(stored.mimeType());
+        return ResponseEntity.ok()
+                .contentType(type)
+                .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+                .header("X-Content-Type-Options", "nosniff")
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline()
+                        .filename(stored.originName(), StandardCharsets.UTF_8).build().toString())
+                .cacheControl(CacheControl.noStore())
+                .body(new UrlResource(stored.path().toUri()));
     }
 
-    // [POST] 특정 대상(MAINTENANCE 등)에 파일(영상/이미지)을 따로 업로드하는 API
-    @PostMapping("/{parentType}/{parentId}")
-    public ResponseEntity<String> uploadMedia(
+    // [DELETE] 첨부파일 삭제 (기업 관리자 전용, DB 기록 삭제 후 커밋되면 실제 파일 삭제)
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{mediaNo}")
+    public ResponseEntity<Map<String, String>> deleteMedia(@PathVariable("mediaNo") Long mediaNo) {
+        mediaService.deleteMedia(mediaNo, currentUserService.current());
+        return ResponseEntity.ok(Map.of("message", "첨부파일이 삭제되었습니다."));
+    }
+
+    // [POST] 점검/유지보수 기록에 파일(영상/이미지) 업로드
+    // corpNo, uploadedBy 파라미터는 기존 클라이언트 호환을 위해 받기만 하고 사용하지 않는다(로그인 사용자 기준).
+    @PostMapping(value = "/{parentType}/{parentId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, Object>> uploadMedia(
             @PathVariable("parentType") Media.ParentType parentType,
             @PathVariable("parentId") Long parentId,
             @RequestParam("file") MultipartFile file,
-            @RequestParam("corpNo") Long corpNo,
-            @RequestParam("uploadedBy") Long uploadedBy
-    ) {
-        try {
-            // 이미 만들어둔 MediaService의 saveFile 재사용!
-            mediaService.saveFile(file, corpNo, parentType, parentId, uploadedBy);
-            return ResponseEntity.ok("미디어가 성공적으로 업로드되었습니다.");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("미디어 업로드 실패: " + e.getMessage());
-        }
+            @RequestParam(value = "corpNo", required = false) Long ignoredCorpNo,
+            @RequestParam(value = "uploadedBy", required = false) Long ignoredUploadedBy) {
+        CurrentUserService.Actor actor = currentUserService.current();
+        Long no = mediaService.saveFile(file, actor.corpNo(), parentType, parentId, actor.userNo());
+        return ResponseEntity.ok(Map.of("no", no, "message", "첨부파일이 업로드되었습니다."));
     }
 }

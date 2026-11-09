@@ -40,7 +40,7 @@
           <div class="bv-readonly"><span>안전 교육 여부</span><strong id="mv-field-education">미기록</strong></div>
           <div class="bv-readonly"><span>교육 메모</span><strong id="mv-field-education-memo">등록된 교육 메모 없음</strong></div>
           <div class="bv-readonly"><span>기록 분류</span><strong id="mv-field-category">미기록</strong></div>
-          <div class="bv-readonly"><span>증거 사진 업로드</span><strong>사진 파일 연결 기능 준비 중</strong></div>
+          <div class="bv-readonly"><span>증거 사진 업로드</span><strong>증거 사진 기능 준비 중</strong></div>
           <div class="bv-readonly mv-grid-full"><span>현장 일지</span><strong id="mv-field-notes" class="mv-preline">기록된 현장 일지가 없습니다.</strong></div>
           <pre id="mv-stored-memo" th:text="${maintenance.memo == null ? '' : maintenance.memo}" hidden></pre>
         </div>
@@ -52,7 +52,7 @@
           </li>
         </ul>
         <p class="mv-inline-note" th:if="${#lists.isEmpty(referenceInspections)}">이 교량에 등록된 점검 기록이 없습니다.</p>
-        <p class="bv-help">현재 유지보수와 점검 기록은 교량 기준으로 조회되며, DB에 직접 연결 관계를 저장하지는 않습니다.</p>
+        <p class="bv-help">같은 교량의 점검 기록을 참고용으로 보여 줍니다.</p>
       </section>
 
       <section class="bv-panel mv-figma-panel" aria-labelledby="md-video-title">

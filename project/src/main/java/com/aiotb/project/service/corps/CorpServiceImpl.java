@@ -52,7 +52,7 @@ public class CorpServiceImpl implements CorpService {
         Object data = response == null ? null : response.get("data");
         if (!"OK".equals(String.valueOf(response == null ? null : response.get("status_code")))
                 || !(data instanceof List<?> dataList)) {
-            throw new IllegalArgumentException("국세청 기업 인증 응답을 확인할 수 없습니다.");
+            throw new IllegalArgumentException("국세청 사업자 확인 결과를 받지 못했습니다. 잠시 후 다시 시도해 주세요.");
         }
         boolean matched = dataList.stream()
                 .filter(Map.class::isInstance)

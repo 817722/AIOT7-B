@@ -1,0 +1,7 @@
+/* 오류 화면(error/403, 404, 500) 전용 스타일: auth.css 의 auth-page / auth-card 를 기반으로 사용 */
+.error-card{max-width:480px;width:100%;padding:38px 34px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.error-card__icon{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;background:#e4f6f3;color:#087f88;margin-bottom:10px;}
+.error-card__icon svg{width:28px;height:28px;}
+.error-card__title{margin:6px 0 4px;font-size:22px;letter-spacing:-.04em;color:#1c303b;}
+.error-card__desc{margin:0;color:#6e828b;font-size:13px;line-height:1.7;}
+.error-card__actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:22px;}

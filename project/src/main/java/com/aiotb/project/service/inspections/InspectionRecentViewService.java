@@ -37,7 +37,7 @@ public class InspectionRecentViewService {
               FROM users u
               JOIN corps c ON c.no = u.corp_no
               JOIN inspections b ON b.no = ? AND b.corp_no = u.corp_no
-             WHERE u.username = ? AND u.enabled = 1 AND c.bis_verified = 1
+             WHERE u.username = ? AND u.status = 'ACTIVE' AND c.status = 'ACTIVE'
             ON DUPLICATE KEY UPDATE viewed_at = CURRENT_TIMESTAMP(3)
             """, inspectionNo, username);
     }
@@ -64,7 +64,7 @@ public class InspectionRecentViewService {
               JOIN inspections b ON b.no = rv.inspection_no AND b.corp_no = rv.corp_no
               LEFT JOIN users manager ON manager.no = b.manager_no
                                      AND manager.corp_no = b.corp_no
-             WHERE u.username = ? AND u.enabled = 1 AND c.bis_verified = 1
+             WHERE u.username = ? AND u.status = 'ACTIVE' AND c.status = 'ACTIVE'
              ORDER BY rv.viewed_at DESC, rv.no DESC
              LIMIT 5
             """, (rs, index) -> {

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>사용자 조회 | 웹 관리자 | 교량점검 시스템</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
+  <link rel="stylesheet" th:href="@{/css/admin-v2.css}" href="/css/admin-v2.css">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="app-layout" th:with="activeMenu='admin'">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="app-main admin-v2" id="main-content">
+    <div class="app-container">
+      <div th:replace="~{fragments/submenu :: submenu(activeMenu='/admin/users')}"></div>
+      <h1 class="bv-title"><svg th:replace="~{fragments/admin :: icon('users')}"></svg>사용자 조회</h1>
+      <p class="bv-subtitle">전체 기업의 사용자 계정과 권한, 계정 상태를 확인합니다.</p>
+
+      <section class="bv-panel" aria-labelledby="ad-user-search-title">
+        <h2 id="ad-user-search-title" class="bv-panel-title"><svg th:replace="~{fragments/admin :: icon('search')}"></svg>사용자 검색</h2>
+        <form method="get" th:action="@{/admin/users}" action="/admin/users">
+          <div class="bv-filter-grid">
+            <label class="bv-field" for="ad-user-corp">
+              <span>소속 기업</span>
+              <select id="ad-user-corp" name="corpNo">
+                <option value="">전체 기업</option>
+                <option th:each="c : ${corpOptions}" th:value="${c.no}" th:text="${c.name}"
+                        th:selected="${corpNo != null and corpNo == c.no}">기업명</option>
+              </select>
+            </label>
+            <label class="bv-field" for="ad-user-role">
+              <span>권한</span>
+              <select id="ad-user-role" name="role">
+                <option value="" th:selected="${role == ''}">전체 권한</option>
+                <option value="SUPER_ADMIN" th:selected="${role == 'SUPER_ADMIN'}">웹 관리자</option>
+                <option value="ADMIN" th:selected="${role == 'ADMIN'}">기업 관리자</option>
+                <option value="INSPECTOR" th:selected="${role == 'INSPECTOR'}">담당자</option>
+              </select>
+            </label>
+            <label class="bv-field" for="ad-user-status">
+              <span>계정 상태</span>
+              <select id="ad-user-status" name="status">
+                <option value="" th:selected="${status == ''}">전체 상태</option>
+                <option value="PENDING" th:selected="${status == 'PENDING'}">승인 대기</option>
+                <option value="ACTIVE" th:selected="${status == 'ACTIVE'}">활성</option>
+                <option value="REJECTED" th:selected="${status == 'REJECTED'}">반려</option>
+                <option value="DISABLED" th:selected="${status == 'DISABLED'}">비활성</option>
+              </select>
+            </label>
+            <label class="bv-field" for="ad-user-keyword">
+              <span>아이디 또는 이름</span>
+              <input id="ad-user-keyword" type="search" name="keyword" maxlength="100" th:value="${keyword}" placeholder="아이디 / 담당자명">
+            </label>
+          </div>
+          <div class="bv-form-actions">
+            <button type="submit" class="bv-btn bv-btn-primary">조회</button>
+            <a class="bv-btn bv-btn-light" th:href="@{/admin/users}" href="/admin/users">초기화</a>
+          </div>
+        </form>
+      </section>
+
+      <section class="bv-panel" aria-labelledby="ad-user-list-title">
+        <div class="bv-section-heading">
+          <div>
+            <h2 id="ad-user-list-title" class="bv-panel-title">사용자 목록</h2>
+            <p class="bv-help" th:text="|검색 결과 ${result.total()}명 · ${result.pageNo()}/${result.totalPages()}페이지|">검색 결과 0명</p>
+          </div>
+        </div>
+        <div class="bv-blank" th:if="${#lists.isEmpty(result.rows())}"><strong>조건에 맞는 사용자가 없습니다.</strong></div>
+        <div class="bv-table-scroll" th:unless="${#lists.isEmpty(result.rows())}">
+          <table class="bv-table">
+            <thead>
+              <tr><th scope="col">이름</th><th scope="col">아이디</th><th scope="col">소속 기업</th><th scope="col">기업 상태</th>
+                  <th scope="col">권한</th><th scope="col">계정 상태</th><th scope="col">가입일</th></tr>
+            </thead>
+            <tbody>
+              <tr th:each="u : ${result.rows()}">
+                <td><a th:href="@{/admin/users/{no}(no=${u.no})}" th:text="${u.name}">이름</a></td>
+                <td th:text="${u.username}">아이디</td>
+                <td><a th:href="@{/admin/corps/{no}(no=${u.corpNo})}" th:text="${u.corpName}">기업명</a></td>
+                <td><span class="ad-badge" th:classappend="|ad-badge--${u.corpStatus}|" th:text="${u.corpStatusLabel}">정상 이용</span></td>
+                <td><span class="ad-role" th:classappend="|ad-role--${u.role}|" th:text="${u.roleLabel}">담당자</span></td>
+                <td><span class="ad-badge" th:classappend="|ad-badge--${u.status}|" th:text="${u.statusLabel}">활성</span></td>
+                <td class="ad-nowrap" th:text="${u.createdAt != null ? #temporals.format(u.createdAt, 'yyyy-MM-dd') : '-'}">2026-11-01</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <nav class="bv-pager" aria-label="사용자 목록 페이지 이동" th:if="${result.totalPages() > 1}">
+          <a th:if="${result.hasPrev()}" th:href="@{/admin/users(corpNo=${corpNo},role=${role},status=${status},keyword=${keyword},page=${result.pageNo() - 1})}">이전</a>
+          <span th:unless="${result.hasPrev()}" class="bv-disabled">이전</span>
+          <span th:text="|${result.pageNo()} / ${result.totalPages()}|">1 / 1</span>
+          <a th:if="${result.hasNext()}" th:href="@{/admin/users(corpNo=${corpNo},role=${role},status=${status},keyword=${keyword},page=${result.pageNo() + 1})}">다음</a>
+          <span th:unless="${result.hasNext()}" class="bv-disabled">다음</span>
+        </nav>
+      </section>
+    </div>
+  </main>
+</div>
+</body>
+</html>

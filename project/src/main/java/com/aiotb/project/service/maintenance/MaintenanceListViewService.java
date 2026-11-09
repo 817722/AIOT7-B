@@ -39,7 +39,7 @@ public class MaintenanceListViewService {
               FROM maintenance_records m
               JOIN bridges b ON b.no = m.bridge_no AND b.corp_no = m.corp_no
               JOIN users actor ON actor.corp_no = m.corp_no
-                              AND actor.username = ? AND actor.enabled = 1
+                              AND actor.username = ? AND actor.status = 'ACTIVE'
               LEFT JOIN users manager ON manager.no = m.manager_no
                                      AND manager.corp_no = m.corp_no
               LEFT JOIN (
@@ -64,7 +64,7 @@ public class MaintenanceListViewService {
               FROM maintenance_records m
               JOIN bridges b ON b.no = m.bridge_no AND b.corp_no = m.corp_no
               JOIN users actor ON actor.corp_no = m.corp_no
-                              AND actor.username = ? AND actor.enabled = 1
+                              AND actor.username = ? AND actor.status = 'ACTIVE'
               LEFT JOIN users manager ON manager.no = m.manager_no
                                      AND manager.corp_no = m.corp_no
               LEFT JOIN (
@@ -88,8 +88,8 @@ public class MaintenanceListViewService {
             SELECT candidate.no, candidate.manager_name
               FROM users candidate
               JOIN users actor ON actor.corp_no = candidate.corp_no
-                              AND actor.username = ? AND actor.enabled = 1
-             WHERE candidate.enabled = 1
+                              AND actor.username = ? AND actor.status = 'ACTIVE'
+             WHERE candidate.status = 'ACTIVE'
              ORDER BY candidate.manager_name, candidate.no
             """, (rs, index) -> {
                 Map<String, Object> m = new LinkedHashMap<>();
@@ -108,7 +108,7 @@ public class MaintenanceListViewService {
               JOIN maintenance_records m
                 ON m.no = f.p_id AND m.corp_no = f.corp_no
               JOIN users actor ON actor.corp_no = m.corp_no
-                              AND actor.username = ? AND actor.enabled = 1
+                              AND actor.username = ? AND actor.status = 'ACTIVE'
              WHERE f.p_type = 'MAINTENANCE' AND f.type = 'VIDEO' AND m.no = ?
              ORDER BY f.created_at DESC, f.no DESC
             """, (rs, index) -> {

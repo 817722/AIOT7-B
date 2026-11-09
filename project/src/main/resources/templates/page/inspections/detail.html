@@ -17,16 +17,12 @@
                 <!-- 서브메뉴 -->
                 <div th:replace="~{fragments/submenu :: submenu(activeMenu='/inspections/5')}"></div>
                 <h1 class="bv-title">점검 상세</h1>
-                <p class="app-page-description">공통 헤더와 사이드바 연결 테스트 화면입니다.</p>
+                <p class="app-page-description">점검 상세 기능은 준비 중입니다.</p>
 
-                <section class="app-grid" aria-label="화면 구성 미리보기">
-                    <div class="app-card"><div class="app-stat-label">등록 교량</div><div class="app-stat-value">--</div></div>
-                    <div class="app-card"><div class="app-stat-label">점검 진행 중</div><div class="app-stat-value">--</div></div>
-                    <div class="app-card"><div class="app-stat-label">점검 완료</div><div class="app-stat-value">--</div></div>
-                </section>
-                <section class="app-card" style="margin-top:20px">
-                    <h2 class="app-card__title">교량 목록</h2>
-                    <p>공통 레이아웃이 정상적으로 표시된다면 1단계가 완료된 것입니다.</p>
+                <section class="app-card" aria-labelledby="inspection-detail-pending">
+                    <h2 class="app-card__title" id="inspection-detail-pending">점검 상세 화면 준비 중</h2>
+                    <p>점검 기록 기능이 완성되면 이곳에서 점검 내용과 첨부 영상을 확인할 수 있습니다.</p>
+                    <p><a th:href="@{/inspections}" href="/inspections">점검 목록으로 돌아가기</a></p>
                 </section>
             </div>
         </main>

@@ -28,8 +28,8 @@
                 <!-- 서브메뉴 -->
                 <div th:replace="~{fragments/submenu :: submenu(activeMenu='/inspections/new')}"></div>
                 
-                <h1 class="bv-title" th:text="${editMode} ? '교량 정보 수정' : '점검 등록·기록 작성'">점검 등록·기록 작성</h1>
-                <p class="bv-subtitle">등록 시 DB에 적재된 전국교량 원본을 선택합니다. 기존 교량의 담당자 변경·삭제는 관리자 권한이 필요합니다.</p>
+                <h1 class="bv-title" th:text="${editMode} ? '점검 기록 수정' : '점검 등록·기록 작성'">점검 등록·기록 작성</h1>
+                <p class="bv-subtitle">점검 대상 교량을 선택하고 점검 기록과 드론 영상을 작성합니다.</p>
                 <div class="bv-demo" th:if="${demoMode}">화면 시연용 샘플 검색 결과입니다. 실제 CSV 원본 조회와 DB 저장·삭제, 담당자 이력은 아직 연결되지 않았습니다.</div>
                 
                 <section class="bv-panel" aria-labelledby="search-title">
@@ -157,7 +157,7 @@
                             
                             <div class="bv-field">
                                 <span>안전 점검 메모</span>
-                                <input style="height: 135px;" type="search" name="keyword" placeholder="EX) 교각 접근 구간 통제를 확인함" th:value="${keyword}"></label>
+                                <input style="height: 135px;" type="search" name="keyword" placeholder="예) 교각 접근 구간 통제를 확인함" th:value="${keyword}"></label>
                             </div>
                         </aside>
                     </div>
@@ -253,9 +253,9 @@
                     <section class="bv-panel" aria-labelledby="recent-work-title">
                         <h2 id="recent-work-title" class="bv-panel-title">기록 저장</h2>
                         <div class="bv-table-scroll">
-                            <button type="submit" id="bv-save" class="bv-btn bv-btn-primary" th:if="${!editMode or canManage}" th:text="${editMode} ? '담당자 변경 저장' : '선택한 교량 등록'">선택한 교량 등록</button>
+                            <button type="submit" id="bv-save" class="bv-btn bv-btn-primary" th:if="${!editMode or canManage}" th:text="${editMode} ? '점검 기록 수정 저장' : '점검 기록 저장'">점검 기록 저장</button>
                             <a class="bv-btn bv-btn-light" th:href="@{/inspections}" href="/inspections">취소</a>
-                            <button th:if="${editMode and canManage}" type="button" id="bv-delete" class="bv-btn bv-btn-danger">교량 삭제</button>
+                            <button th:if="${editMode and canManage}" type="button" id="bv-delete" class="bv-btn bv-btn-danger">점검 기록 삭제</button>
                         </div>
                         <div class="bv-form-actions"><button class="bv-btn bv-btn-primary" type="submit">제출</button><a class="bv-btn bv-btn-light" th:href="@{/inspections}" href="/inspections">초기화</a></div>
                     </section>

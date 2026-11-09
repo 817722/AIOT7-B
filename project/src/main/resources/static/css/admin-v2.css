@@ -1,0 +1,143 @@
+/* 관리자 UI v2 (웹 관리자 /admin, 기업 관리자 /corps)
+   - 기존 bridge-v2 / maintenance-v2 의 bv-* 규칙과 색상 토큰을 그대로 따르며 .admin-v2 범위 안에서만 적용
+   - common.css 및 다른 화면 CSS는 수정하지 않음
+   - 폰트는 common.css 의 기존 폰트(Malgun Gothic 계열)를 그대로 사용 */
+.admin-v2{--bv-text:#244751;--bv-primary:#087e85;--bv-border:#c7d5dc;--bv-muted:#7c939d;color:var(--bv-text);}
+.admin-v2 .app-container{max-width:1260px;}
+
+/* 제목 · 패널 (bv 공통 규칙) */
+.admin-v2 .bv-title{font-size:28px;font-weight:800;letter-spacing:-.8px;margin:16px 0 2px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.admin-v2 .bv-subtitle{margin:0 0 20px;color:#6e8992;font-size:13px;}
+.admin-v2 .bv-panel{background:#fff;border:1px solid #cfdde1;border-radius:8px;padding:22px 23px;margin:0 0 16px;box-shadow:0 1px 1px rgba(30,75,85,.025);min-width:0;}
+.admin-v2 .bv-panel-title{font-size:16px;margin:0 0 14px;font-weight:800;color:#2c5c68;letter-spacing:-.2px;display:flex;align-items:center;gap:7px;}
+.admin-v2 .bv-section-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:13px;}
+.admin-v2 .bv-section-heading .bv-panel-title{margin-bottom:2px;}
+.admin-v2 .bv-help{font-size:12px;color:#7c929a;font-weight:400;line-height:1.6;margin:0;}
+.admin-v2 .bv-muted{color:#9daab0;font-weight:normal;}
+
+/* 폼 · 버튼 */
+.admin-v2 .bv-filter-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.admin-v2 .bv-field{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:12px;font-weight:700;color:#397280;}
+.admin-v2 .bv-field>span{font-size:12px;color:#4e8490;}
+.admin-v2 .bv-field input,.admin-v2 .bv-field select{width:100%;min-width:0;height:44px;background:#fff;border:1px solid var(--bv-border);border-radius:6px;padding:0 12px;color:#263b44;font-size:13px;}
+.admin-v2 .bv-field input:focus,.admin-v2 .bv-field select:focus,.admin-v2 textarea:focus{outline:2px solid rgba(8,126,133,.2);border-color:#078b90;}
+.admin-v2 .bv-form-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:16px;}
+.admin-v2 .bv-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:9px 16px;text-decoration:none;border-radius:5px;cursor:pointer;border:1px solid transparent;font-weight:700;font-size:12px;line-height:1.3;white-space:nowrap;text-align:center;}
+.admin-v2 .bv-btn-primary{color:#fff;background:#07858a;border-color:#07858a;}
+.admin-v2 .bv-btn-primary:hover{background:#046d74;}
+.admin-v2 .bv-btn-light{background:#fff;border-color:#c9d7dc;color:#315d69;}
+.admin-v2 .bv-btn-light:hover{background:#f0f7f8;}
+.admin-v2 .bv-btn-danger{color:#c2484b;border:1px solid #e6a1a3;background:#fff;}
+.admin-v2 .bv-btn-danger:hover{background:#fdf2f2;}
+.admin-v2 .bv-btn-sm{min-height:30px;padding:6px 10px;font-size:11px;}
+
+/* 표 */
+.admin-v2 .bv-table-scroll{overflow-x:auto;width:100%;border-radius:6px;border:1px solid #d7e2e5;}
+.admin-v2 .bv-table{border-collapse:collapse;width:100%;min-width:720px;text-align:left;font-size:12px;}
+.admin-v2 .bv-table th{background:#dbe6ec;color:#3b5661;padding:13px 12px;font-weight:700;white-space:nowrap;}
+.admin-v2 .bv-table td{border-top:1px solid #e0e9eb;padding:12px;vertical-align:middle;}
+.admin-v2 .bv-table tbody tr:nth-child(odd){background:#f6fafb;}
+.admin-v2 .bv-table tbody tr:hover{background:#edf7f7;}
+.admin-v2 .bv-table a{color:#087f88;font-weight:700;text-decoration:none;}
+.admin-v2 .bv-table a:hover{text-decoration:underline;}
+.admin-v2 .bv-table .ad-num{text-align:right;font-variant-numeric:tabular-nums;}
+.admin-v2 .bv-table .ad-nowrap{white-space:nowrap;}
+
+/* 페이지 · 빈 화면 */
+.admin-v2 .bv-pager{display:flex;justify-content:flex-end;gap:12px;align-items:center;margin:16px 0 0;font-size:12px;}
+.admin-v2 .bv-pager a{color:#236b77;text-decoration:none;font-weight:700;}
+.admin-v2 .bv-disabled{color:#adbbc1;}
+.admin-v2 .bv-blank{padding:30px 16px;text-align:center;background:#fafcfc;border:1px dashed #d2e0e5;border-radius:6px;font-size:13px;}
+.admin-v2 .bv-blank strong{font-size:15px;color:#4b6b74;}
+.admin-v2 .bv-blank p{color:#69838d;margin:8px 0 0;}
+
+/* 상태 탭 (링크) */
+.admin-v2 .ad-tabs{display:flex;gap:22px;flex-wrap:wrap;border-bottom:1px solid #cddfe4;margin:0 0 14px;}
+.admin-v2 .ad-tabs a{border-bottom:3px solid transparent;padding:10px 3px;color:#718f99;font-weight:700;font-size:13px;text-decoration:none;}
+.admin-v2 .ad-tabs a strong{margin-left:4px;color:inherit;font-variant-numeric:tabular-nums;}
+.admin-v2 .ad-tabs a.is-active{border-bottom-color:#078f92;color:#087d83;}
+
+/* 아이콘 (인라인 SVG) */
+.admin-v2 .ad-icon{width:16px;height:16px;flex:none;}
+.admin-v2 .bv-title .ad-icon{width:26px;height:26px;color:var(--bv-primary);}
+.admin-v2 .bv-panel-title .ad-icon{color:var(--bv-primary);}
+
+/* 현황 카드 */
+.admin-v2 .ad-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 16px;}
+.admin-v2 .ad-stat{display:flex;flex-direction:column;gap:6px;padding:16px 18px;background:#fff;border:1px solid #cfdde1;border-radius:8px;text-decoration:none;color:inherit;min-width:0;}
+.admin-v2 a.ad-stat:hover{border-color:#8fc4c7;box-shadow:0 4px 14px rgba(18,60,70,.08);}
+.admin-v2 .ad-stat__label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#5b7f89;}
+.admin-v2 .ad-stat__label .ad-icon{color:var(--bv-primary);}
+.admin-v2 .ad-stat__value{font-size:26px;font-weight:800;color:#244b58;font-variant-numeric:tabular-nums;line-height:1.1;}
+.admin-v2 .ad-stat__value small{font-size:13px;font-weight:700;color:#7c939d;margin-left:2px;}
+.admin-v2 .ad-stat--attention{border-color:#f0cf8e;background:#fffaf0;}
+.admin-v2 .ad-stat--attention .ad-stat__value{color:#9a6512;}
+.admin-v2 .ad-stat--danger .ad-stat__value{color:#b0474a;}
+
+/* 상태 배지 (기업: PENDING/ACTIVE/REJECTED/SUSPENDED, 사용자: PENDING/ACTIVE/REJECTED/DISABLED) */
+.admin-v2 .ad-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;border:1px solid transparent;}
+.admin-v2 .ad-badge--PENDING{background:#fff4dc;color:#94600e;border-color:#f1d59d;}
+.admin-v2 .ad-badge--ACTIVE{background:#e3f4f2;color:#0b7a72;border-color:#b5e0db;}
+.admin-v2 .ad-badge--REJECTED{background:#fbeaea;color:#b0474a;border-color:#efc3c4;}
+.admin-v2 .ad-badge--SUSPENDED{background:#f1e9f7;color:#6c3f8f;border-color:#d8c4e7;}
+.admin-v2 .ad-badge--DISABLED{background:#eef1f3;color:#5d6b72;border-color:#d3dade;}
+.admin-v2 .ad-role{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#e8f0f3;color:#3b5f6a;white-space:nowrap;}
+.admin-v2 .ad-role--SUPER_ADMIN{background:#243f49;color:#fff;}
+.admin-v2 .ad-role--ADMIN{background:#d6eeee;color:#086a70;}
+
+/* 처리 결과 메시지 */
+.admin-v2 .ad-alerts:empty{display:none;}
+.admin-v2 .ad-alert{display:flex;align-items:flex-start;gap:8px;margin:0 0 14px;padding:12px 14px;border-radius:6px;font-size:13px;border:1px solid transparent;}
+.admin-v2 .ad-alert .ad-icon{margin-top:2px;}
+.admin-v2 .ad-alert--success{background:#e7f6f3;border-color:#b6e0d8;color:#0d6b61;}
+.admin-v2 .ad-alert--error{background:#fdf0f0;border-color:#efc3c4;color:#a63d40;}
+.admin-v2 .ad-alert--info{background:#f1f7f9;border-color:#d0e2e8;color:#3b6370;}
+
+/* 정보 목록 (읽기 전용 필드) */
+.admin-v2 .ad-detail-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:16px;align-items:start;}
+.admin-v2 .ad-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0;}
+.admin-v2 .ad-fields>div{padding:11px 12px;border:1px solid #d7e2e6;border-radius:5px;min-width:0;}
+.admin-v2 .ad-fields dt{color:#869ca4;font-size:11px;margin:0 0 5px;}
+.admin-v2 .ad-fields dd{margin:0;font-size:13px;font-weight:600;overflow-wrap:anywhere;}
+.admin-v2 .ad-fields .ad-fields__wide{grid-column:1/-1;}
+.admin-v2 .ad-fields+.bv-panel-title{margin-top:22px;}
+
+/* 상태 처리 영역 */
+.admin-v2 .ad-actions{display:flex;flex-direction:column;gap:10px;}
+.admin-v2 .ad-actions form{margin:0;}
+.admin-v2 .ad-actions .bv-btn{width:100%;}
+.admin-v2 .ad-reason{border:1px solid #d7e2e6;border-radius:6px;background:#fbfdfd;}
+.admin-v2 .ad-reason>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:9px 16px;font-weight:700;font-size:12px;border-radius:5px;}
+.admin-v2 .ad-reason>summary::-webkit-details-marker{display:none;}
+.admin-v2 .ad-reason--danger>summary{color:#c2484b;}
+.admin-v2 .ad-reason--warn>summary{color:#6c3f8f;}
+.admin-v2 .ad-reason[open]>summary{border-bottom:1px solid #e2eaed;border-radius:5px 5px 0 0;}
+.admin-v2 .ad-reason form{padding:12px;display:flex;flex-direction:column;gap:8px;}
+.admin-v2 .ad-reason label{font-size:12px;font-weight:700;color:#4e8490;}
+.admin-v2 textarea{width:100%;min-height:76px;resize:vertical;border:1px solid var(--bv-border);border-radius:6px;padding:9px 11px;font-size:13px;color:#263b44;background:#fff;}
+.admin-v2 .ad-inline-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.admin-v2 .ad-inline-actions form{margin:0;}
+.admin-v2 .ad-inline-actions .ad-reason>summary{min-height:30px;padding:6px 10px;font-size:11px;}
+.admin-v2 .ad-inline-actions .ad-reason[open]{position:relative;}
+.admin-v2 .ad-inline-actions .ad-reason form{min-width:240px;}
+.admin-v2 .ad-note{font-size:12px;color:#6c858e;margin:8px 0 0;line-height:1.6;}
+.admin-v2 .ad-note strong{color:#3b5f6a;}
+.admin-v2 section:not(.bv-panel)>.ad-note{margin:-4px 0 16px;}
+
+/* 이력 타임라인 */
+.admin-v2 .ad-timeline{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0;}
+.admin-v2 .ad-timeline li{position:relative;padding:0 0 14px 22px;border-left:2px solid #dbe7ea;margin-left:6px;}
+.admin-v2 .ad-timeline li:last-child{padding-bottom:0;}
+.admin-v2 .ad-timeline li::before{content:"";position:absolute;left:-7px;top:3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #07858a;}
+.admin-v2 .ad-timeline__head{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;font-weight:700;}
+.admin-v2 .ad-timeline__meta{font-size:12px;color:#7c929a;margin-top:2px;}
+.admin-v2 .ad-timeline__reason{font-size:12px;color:#4b6670;margin:4px 0 0;padding:6px 9px;background:#f4f8f9;border-radius:4px;overflow-wrap:anywhere;}
+
+/* 뒤로가기 링크 */
+.admin-v2 .ad-back{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#236b77;text-decoration:none;margin-top:6px;}
+.admin-v2 .ad-back:hover{text-decoration:underline;}
+
+@media(max-width:1100px){.admin-v2 .ad-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:860px){.admin-v2 .ad-detail-grid{grid-template-columns:1fr;}}
+@media(max-width:640px){.admin-v2 .bv-filter-grid,.admin-v2 .ad-fields{grid-template-columns:1fr;}.admin-v2 .bv-section-heading{flex-direction:column;align-items:stretch;}}
+@media(max-width:420px){.admin-v2 .ad-stat-grid{grid-template-columns:1fr;}}

@@ -67,7 +67,7 @@ public class BusinessVerificationController {
             Object data = response == null ? null : response.get("data");
             if (!"OK".equals(String.valueOf(response == null ? null : response.get("status_code")))
                     || !(data instanceof List<?> list)) {
-                return result(HttpStatus.BAD_GATEWAY, false, "국세청 인증 응답을 확인할 수 없습니다.");
+                return result(HttpStatus.BAD_GATEWAY, false, "국세청 사업자 확인 결과를 받지 못했습니다. 잠시 후 다시 시도해 주세요.");
             }
             boolean matched = list.stream()
                     .filter(Map.class::isInstance).map(Map.class::cast)
@@ -81,7 +81,7 @@ public class BusinessVerificationController {
             return result(HttpStatus.OK, true, "기업 정보가 확인됐습니다. 작업자 정보를 입력해 주세요.");
         } catch (Exception e) {
             log.warn("외부 사업자 진위확인 API 호출 실패", e);
-            return result(HttpStatus.BAD_GATEWAY, false, "국세청 인증 API에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+            return result(HttpStatus.BAD_GATEWAY, false, "국세청 사업자 확인 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
         }
     }
 

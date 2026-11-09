@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>기업 정보 | 기업 관리 · 검수 | 교량점검 시스템</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
+  <link rel="stylesheet" th:href="@{/css/admin-v2.css}" href="/css/admin-v2.css">
+  <script th:src="@{/js/admin.js}" src="/js/admin.js" defer></script>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="app-layout" th:with="activeMenu='corps'">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="app-main admin-v2" id="main-content">
+    <div class="app-container">
+      <div th:replace="~{fragments/submenu :: submenu(activeMenu='/corps')}"></div>
+      <h1 class="bv-title">
+        <svg th:replace="~{fragments/admin :: icon('building')}"></svg>
+        <span th:text="${corp.name}">기업명</span>
+        <span class="ad-badge" th:classappend="|ad-badge--${corp.status}|" th:text="${corp.statusLabel}">정상 이용</span>
+      </h1>
+      <p class="bv-subtitle">소속 기업 정보와 담당자 현황을 확인하고, 담당자의 가입 요청을 검수합니다.</p>
+
+      <div th:replace="~{fragments/admin :: alerts}"></div>
+
+      <section aria-labelledby="cp-stats-title">
+        <h2 id="cp-stats-title" class="bv-panel-title">기업 현황</h2>
+        <div class="ad-stat-grid">
+          <a class="ad-stat" th:classappend="${corp.pendingUsers > 0} ? ' ad-stat--attention' : ''"
+             th:href="@{/corps/members(status='PENDING')}" href="/corps/members?status=PENDING">
+            <span class="ad-stat__label"><svg th:replace="~{fragments/admin :: icon('clock')}"></svg>가입 승인 대기</span>
+            <strong class="ad-stat__value"><span th:text="${corp.pendingUsers}">0</span><small>명</small></strong>
+          </a>
+          <a class="ad-stat" th:href="@{/corps/members(status='ACTIVE')}" href="/corps/members?status=ACTIVE">
+            <span class="ad-stat__label"><svg th:replace="~{fragments/admin :: icon('users')}"></svg>활성 사용자</span>
+            <strong class="ad-stat__value"><span th:text="${corp.activeUsers}">0</span><small>명</small></strong>
+            <span class="bv-help" th:text="|전체 ${corp.userCount}명|">전체 0명</span>
+          </a>
+          <a class="ad-stat" th:href="@{/bridges}" href="/bridges">
+            <span class="ad-stat__label"><svg th:replace="~{fragments/admin :: icon('bridge')}"></svg>관리 교량</span>
+            <strong class="ad-stat__value"><span th:text="${corp.bridgeCount}">0</span><small>개</small></strong>
+            <span class="bv-help" th:text="|담당자 미배정 ${corp.unassignedBridges}개|">담당자 미배정 0개</span>
+          </a>
+          <div class="ad-stat">
+            <span class="ad-stat__label"><svg th:replace="~{fragments/admin :: icon('file')}"></svg>점검 · 유지보수 기록</span>
+            <strong class="ad-stat__value"><span th:text="${corp.inspectionCount + corp.maintenanceCount}">0</span><small>건</small></strong>
+            <span class="bv-help" th:text="|점검 ${corp.inspectionCount}건 · 유지보수 ${corp.maintenanceCount}건|">점검 0건</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="ad-detail-grid">
+        <section class="bv-panel" aria-labelledby="cp-pending-title">
+          <div class="bv-section-heading">
+            <div>
+              <h2 id="cp-pending-title" class="bv-panel-title"><svg th:replace="~{fragments/admin :: icon('user-check')}"></svg>가입 승인 대기 담당자</h2>
+              <p class="bv-help">같은 사업자등록번호로 가입한 사용자입니다. 승인하면 담당자로 로그인할 수 있습니다.</p>
+            </div>
+            <a class="bv-btn bv-btn-light" th:href="@{/corps/members}" href="/corps/members">담당자 관리</a>
+          </div>
+          <div class="bv-blank" th:if="${#lists.isEmpty(pendingMembers)}"><strong>승인 대기 중인 담당자가 없습니다.</strong></div>
+          <div class="bv-table-scroll" th:unless="${#lists.isEmpty(pendingMembers)}">
+            <table class="bv-table">
+              <thead><tr><th scope="col">이름</th><th scope="col">아이디</th><th scope="col">연락처</th><th scope="col">요청일</th><th scope="col">검수</th></tr></thead>
+              <tbody>
+                <tr th:each="m : ${pendingMembers}">
+                  <td><a th:href="@{/corps/members/{no}(no=${m.no})}" th:text="${m.name}">이름</a></td>
+                  <td th:text="${m.username}">아이디</td>
+                  <td th:text="${m.phone}">010</td>
+                  <td class="ad-nowrap" th:text="${m.createdAt != null ? #temporals.format(m.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">2026-11-01</td>
+                  <td><div th:replace="~{fragments/admin :: memberActions(${m}, 'info', 'ad-inline-actions')}"></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="bv-panel" aria-labelledby="cp-info-title">
+          <h2 id="cp-info-title" class="bv-panel-title">기업 정보</h2>
+          <dl class="ad-fields">
+            <div class="ad-fields__wide"><dt>기업명</dt><dd th:text="${corp.name}">기업명</dd></div>
+            <div><dt>사업자등록번호</dt><dd th:text="${corp.bisNo}">123-45-67890</dd></div>
+            <div><dt>대표자명</dt><dd th:text="${corp.ceoName}">대표자</dd></div>
+            <div><dt>개업일자</dt><dd th:text="${corp.openedAt != null ? #temporals.format(corp.openedAt, 'yyyy-MM-dd') : '-'}">2020-01-01</dd></div>
+            <div><dt>국세청 검증</dt><dd th:text="${corp.verified} ? '검증 완료' : '미검증'">검증 완료</dd></div>
+            <div><dt>가입 신청일</dt><dd th:text="${corp.createdAt != null ? #temporals.format(corp.createdAt, 'yyyy-MM-dd') : '-'}">2026-11-01</dd></div>
+            <div><dt>서비스 승인일</dt><dd th:text="${corp.statusAt != null ? #temporals.format(corp.statusAt, 'yyyy-MM-dd') : '-'}">2026-11-01</dd></div>
+          </dl>
+          <h3 class="bv-panel-title" id="cp-shortcut-title">기업 관리 기능 바로가기</h3>
+          <div class="ad-actions" aria-labelledby="cp-shortcut-title">
+            <a class="bv-btn bv-btn-light" th:href="@{/bridges}" href="/bridges"><svg th:replace="~{fragments/admin :: icon('bridge')}"></svg>교량 목록 · 담당자 변경</a>
+            <a class="bv-btn bv-btn-light" th:href="@{/bridges/new}" href="/bridges/new"><svg th:replace="~{fragments/admin :: icon('search')}"></svg>전국교량 검색 · 교량 등록</a>
+            <a class="bv-btn bv-btn-light" th:href="@{/maintenances}" href="/maintenances"><svg th:replace="~{fragments/admin :: icon('file')}"></svg>유지보수 기록 관리</a>
+          </div>
+          <p class="ad-note">교량 담당자 변경은 교량 수정 화면에서 할 수 있으며, 변경 이력이 함께 기록됩니다.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

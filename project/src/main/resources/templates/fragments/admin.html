@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  관리자 화면 공통 fragment
+  - icon(name): Lucide 아이콘(ISC License) 경로를 인라인 SVG로 사용. 외부 CDN 요청 없음(CSP 'self'와도 충돌 없음).
+                아이콘은 장식용(aria-hidden)이며 항상 텍스트 라벨과 함께 사용한다.
+  - alerts: 처리 결과(flash) 메시지. th:text 로만 출력(XSS 방지).
+-->
+<svg th:fragment="icon(name)" class="ad-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+     th:switch="${name}">
+    <th:block th:case="'dashboard'"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></th:block>
+    <th:block th:case="'building'"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></th:block>
+    <th:block th:case="'users'"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></th:block>
+    <th:block th:case="'user-check'"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></th:block>
+    <th:block th:case="'user-x'"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="22" y2="13"/><line x1="22" y1="8" x2="17" y2="13"/></th:block>
+    <th:block th:case="'check'"><polyline points="20 6 9 17 4 12"/></th:block>
+    <th:block th:case="'x'"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></th:block>
+    <th:block th:case="'pause'"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></th:block>
+    <th:block th:case="'restore'"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></th:block>
+    <th:block th:case="'history'"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></th:block>
+    <th:block th:case="'clock'"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></th:block>
+    <th:block th:case="'search'"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></th:block>
+    <th:block th:case="'shield'"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></th:block>
+    <th:block th:case="'file'"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/></th:block>
+    <th:block th:case="'bridge'"><path d="M4 6v13M20 6v13M4 11l8 6 8-6M4 8l8 6 8-6"/><path d="M2 20h20"/></th:block>
+    <th:block th:case="'arrow-left'"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></th:block>
+    <th:block th:case="'alert'"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></th:block>
+    <th:block th:case="*"><circle cx="12" cy="12" r="1"/></th:block>
+</svg>
+
+<div th:fragment="alerts" class="ad-alerts">
+    <p class="ad-alert ad-alert--success" role="status" th:if="${adminMessage != null}">
+        <svg th:replace="~{fragments/admin :: icon('check')}"></svg>
+        <span th:text="${adminMessage}">처리되었습니다.</span>
+    </p>
+    <p class="ad-alert ad-alert--error" role="alert" th:if="${adminError != null}">
+        <svg th:replace="~{fragments/admin :: icon('alert')}"></svg>
+        <span th:text="${adminError}">처리하지 못했습니다.</span>
+    </p>
+</div>
+
+<!--
+  기업 관리자(ADMIN)의 담당자 상태 처리 폼: 승인 / 반려 / 비활성 / 재활성
+  - member.actions: 서버(CorpManageService)가 계산한 "현재 가능한 처리" 목록 (INSPECTOR 대상, 본인 제외)
+  - 실제 허용 여부는 POST /corps/members/{no}/status 에서 서버가 다시 검증
+  - layout: 'ad-inline-actions'(목록) / 'ad-actions'(상세), returnTo: list / info / detail
+-->
+<div th:fragment="memberActions(member, returnTo, layout)" th:class="${layout}">
+    <th:block th:if="${#lists.isEmpty(member.actions)}">
+        <span class="bv-help" th:text="${member.self} ? '본인 계정' : (${member.role != 'INSPECTOR'} ? '관리자 계정' : '처리 가능한 작업 없음')">-</span>
+    </th:block>
+
+    <form method="post" th:action="@{/corps/members/{no}/status(no=${member.no})}" th:if="${#lists.contains(member.actions, 'APPROVE')}"
+          th:attr="data-confirm=|${member.name} 님의 가입을 승인하시겠습니까?|">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <input type="hidden" name="action" value="APPROVE">
+        <input type="hidden" name="returnTo" th:value="${returnTo}">
+        <button type="submit" class="bv-btn bv-btn-primary" th:classappend="${layout == 'ad-inline-actions'} ? ' bv-btn-sm' : ''">
+            <svg th:replace="~{fragments/admin :: icon('user-check')}"></svg>가입 승인</button>
+    </form>
+
+    <details class="ad-reason ad-reason--danger" th:if="${#lists.contains(member.actions, 'REJECT')}">
+        <summary><svg th:replace="~{fragments/admin :: icon('user-x')}"></svg>가입 반려</summary>
+        <form method="post" th:action="@{/corps/members/{no}/status(no=${member.no})}"
+              th:attr="data-confirm=|${member.name} 님의 가입 요청을 반려하시겠습니까?|">
+            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="hidden" name="action" value="REJECT">
+            <input type="hidden" name="returnTo" th:value="${returnTo}">
+            <label th:for="|reject-${member.no}|">반려 사유 (필수)</label>
+            <textarea th:id="|reject-${member.no}|" name="reason" required maxlength="500" placeholder="예) 소속 직원이 아닙니다."></textarea>
+            <button type="submit" class="bv-btn bv-btn-danger">반려 처리</button>
+        </form>
+    </details>
+
+    <details class="ad-reason ad-reason--warn" th:if="${#lists.contains(member.actions, 'DISABLE')}">
+        <summary><svg th:replace="~{fragments/admin :: icon('pause')}"></svg>비활성</summary>
+        <form method="post" th:action="@{/corps/members/{no}/status(no=${member.no})}"
+              th:attr="data-confirm=|${member.name} 님의 계정을 비활성화하시겠습니까? 로그인할 수 없게 됩니다.|">
+            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="hidden" name="action" value="DISABLE">
+            <input type="hidden" name="returnTo" th:value="${returnTo}">
+            <label th:for="|disable-${member.no}|">비활성 사유 (필수)</label>
+            <textarea th:id="|disable-${member.no}|" name="reason" required maxlength="500" placeholder="예) 퇴사 처리"></textarea>
+            <button type="submit" class="bv-btn bv-btn-danger">비활성 처리</button>
+        </form>
+    </details>
+
+    <form method="post" th:action="@{/corps/members/{no}/status(no=${member.no})}" th:if="${#lists.contains(member.actions, 'REACTIVATE')}"
+          th:attr="data-confirm=|${member.name} 님의 계정을 다시 활성화하시겠습니까?|">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <input type="hidden" name="action" value="REACTIVATE">
+        <input type="hidden" name="returnTo" th:value="${returnTo}">
+        <button type="submit" class="bv-btn bv-btn-light" th:classappend="${layout == 'ad-inline-actions'} ? ' bv-btn-sm' : ''">
+            <svg th:replace="~{fragments/admin :: icon('restore')}"></svg>재활성</button>
+    </form>
+</div>
+</body>
+</html>

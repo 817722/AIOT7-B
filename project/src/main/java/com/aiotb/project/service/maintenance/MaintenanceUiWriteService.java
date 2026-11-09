@@ -44,8 +44,8 @@ public class MaintenanceUiWriteService {
         List<Map<String, Object>> found = jdbc.queryForList("""
                 SELECT u.no, u.corp_no
                   FROM users u
-                  JOIN corps c ON c.no = u.corp_no AND c.bis_verified = 1
-                 WHERE u.username = ? AND u.enabled = 1
+                  JOIN corps c ON c.no = u.corp_no AND c.status = 'ACTIVE'
+                 WHERE u.username = ? AND u.status = 'ACTIVE'
                 """, authentication.getName());
         if (found.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "활성화된 기업 사용자만 이용할 수 있습니다.");
@@ -104,7 +104,7 @@ public class MaintenanceUiWriteService {
         Actor actor = actor(auth);
         return jdbc.query("""
                 SELECT no, manager_name FROM users
-                 WHERE corp_no = ? AND enabled = 1
+                 WHERE corp_no = ? AND status = 'ACTIVE'
                  ORDER BY manager_name, no
                 """, (rs, index) -> Map.of("no", rs.getLong("no"), "name", rs.getString("manager_name")),
                 actor.corpNo());
@@ -218,7 +218,7 @@ public class MaintenanceUiWriteService {
 
     private void requireManager(Actor actor, long managerNo) {
         Integer count = jdbc.queryForObject("""
-                SELECT COUNT(*) FROM users WHERE no = ? AND corp_no = ? AND enabled = 1
+                SELECT COUNT(*) FROM users WHERE no = ? AND corp_no = ? AND status = 'ACTIVE'
                 """, Integer.class, managerNo, actor.corpNo());
         if (count == null || count == 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "같은 기업의 활성 작업자를 선택해 주세요.");

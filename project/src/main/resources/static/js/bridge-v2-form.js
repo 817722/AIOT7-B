@@ -84,7 +84,7 @@
       if (managerInput) managerInput.value = originalManagerName;
       if (managerLabel) managerLabel.textContent = '등록 예정 담당자';
       if (managerHelp) managerHelp.textContent = '교량을 등록하면 현재 로그인한 작업자가 최초 담당자로 지정됩니다.';
-      message(`${row.dataset.name} 원본을 선택했습니다. 신규 교량으로 등록할 수 있습니다.`);
+      message(`${row.dataset.name}을(를) 선택했습니다. 신규 교량으로 등록할 수 있습니다.`);
     }
   }
 
@@ -98,7 +98,7 @@
     try {
       const response = await fetch(`/api/bridge-ui/catalog?keyword=${encodeURIComponent(keyword)}`,
         { credentials: 'same-origin', headers: { Accept: 'application/json' } });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) throw new Error('요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.');
       const bridges = await response.json();
       if (!Array.isArray(bridges)) throw new Error('검색 응답 형식 오류');
       tbody.replaceChildren();
@@ -205,7 +205,7 @@
   const managerSelect = document.getElementById('bv-manager-select');
   if (isEdit && canManage && managerSelect) {
     fetch('/api/bridge-ui/managers', { credentials:'same-origin', headers:{ Accept:'application/json' } })
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(r => { if (!r.ok) throw new Error('요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'); return r.json(); })
       .then(rows => {
         managerSelect.replaceChildren();
         const placeholder = document.createElement('option');
@@ -230,7 +230,7 @@
     if (!response.ok) {
       let detail = '';
       try { const error = await response.json(); detail = error.detail || error.message || ''; } catch (_) {}
-      throw new Error(`${detail || `HTTP ${response.status}`}`);
+      throw new Error(detail || '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.');
     }
     return response.status === 204 ? null : response.json();
   }
@@ -245,7 +245,7 @@
     const response = await fetch(`/api/bridge-ui/${no}/image`, {
       method: 'POST', credentials: 'same-origin', headers, body: formData
     });
-    if (!response.ok) throw new Error(`이미지 업로드 HTTP ${response.status}`);
+    if (!response.ok) throw new Error('요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.');
   }
 
   document.getElementById('bv-save')?.addEventListener('click', async e => {

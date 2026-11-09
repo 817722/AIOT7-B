@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>담당자 관리 | 기업 관리 · 검수 | 교량점검 시스템</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
+  <link rel="stylesheet" th:href="@{/css/admin-v2.css}" href="/css/admin-v2.css">
+  <script th:src="@{/js/admin.js}" src="/js/admin.js" defer></script>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="app-layout" th:with="activeMenu='corps'">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="app-main admin-v2" id="main-content">
+    <div class="app-container">
+      <div th:replace="~{fragments/submenu :: submenu(activeMenu='/corps/members')}"></div>
+      <h1 class="bv-title"><svg th:replace="~{fragments/admin :: icon('users')}"></svg>담당자 관리</h1>
+      <p class="bv-subtitle">소속 기업의 사용자 계정을 확인하고, 담당자의 가입 승인 · 반려 · 비활성 · 재활성을 처리합니다.</p>
+
+      <div th:replace="~{fragments/admin :: alerts}"></div>
+
+      <section class="bv-panel" aria-labelledby="cp-member-search-title">
+        <h2 id="cp-member-search-title" class="bv-panel-title"><svg th:replace="~{fragments/admin :: icon('search')}"></svg>사용자 검색</h2>
+        <form method="get" th:action="@{/corps/members}" action="/corps/members">
+          <input type="hidden" name="status" th:value="${status}">
+          <div class="bv-filter-grid">
+            <label class="bv-field" for="cp-member-keyword">
+              <span>아이디 또는 이름</span>
+              <input id="cp-member-keyword" type="search" name="keyword" maxlength="100" th:value="${keyword}" placeholder="아이디 / 담당자명">
+            </label>
+          </div>
+          <div class="bv-form-actions">
+            <button type="submit" class="bv-btn bv-btn-primary">조회</button>
+            <a class="bv-btn bv-btn-light" th:href="@{/corps/members}" href="/corps/members">초기화</a>
+          </div>
+        </form>
+      </section>
+
+      <section class="bv-panel" aria-labelledby="cp-member-list-title">
+        <div class="bv-section-heading">
+          <div>
+            <h2 id="cp-member-list-title" class="bv-panel-title">소속 사용자</h2>
+            <p class="bv-help" th:text="|조회 결과 ${#lists.size(members)}명|">조회 결과 0명</p>
+          </div>
+        </div>
+        <nav class="ad-tabs" aria-label="계정 상태별 목록">
+          <a th:classappend="${status == ''} ? ' is-active' : ''" th:href="@{/corps/members(keyword=${keyword})}">전체 <strong th:text="${counts['ALL']}">0</strong></a>
+          <a th:classappend="${status == 'PENDING'} ? ' is-active' : ''" th:href="@{/corps/members(keyword=${keyword},status='PENDING')}">승인 대기 <strong th:text="${counts['PENDING']}">0</strong></a>
+          <a th:classappend="${status == 'ACTIVE'} ? ' is-active' : ''" th:href="@{/corps/members(keyword=${keyword},status='ACTIVE')}">활성 <strong th:text="${counts['ACTIVE']}">0</strong></a>
+          <a th:classappend="${status == 'DISABLED'} ? ' is-active' : ''" th:href="@{/corps/members(keyword=${keyword},status='DISABLED')}">비활성 <strong th:text="${counts['DISABLED']}">0</strong></a>
+          <a th:classappend="${status == 'REJECTED'} ? ' is-active' : ''" th:href="@{/corps/members(keyword=${keyword},status='REJECTED')}">반려 <strong th:text="${counts['REJECTED']}">0</strong></a>
+        </nav>
+        <div class="bv-blank" th:if="${#lists.isEmpty(members)}"><strong>조건에 맞는 사용자가 없습니다.</strong></div>
+        <div class="bv-table-scroll" th:unless="${#lists.isEmpty(members)}">
+          <table class="bv-table">
+            <thead>
+              <tr><th scope="col">이름</th><th scope="col">아이디</th><th scope="col">권한</th><th scope="col">계정 상태</th>
+                  <th scope="col">연락처</th><th scope="col">가입일</th><th scope="col">처리</th></tr>
+            </thead>
+            <tbody>
+              <tr th:each="m : ${members}">
+                <td><a th:href="@{/corps/members/{no}(no=${m.no})}" th:text="${m.name}">이름</a></td>
+                <td th:text="${m.username}">아이디</td>
+                <td><span class="ad-role" th:classappend="|ad-role--${m.role}|" th:text="${m.roleLabel}">담당자</span></td>
+                <td><span class="ad-badge" th:classappend="|ad-badge--${m.status}|" th:text="${m.statusLabel}">활성</span></td>
+                <td th:text="${m.phone}">010</td>
+                <td class="ad-nowrap" th:text="${m.createdAt != null ? #temporals.format(m.createdAt, 'yyyy-MM-dd') : '-'}">2026-11-01</td>
+                <td><div th:replace="~{fragments/admin :: memberActions(${m}, 'list', 'ad-inline-actions')}"></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="ad-note">기업 관리자는 같은 기업의 <strong>담당자</strong> 계정만 처리할 수 있으며, 본인 계정과 다른 관리자 계정은 처리할 수 없습니다.</p>
+      </section>
+    </div>
+  </main>
+</div>
+</body>
+</html>

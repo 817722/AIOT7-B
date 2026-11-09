@@ -50,7 +50,7 @@ public class InspectionRepresentativeImageService {
         }
         User user = users.findByUsername(auth.getName())
                 .orElseThrow(() -> new AccessDeniedException("등록되지 않은 사용자입니다."));
-        if (!user.isEnabled() || user.getCorp() == null || !user.getCorp().isVerified()) {
+        if (!user.canUseService()) {
             throw new AccessDeniedException("사용할 수 없는 기업 계정입니다.");
         }
         return new Actor(user.getNo(), user.getCorp().getNo());

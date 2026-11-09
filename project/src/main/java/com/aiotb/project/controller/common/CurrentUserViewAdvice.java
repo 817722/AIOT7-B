@@ -56,4 +56,23 @@ public class CurrentUserViewAdvice {
                 .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
         return admin ? "관리자" : "작업자";
     }
+
+    /**
+     * 사이드바 메뉴 표시용 대표 권한: SUPER_ADMIN / ADMIN / INSPECTOR (비로그인 시 null).
+     * 메뉴 표시 여부일 뿐이며, 실제 접근 제한은 SecurityConfig와 Controller/Service에서 검증한다.
+     */
+    @ModelAttribute("currentUserRole")
+    public String currentUserRole() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
+            return null;
+        }
+        java.util.Set<String> roles = new java.util.HashSet<>();
+        authentication.getAuthorities().forEach(a -> roles.add(a.getAuthority()));
+        if (roles.contains("ROLE_SUPER_ADMIN")) return "SUPER_ADMIN";
+        if (roles.contains("ROLE_ADMIN")) return "ADMIN";
+        if (roles.contains("ROLE_INSPECTOR")) return "INSPECTOR";
+        return null;
+    }
 }

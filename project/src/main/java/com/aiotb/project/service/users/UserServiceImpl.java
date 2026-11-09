@@ -44,18 +44,27 @@ public class UserServiceImpl implements UserService {
         corpDto.setCorpName(verifiedBusiness.corpName());
         corpDto.setOpenDate(verifiedBusiness.openDate());
 
+        // 가입 전에 같은 사업자번호의 기업이 이미 있는지 확인한다.
+        // - 신규 기업: 최초 가입자 = ADMIN(ACTIVE), 기업은 SUPER_ADMIN 승인 전까지 PENDING
+        // - 기존 기업: 가입자 = INSPECTOR(PENDING), 같은 기업 ADMIN이 승인
+        boolean existingCorp = corpService.isVerified(verifiedBusiness.businessNo());
+
         // 가입 마지막 단계에서 국세청 정보를 재검증하고, 동일 트랜잭션 안에서 기업/사용자를 생성한다.
         Corp corp = corpService.verifyAndRegister(corpDto);
+        if (existingCorp && (corp.getStatus() == Corp.Status.REJECTED || corp.getStatus() == Corp.Status.SUSPENDED)) {
+            throw new IllegalArgumentException("가입이 반려되었거나 이용이 정지된 기업에는 담당자 가입을 신청할 수 없습니다.");
+        }
+
         User user = User.builder()
                 .corp(corp)
                 .username(dto.getUsername().trim())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .managerName(dto.getManagerName())
                 .phone(dto.getPhone())
-                .enabled(true)
+                .status(existingCorp ? User.Status.PENDING : User.Status.ACTIVE)
                 .build();
-        // 관리자 권한은 셀프 가입으로 부여하지 않으며 별도 승인/권한 부여 절차로 처리한다.
-        user.addAuth("INSPECTOR");
+        // SUPER_ADMIN은 화면에서 생성할 수 없으며 SQL로만 등록한다.
+        user.addAuth(existingCorp ? "INSPECTOR" : "ADMIN");
         return userRepository.saveAndFlush(user);
     }
 

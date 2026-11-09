@@ -41,7 +41,7 @@ public class BridgeUiWriteService {
         }
         User user = users.findByUsername(auth.getName())
             .orElseThrow(() -> new AccessDeniedException("사용자가 존재하지 않습니다."));
-        if (!user.isEnabled() || user.getCorp() == null || !user.getCorp().isVerified()) {
+        if (!user.canUseService()) {
             throw new AccessDeniedException("인증된 기업 사용자만 이용할 수 있습니다.");
         }
         return new CurrentUser(user.getNo(), user.getCorp().getNo());
@@ -116,7 +116,7 @@ public class BridgeUiWriteService {
         CurrentUser actor = actor(auth);
         return jdbc.query("""
             SELECT no, manager_name
-              FROM users WHERE corp_no = ? AND enabled = 1
+              FROM users WHERE corp_no = ? AND status = 'ACTIVE'
              ORDER BY manager_name, no
             """, (rs, idx) -> Map.of("no", rs.getLong("no"), "name", rs.getString("manager_name")), actor.corpNo());
     }
@@ -161,7 +161,7 @@ public class BridgeUiWriteService {
             return no;
         } catch (DataIntegrityViolationException ex) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "해당 교량이 이미 소속 기업에 등록됐거나 DB 제약조건을 충족하지 못했습니다.", ex);
+                "이미 우리 기업에 등록된 교량입니다.", ex);
         }
     }
 
@@ -194,7 +194,7 @@ public class BridgeUiWriteService {
 
         Integer eligible = jdbc.queryForObject("""
             SELECT COUNT(*) FROM users
-             WHERE no = ? AND corp_no = ? AND enabled = 1
+             WHERE no = ? AND corp_no = ? AND status = 'ACTIVE'
             """, Integer.class, managerNo, actor.corpNo());
         if (eligible == null || eligible == 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "같은 기업의 활성 작업자를 선택해 주세요.");

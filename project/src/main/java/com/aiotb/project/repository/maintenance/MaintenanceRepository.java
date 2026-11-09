@@ -16,4 +16,11 @@ public interface MaintenanceRepository extends JpaRepository<Maintenance, Long> 
     List<Maintenance> findByMaintenanceDateBetween(LocalDate start, LocalDate end);
 
     List<Maintenance> findByMaintenanceType(String type);
+
+    // ── 기업별 접근 제한용 (로그인 사용자의 corp_no 기준) ──
+    Optional<Maintenance> findByIdAndCorpNo(String id, Long corpNo);
+
+    List<Maintenance> findByCorpNoOrderByMaintenanceDateDesc(Long corpNo);
+
+    List<Maintenance> findByBridgeNoAndCorpNoOrderByMaintenanceDateDesc(Long bridgeNo, Long corpNo);
 }

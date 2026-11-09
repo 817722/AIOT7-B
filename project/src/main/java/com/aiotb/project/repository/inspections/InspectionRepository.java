@@ -17,4 +17,9 @@ public interface InspectionRepository extends JpaRepository<Inspection, Long> {
 
     // 특정 담당자의 점검 목록 조회
     List<Inspection> findByInspectorNo(Long inspectorNo);
+
+    // ── 기업별 접근 제한용 (로그인 사용자의 corp_no 기준) ──
+    Optional<Inspection> findByIdAndCorpNo(String id, Long corpNo);
+
+    List<Inspection> findByBridgeNoAndCorpNoOrderByInspectionDateDesc(Long bridgeNo, Long corpNo);
 }

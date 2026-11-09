@@ -52,8 +52,9 @@ public class UserController {
         if (bindingResult.hasErrors()) {
             return "page/users/join";
         }
+        com.aiotb.project.domain.users.User joined;
         try {
-            userService.join(joinDto, verified);
+            joined = userService.join(joinDto, verified);
         } catch (IllegalArgumentException e) {
             model.addAttribute("serverError", e.getMessage());
             return "page/users/join";
@@ -67,7 +68,11 @@ public class UserController {
             return "page/users/join";
         }
         session.removeAttribute(VerifiedBusiness.SESSION_KEY);
-        redirectAttributes.addFlashAttribute("message", "회원가입이 완료되었습니다. 로그인해 주세요.");
+        // 기업 승인(SUPER_ADMIN)과 담당자 승인(기업 ADMIN)을 구분하여 안내한다.
+        boolean corpAdmin = joined.hasRole(com.aiotb.project.domain.users.UserAuth.Role.ADMIN);
+        redirectAttributes.addFlashAttribute("message", corpAdmin
+                ? "기업 가입 신청이 완료되었습니다. 웹 관리자의 기업 승인 후 로그인할 수 있습니다."
+                : "담당자 가입 요청이 완료되었습니다. 소속 기업 관리자의 승인 후 로그인할 수 있습니다.");
         return "redirect:/login";
     }
 

@@ -92,10 +92,10 @@
         showSummary(data);
         message('success', body.message || '기업 인증이 완료되었습니다.');
       } else {
-        message('error', body.message || `기업 인증에 실패했습니다 (HTTP ${response.status}).`);
+        message('error', body.message || '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.');
       }
     } catch (e) {
-      message('error', '기업 인증 요청에 실패했습니다. 서버 상태를 확인해 주세요.');
+      message('error', '기업 인증 요청에 실패했습니다. 잠시 후 다시 시도해 주세요.');
     } finally {
       verifyBtn.disabled = false;
       verifyBtn.textContent = '기업 인증';

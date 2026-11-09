@@ -106,6 +106,39 @@
         </ul>
         </nav>
     </div>
+
+    <!-- 웹 관리자(SUPER_ADMIN) 서브메뉴 -->
+    <div class="app-submenu" th:if="${currentMenuGroup == 'admin'}">
+        <div class="app-submenu__heading">웹 관리자 <span>|</span></div>
+        <nav class="app-submenu__nav" aria-label="웹 관리자 메뉴">
+            <ul>
+            <li><a class="app-submenu__link"
+                th:classappend="${activeMenu == '/admin'} ? 'is-active' : ''"
+                th:href="@{/admin}" href="/admin">대시보드</a></li>
+            <li><a class="app-submenu__link"
+                th:classappend="${#strings.startsWith(activeMenu, '/admin/corps')} ? 'is-active' : ''"
+                th:href="@{/admin/corps}" href="/admin/corps">기업 관리</a></li>
+            <li><a class="app-submenu__link"
+                th:classappend="${#strings.startsWith(activeMenu, '/admin/users')} ? 'is-active' : ''"
+                th:href="@{/admin/users}" href="/admin/users">사용자 조회</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- 기업 관리자(ADMIN) 서브메뉴 -->
+    <div class="app-submenu" th:if="${currentMenuGroup == 'corps'}">
+        <div class="app-submenu__heading">업무 관리 <span>|</span> 기업 관리 · 검수 <span>|</span></div>
+        <nav class="app-submenu__nav" aria-label="기업 관리 메뉴">
+            <ul>
+            <li><a class="app-submenu__link"
+                th:classappend="${activeMenu == '/corps'} ? 'is-active' : ''"
+                th:href="@{/corps}" href="/corps">기업 정보</a></li>
+            <li><a class="app-submenu__link"
+                th:classappend="${#strings.startsWith(activeMenu, '/corps/members')} ? 'is-active' : ''"
+                th:href="@{/corps/members}" href="/corps/members">담당자 관리</a></li>
+            </ul>
+        </nav>
+    </div>
 </div>
 </body>
 </html>

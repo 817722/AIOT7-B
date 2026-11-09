@@ -101,7 +101,7 @@
       if (!response.ok) {
         let error = '';
         try { const data = await response.json(); error = data.message || data.detail || ''; } catch (_) {}
-        throw new Error(error || `삭제 실패 (HTTP ${response.status})`);
+        throw new Error(error || '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.');
       }
       if (player.dataset.videoNo === String(no)) {
         player.pause(); player.removeAttribute('src'); player.load();

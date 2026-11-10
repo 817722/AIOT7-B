@@ -17,7 +17,7 @@
   <main class="app-main maintenance-v2 mv-figma" id="main-content"
         th:attr="data-edit-mode=${editMode},data-record-no=${editMode ? maintenance.no : ''}">
     <div class="app-container">
-      <div th:replace="~{fragments/submenu :: submenu(activeMenu='/maintenances')}"></div>
+      <div th:replace="~{fragments/submenu :: submenu(activeMenu='/maintenances/new')}"></div>
       <h1 class="bv-title" th:text="${editMode} ? '유지보수 기록 수정' : '유지보수 등록·기록 작성'">유지보수 등록·기록 작성</h1>
       <p class="bv-subtitle">대상 및 연결 기록을 확인한 뒤 현장 기록과 유지보수 영상을 관리합니다.</p>
 

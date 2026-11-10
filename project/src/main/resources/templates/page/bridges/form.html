@@ -2,8 +2,10 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="_csrf" th:content="${_csrf.token}">
-<meta name="_csrf_header" th:content="${_csrf.headerName}">
+<!-- <meta name="_csrf" th:content="${_csrf.token}">
+<meta name="_csrf_header" th:content="${_csrf.headerName}"> -->
+<meta name="_csrf" th:content="${_csrf?.token}">
+<meta name="_csrf_header" th:content="${_csrf?.headerName}">
 <title th:text="${editMode} ? '교량 수정 | 교량점검 시스템' : '교량 등록 | 교량점검 시스템'">교량 등록·수정</title>
 <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css"><link rel="stylesheet" th:href="@{/css/bridge-v2.css}" href="/css/bridge-v2.css"><link rel="stylesheet" th:href="@{/css/bridge-registered.css}" href="/css/bridge-registered.css"><script th:src="@{/js/bridge-v2-form.js}" src="/js/bridge-v2-form.js" defer></script>
 </head>

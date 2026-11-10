@@ -165,7 +165,7 @@
    ============================================================== */
 .maintenance-v2.mv-figma {--mv-field:#bfcfd6;--mv-ink:#24535f;--mv-soft:#f8fbfc}
 .maintenance-v2.mv-figma .app-container{max-width:1260px}
-.maintenance-v2.mv-figma .bv-title{margin:0 0 2px;font-size:28px;color:#245260;letter-spacing:-.8px}
+.maintenance-v2.mv-figma .bv-title{margin:16px 0 2px;font-size:28px;color:#245260;letter-spacing:-.8px}
 .maintenance-v2.mv-figma .bv-subtitle{margin:0 0 20px;color:#718b95;font-size:13px}
 .maintenance-v2.mv-figma .mv-figma-panel{padding:22px 23px;margin-bottom:16px;border-color:#cedde3;border-radius:8px;box-shadow:0 1px 1px rgba(29,68,77,.03)}
 .maintenance-v2.mv-figma .bv-panel-title{font-size:16px;color:#285b68;margin:0 0 14px}

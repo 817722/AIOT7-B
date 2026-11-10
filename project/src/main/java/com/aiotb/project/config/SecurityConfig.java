@@ -30,10 +30,11 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
 
-    @Bean  // 👈 위에 있는 Bean 주석으로 놓고 새로 추가(11/04)
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-    http.authorizeHttpRequests(auth -> auth
+    http
+    .authorizeHttpRequests(auth -> auth
             .requestMatchers(
                 "/", "/login", "/join", "/users/join",
                 "/users/login", "/api/business/verify", "/error",

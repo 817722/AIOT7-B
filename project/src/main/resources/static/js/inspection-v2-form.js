@@ -1,85 +1,43 @@
-// 2. [+ 파일 추가] 클릭 시 다중 영상들을 오른쪽 테이블 목록에 한 줄씩 동적으로 붙여주는 함수
-function appendVideoToTable(input) {
-  const tbody = document.getElementById('videoTableBody');
-  const emptyRow = document.getElementById('emptyRow');
+document.addEventListener('DOMContentLoaded', function () {
+    const inspectionForm = document.getElementById('inspectionForm');
+    const checklistTable = document.getElementById('checklist-table');
 
-  if (input.files && input.files.length > 0) {
-    if (emptyRow) {
-      emptyRow.remove(); // '최근 기록이 없습니다' 문구 제거
+    if (inspectionForm && checklistTable) {
+        inspectionForm.addEventListener('submit', function (event) {
+            // 1. 기존에 생성된 동적 hidden 필드가 있다면 중복 방지를 위해 삭제
+            const oldHiddenInputs = inspectionForm.querySelectorAll('input[name="safetyChecklist"]');
+            oldHiddenInputs.forEach(input => input.remove());
+
+            // 2. 체크리스트 테이블의 모든 행(tbody tr)을 탐색
+            const rows = checklistTable.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                // 각 행의 식별자 데이터 가져오기 (예: CHK_001, CHK_002 등)
+                const itemId = row.getAttribute('data-item-id') || 'UNKNOWN';
+                
+                // 확인 결과 값 (Select)
+                const statusSelect = row.querySelector('select');
+                const statusValue = statusSelect ? statusSelect.value : 'OK';
+                
+                // 관찰 내용 값 (Input text)
+                const memoInput = row.querySelector('input[type="text"]');
+                const memoValue = memoInput ? memoInput.value.trim() : '';
+
+                // 3. 백엔드에서 구분하기 쉽도록 포맷팅 규칙 정의 (구분자: ::)
+                // 예시 결과물: "CHK_001::NEED_CHECK::교각 하부 미세 균열 발견"
+                const combinedValue = `${itemId}::${statusValue}::${memoValue}`;
+
+                // 4. 폼 내부에 hidden input 생성하여 데이터 주입
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'safetyChecklist'; // DTO의 필드명과 정확히 매칭
+                hiddenInput.value = combinedValue;
+
+                inspectionForm.appendChild(hiddenInput);
+            });
+
+            console.log('>>> 체크리스트 데이터 가공 및 폼 전송 준비 완료');
+            // 별도의 event.preventDefault()가 없으므로 form의 원래 목적지인 백엔드로 파일과 함께 정상 전송됩니다.
+        });
     }
-
-    Array.from(input.files).forEach(file => {
-      const fileURL = URL.createObjectURL(file);
-      
-      const tr = document.createElement('tr');
-      
-      // 1열: 영상 이름
-      const tdName = document.createElement('td');
-      tdName.innerText = file.name;
-      
-      // 2열: 대기 상태 표시 및 개별 재생 링크 제공
-      const tdStatus = document.createElement('td');
-      const playLink = document.createElement('span');
-      playLink.innerText = "추가됨 (클릭시 재생)";
-      playLink.style.cssText = "color: #07868d; cursor: pointer; font-size: 13px; text-decoration: underline;";
-      
-      // 글씨를 누르면 왼쪽 비디오 플레이어 인터페이스로 영상 교체 연동
-      playLink.onclick = function() {
-        const videoPlayer = document.getElementById('videoPlayer');
-        videoPlayer.src = fileURL;
-        videoPlayer.play();
-      };
-      tdStatus.appendChild(playLink);
-      
-      // ❌ [추가] 3열: 동적으로 추가된 파일의 '삭제' 버튼 기능 생성
-      const tdDelete = document.createElement('td');
-      tdDelete.innerText = "x";
-      tdDelete.style.cssText = "cursor: pointer; color: #dc3545; font-weight: bold;";
-      
-      // 동적 삭제 클릭 이벤트 처리 (deleteRow 함수 호출)
-      tdDelete.onclick = function() {
-        if (confirm("목록에서 이 영상을 제외하시겠습니까?")) {
-          tr.remove(); // 자바스크립트로 생성한 이 행(tr)을 즉시 화면에서 제거
-          
-          // 만약 모든 영상이 지워졌다면 "추가된 파일이 없습니다" 문구 다시 노출
-          const dataRows = tbody.querySelectorAll('tr:not(#emptyRow)');
-          if (dataRows.length === 0) {
-            const newEmptyRow = document.createElement('tr');
-            newEmptyRow.id = 'emptyRow';
-            newEmptyRow.innerHTML = '<td colspan="3" style="text-align: center;">추가된 파일이 없습니다.</td>';
-            tbody.appendChild(newEmptyRow);
-          }
-        }
-      };
-
-      // 순서대로 테이블 행(tr)에 열(td)들을 붙여줌
-      tr.appendChild(tdName);
-      tr.appendChild(tdStatus);
-      tr.appendChild(tdDelete); // 👈 3열 삽입
-      tbody.appendChild(tr);
-    });
-  }
-}
-
-// 3. 기존 Thymeleaf로 출력된 데이터들을 위해 필요한 기존 삭제 함수 (그대로 유지)
-function deleteRow(element) {
-    if (!confirm("목록에서 이 영상을 제외하시겠습니까?")) {
-        return;
-    }
-    const row = element.closest('tr');
-    if (row) { row.remove(); }
-
-    const tableBody = document.getElementById('videoTableBody');
-    const dataRows = tableBody.querySelectorAll('tr:not(#emptyRow)');
-    if (dataRows.length === 0) {
-        let emptyRow = document.getElementById('emptyRow');
-        if (!emptyRow) {
-            emptyRow = document.createElement('tr');
-            emptyRow.id = 'emptyRow';
-            emptyRow.innerHTML = '<td colspan="3" style="text-align: center;">추가된 파일이 없습니다.</td>';
-            tableBody.appendChild(emptyRow);
-        } else {
-            emptyRow.style.display = '';
-        }
-    }
-}
+});

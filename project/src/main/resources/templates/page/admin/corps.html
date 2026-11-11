@@ -1,95 +1,131 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>기업 관리 | 웹 관리자 | 교량점검 시스템</title>
-  <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
-  <link rel="stylesheet" th:href="@{/css/admin-v2.css}" href="/css/admin-v2.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>기업 관리 | 웹 관리자 | 교량점검 시스템</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
+    <link rel="stylesheet" th:href="@{/css/admin-v2.css}" href="/css/admin-v2.css">
 </head>
+
 <body>
-<div th:replace="~{fragments/header :: header}"></div>
-<div class="app-layout" th:with="activeMenu='admin'">
-  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-  <main class="app-main admin-v2" id="main-content">
-    <div class="app-container">
-      <div th:replace="~{fragments/submenu :: submenu(activeMenu='/admin/corps')}"></div>
-      <h1 class="bv-title"><svg th:replace="~{fragments/admin :: icon('building')}"></svg>기업 관리</h1>
-      <p class="bv-subtitle">기업 가입 신청을 검수하고, 서비스 이용 상태를 관리합니다.</p>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <div class="app-layout" th:with="activeMenu='admin'">
+        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+        <main class="app-main admin-v2" id="main-content">
+            <div class="app-container">
+                <div th:replace="~{fragments/submenu :: submenu(activeMenu='/admin/corps')}"></div>
+                <h1 class="bv-title"><svg th:replace="~{fragments/admin :: icon('building')}"></svg>기업 관리</h1>
+                <p class="bv-subtitle">기업 가입 신청을 검수하고, 서비스 이용 상태를 관리합니다.</p>
 
-      <section class="bv-panel" aria-labelledby="ad-corp-search-title">
-        <h2 id="ad-corp-search-title" class="bv-panel-title"><svg th:replace="~{fragments/admin :: icon('search')}"></svg>기업 검색</h2>
-        <form method="get" th:action="@{/admin/corps}" action="/admin/corps">
-          <input type="hidden" name="status" th:value="${status}">
-          <div class="bv-filter-grid">
-            <label class="bv-field" for="ad-corp-keyword">
-              <span>기업명 또는 사업자등록번호</span>
-              <input id="ad-corp-keyword" type="search" name="keyword" maxlength="100"
-                     th:value="${keyword}" placeholder="예) 가람건설 / 123-45-67890">
-            </label>
-          </div>
-          <div class="bv-form-actions">
-            <button type="submit" class="bv-btn bv-btn-primary">조회</button>
-            <a class="bv-btn bv-btn-light" th:href="@{/admin/corps}" href="/admin/corps">초기화</a>
-          </div>
-        </form>
-      </section>
+                <section class="bv-panel" aria-labelledby="ad-corp-search-title">
+                    <h2 id="ad-corp-search-title" class="bv-panel-title">
+                        <svg th:replace="~{fragments/admin :: icon('search')}"></svg>
+                        기업 검색
+                    </h2>
+                    <form method="get" th:action="@{/admin/corps}" action="/admin/corps">
+                        <input type="hidden" name="status" th:value="${status}">
+                        <div class="bv-filter-grid">
+                            <label class="bv-field" for="ad-corp-keyword">
+                                <span>기업명 또는 사업자등록번호</span>
+                                <input id="ad-corp-keyword" type="search" name="keyword" maxlength="100" th:value="${keyword}" placeholder="예) 가람건설 / 123-45-67890">
+                            </label>
+                        </div>
+                        <div class="bv-form-actions">
+                            <button type="submit" class="bv-btn bv-btn-primary">조회</button>
+                            <a class="bv-btn bv-btn-light" th:href="@{/admin/corps}" href="/admin/corps">초기화</a>
+                        </div>
+                    </form>
+                </section>
 
-      <section class="bv-panel" aria-labelledby="ad-corp-list-title">
-        <div class="bv-section-heading">
-          <div>
-            <h2 id="ad-corp-list-title" class="bv-panel-title">기업 목록</h2>
-            <p class="bv-help" th:text="|검색 결과 ${result.total()}곳 · ${result.pageNo()}/${result.totalPages()}페이지|">검색 결과 0곳</p>
-          </div>
-        </div>
-        <nav class="ad-tabs" aria-label="기업 상태별 목록">
-          <a th:classappend="${status == ''} ? ' is-active' : ''" th:href="@{/admin/corps(keyword=${keyword})}">전체 <strong th:text="${counts['ALL']}">0</strong></a>
-          <a th:classappend="${status == 'PENDING'} ? ' is-active' : ''" th:href="@{/admin/corps(keyword=${keyword},status='PENDING')}">승인 대기 <strong th:text="${counts['PENDING']}">0</strong></a>
-          <a th:classappend="${status == 'ACTIVE'} ? ' is-active' : ''" th:href="@{/admin/corps(keyword=${keyword},status='ACTIVE')}">정상 이용 <strong th:text="${counts['ACTIVE']}">0</strong></a>
-          <a th:classappend="${status == 'SUSPENDED'} ? ' is-active' : ''" th:href="@{/admin/corps(keyword=${keyword},status='SUSPENDED')}">이용 정지 <strong th:text="${counts['SUSPENDED']}">0</strong></a>
-          <a th:classappend="${status == 'REJECTED'} ? ' is-active' : ''" th:href="@{/admin/corps(keyword=${keyword},status='REJECTED')}">가입 반려 <strong th:text="${counts['REJECTED']}">0</strong></a>
-        </nav>
+                <section class="bv-panel" aria-labelledby="ad-corp-list-title">
+                    <div class="bv-section-heading">
+                        <div>
+                            <h2 id="ad-corp-list-title" class="bv-panel-title">기업 목록</h2>
+                            <p class="bv-help" th:text="|검색 결과 ${result.total()}곳 · ${result.pageNo()}/${result.totalPages()}페이지|">
+                                검색 결과 0곳
+                            </p>
+                        </div>
+                    </div>
+                    <nav class="ad-tabs" aria-label="기업 상태별 목록">
+                        <a th:classappend="${status == ''} ? ' is-active' : ''" th:href="@{/admin/corps(keyword=${keyword})}">
+                            전체
+                            <strong th:text="${counts['ALL']}">0</strong>
+                        </a>
+                        <a th:classappend="${status == 'PENDING'} ? ' is-active' : ''" th:href="@{/admin/corps(keyword=${keyword},status='PENDING')}">
+                            승인 대기 
+                            <strong th:text="${counts['PENDING']}">0</strong>
+                        </a>
+                        <a th:classappend="${status == 'ACTIVE'} ? ' is-active' : ''" th:href="@{/admin/corps(keyword=${keyword},status='ACTIVE')}">
+                            정상 이용 
+                            <strong th:text="${counts['ACTIVE']}">0</strong>
+                        </a>
+                        <a th:classappend="${status == 'SUSPENDED'} ? ' is-active' : ''" th:href="@{/admin/corps(keyword=${keyword},status='SUSPENDED')}">
+                            이용 정지 
+                            <strong th:text="${counts['SUSPENDED']}">0</strong>
+                        </a>
+                        <a th:classappend="${status == 'REJECTED'} ? ' is-active' : ''" th:href="@{/admin/corps(keyword=${keyword},status='REJECTED')}">
+                            가입 반려 
+                            <strong th:text="${counts['REJECTED']}">0</strong>
+                        </a>
+                    </nav>
 
-        <div class="bv-blank" th:if="${#lists.isEmpty(result.rows())}">
-          <strong th:text="${keyword == '' and status == ''} ? '등록된 기업이 없습니다.' : '조건에 맞는 기업이 없습니다.'">기업 없음</strong>
-          <p th:unless="${keyword == '' and status == ''}">검색어나 상태를 바꾸어 다시 조회해 주세요.</p>
-        </div>
-        <div class="bv-table-scroll" th:unless="${#lists.isEmpty(result.rows())}">
-          <table class="bv-table">
-            <thead>
-              <tr>
-                <th scope="col">기업명</th><th scope="col">사업자등록번호</th><th scope="col">대표자</th>
-                <th scope="col">기업 관리자</th><th scope="col">상태</th>
-                <th scope="col" class="ad-num">사용자</th><th scope="col" class="ad-num">승인 대기 담당자</th><th scope="col" class="ad-num">교량</th>
-                <th scope="col">가입 신청일</th><th scope="col">최근 처리일</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr th:each="corp : ${result.rows()}">
-                <td><a th:href="@{/admin/corps/{no}(no=${corp.no})}" th:text="${corp.name}">기업명</a></td>
-                <td class="ad-nowrap" th:text="${corp.bisNo}">123-45-67890</td>
-                <td th:text="${corp.ceoName}">대표자</td>
-                <td th:text="${corp.adminName != null ? corp.adminName : '-'}">관리자</td>
-                <td><span class="ad-badge" th:classappend="|ad-badge--${corp.status}|" th:text="${corp.statusLabel}">승인 대기</span></td>
-                <td class="ad-num" th:text="${corp.userCount}">0</td>
-                <td class="ad-num" th:text="${corp.pendingUsers}">0</td>
-                <td class="ad-num" th:text="${corp.bridgeCount}">0</td>
-                <td class="ad-nowrap" th:text="${corp.createdAt != null ? #temporals.format(corp.createdAt, 'yyyy-MM-dd') : '-'}">2026-11-01</td>
-                <td class="ad-nowrap" th:text="${corp.statusAt != null ? #temporals.format(corp.statusAt, 'yyyy-MM-dd HH:mm') : '-'}">-</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <nav class="bv-pager" aria-label="기업 목록 페이지 이동" th:if="${result.totalPages() > 1}">
-          <a th:if="${result.hasPrev()}" th:href="@{/admin/corps(keyword=${keyword},status=${status},page=${result.pageNo() - 1})}">이전</a>
-          <span th:unless="${result.hasPrev()}" class="bv-disabled">이전</span>
-          <span th:text="|${result.pageNo()} / ${result.totalPages()}|">1 / 1</span>
-          <a th:if="${result.hasNext()}" th:href="@{/admin/corps(keyword=${keyword},status=${status},page=${result.pageNo() + 1})}">다음</a>
-          <span th:unless="${result.hasNext()}" class="bv-disabled">다음</span>
-        </nav>
-      </section>
+                    <div class="bv-blank" th:if="${#lists.isEmpty(result.rows())}">
+                        <strong th:text="${keyword == '' and status == ''} ? '등록된 기업이 없습니다.' : '조건에 맞는 기업이 없습니다.'">
+                            기업 없음
+                        </strong>
+                        <p th:unless="${keyword == '' and status == ''}">검색어나 상태를 바꾸어 다시 조회해 주세요.</p>
+                    </div>
+                    <div class="bv-table-scroll" th:unless="${#lists.isEmpty(result.rows())}">
+                        <table class="bv-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">기업명</th>
+                                    <th scope="col">사업자등록번호</th>
+                                    <th scope="col">대표자</th>
+                                    <th scope="col">기업 관리자</th>
+                                    <th scope="col">상태</th>
+                                    <th scope="col" class="ad-num">사용자</th>
+                                    <th scope="col" class="ad-num">승인 대기 담당자</th>
+                                    <th scope="col" class="ad-num">교량</th>
+                                    <th scope="col">가입 신청일</th>
+                                    <th scope="col">최근 처리일</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="corp : ${result.rows()}">
+                                    <td><a th:href="@{/admin/corps/{no}(no=${corp.no})}" th:text="${corp.name}">기업명</a>
+                                    </td>
+                                    <td class="ad-nowrap" th:text="${corp.bisNo}">123-45-67890</td>
+                                    <td th:text="${corp.ceoName}">대표자</td>
+                                    <td th:text="${corp.adminName != null ? corp.adminName : '-'}">관리자</td>
+                                    <td><span class="ad-badge" th:classappend="|ad-badge--${corp.status}|"
+                                            th:text="${corp.statusLabel}">승인 대기</span></td>
+                                    <td class="ad-num" th:text="${corp.userCount}">0</td>
+                                    <td class="ad-num" th:text="${corp.pendingUsers}">0</td>
+                                    <td class="ad-num" th:text="${corp.bridgeCount}">0</td>
+                                    <td class="ad-nowrap" th:text="${corp.createdAt != null ? #temporals.format(corp.createdAt, 'yyyy-MM-dd') : '-'}">
+                                        2026-11-01
+                                    </td>
+                                    <td class="ad-nowrap" th:text="${corp.statusAt != null ? #temporals.format(corp.statusAt, 'yyyy-MM-dd HH:mm') : '-'}">
+                                        -
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <nav class="bv-pager" aria-label="기업 목록 페이지 이동" th:if="${result.totalPages() > 1}">
+                        <a th:if="${result.hasPrev()}" th:href="@{/admin/corps(keyword=${keyword},status=${status},page=${result.pageNo() - 1})}">이전</a>
+                        <span th:unless="${result.hasPrev()}" class="bv-disabled">이전</span>
+                        <span th:text="|${result.pageNo()} / ${result.totalPages()}|">1 / 1</span>
+                        <a th:if="${result.hasNext()}" th:href="@{/admin/corps(keyword=${keyword},status=${status},page=${result.pageNo() + 1})}">다음</a>
+                        <span th:unless="${result.hasNext()}" class="bv-disabled">다음</span>
+                    </nav>
+                </section>
+            </div>
+        </main>
     </div>
-  </main>
-</div>
 </body>
+
 </html>

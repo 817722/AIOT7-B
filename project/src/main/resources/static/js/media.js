@@ -103,3 +103,96 @@ function deleteRow(element) {
         }
     }
 }
+
+
+
+// 누적된 사진 File 객체를 저장할 배열 (비동기 FormData 전송 시 사용)
+window.selectedPhotoFiles = [];
+
+// 1. [+ 사진 추가] 선택 시 테이블에 한 줄씩 동적으로 붙여주는 함수
+function appendPhotoToTable(input) {
+  const tbody = document.getElementById('photoTableBody');
+  const emptyRow = document.getElementById('photoEmptyRow');
+
+  if (input.files && input.files.length > 0) {
+    if (emptyRow) {
+      emptyRow.remove();
+    }
+
+    Array.from(input.files).forEach(file => {
+      // 누적 배열에 실제 파일 저장
+      window.selectedPhotoFiles.push(file);
+      const fileURL = URL.createObjectURL(file);
+
+      const tr = document.createElement('tr');
+
+      // 1열: 파일명
+      const tdName = document.createElement('td');
+      tdName.innerText = file.name;
+
+      // 2열: 대기 상태 표시 및 미리보기 링크
+      const tdStatus = document.createElement('td');
+      const viewLink = document.createElement('span');
+      viewLink.innerText = '추가됨 (클릭시 보기)';
+      viewLink.style.cssText = 'color: #07868d; cursor: pointer; font-size: 13px; text-decoration: underline;';
+      viewLink.onclick = function () {
+        window.open(fileURL, '_blank');
+      };
+      tdStatus.appendChild(viewLink);
+
+      // 3열: 삭제 버튼 ('x')
+      const tdDelete = document.createElement('td');
+      tdDelete.innerText = 'x';
+      tdDelete.style.cssText = 'cursor: pointer; color: #dc3545; font-weight: bold;';
+      tdDelete.onclick = function () {
+        if (confirm('목록에서 이 사진을 제외하시겠습니까?')) {
+          // 누적 배열에서도 해당 파일 제거
+          const idx = window.selectedPhotoFiles.indexOf(file);
+          if (idx > -1) window.selectedPhotoFiles.splice(idx, 1);
+
+          URL.revokeObjectURL(fileURL);
+          tr.remove();
+
+          const dataRows = tbody.querySelectorAll('tr:not(#photoEmptyRow)');
+          if (dataRows.length === 0) {
+            const newEmptyRow = document.createElement('tr');
+            newEmptyRow.id = 'photoEmptyRow';
+            newEmptyRow.innerHTML = '<td colspan="3" style="text-align: center;">추가된 파일이 없습니다.</td>';
+            tbody.appendChild(newEmptyRow);
+          }
+        }
+      };
+
+      tr.appendChild(tdName);
+      tr.appendChild(tdStatus);
+      tr.appendChild(tdDelete);
+      tbody.appendChild(tr);
+    });
+
+    // 같은 파일을 다시 선택할 수 있도록 input 초기화
+    input.value = '';
+  }
+}
+
+// 2. 기존 Thymeleaf로 출력된 사진 데이터를 위한 삭제 함수
+function deletePhotoRow(element) {
+  if (!confirm('목록에서 이 사진을 제외하시겠습니까?')) {
+    return;
+  }
+  const row = element.closest('tr');
+  if (row) row.remove();
+
+  const tableBody = document.getElementById('photoTableBody');
+  const dataRows = tableBody.querySelectorAll('tr:not(#photoEmptyRow)');
+  if (dataRows.length === 0) {
+    let emptyRow = document.getElementById('photoEmptyRow');
+    if (!emptyRow) {
+      emptyRow = document.createElement('tr');
+      emptyRow.id = 'photoEmptyRow';
+      emptyRow.innerHTML = '<td colspan="3" style="text-align: center;">추가된 파일이 없습니다.</td>';
+      tableBody.appendChild(emptyRow);
+    } else {
+      emptyRow.style.display = '';
+    }
+  }
+}

@@ -143,10 +143,16 @@ async function initCurrentInspector() {
       try {
         const bridges = await requestJson('/api/maintenance-ui/bridges?keyword=');
         cachedBridges = Array.isArray(bridges) ? bridges : [];
-        renderBridgeOptions(cachedBridges, queryInput ? queryInput.value : '');
       } catch (error) {
-        console.error('교량 목록 조회 오류:', error);
-        bridgeSelect.innerHTML = `<option value="">----- 교량 로딩 실패 (${error.message}) -----</option>`;
+        console.warn('교량 목록 API 없음 - 기본 교량 목록으로 대체합니다:', error);
+        // 백엔드 API가 준비되기 전까지 선택할 수 있는 기본 교량 목록
+        cachedBridges = [
+          { no: 1, name: '가람교', province: '경기도', city: '가평군' },
+          { no: 2, name: '나루교', province: '경기도', city: '수원시' },
+          { no: 3, name: '다온교', province: '경기도', city: '성남시' },
+          { no: 4, name: '라니교', province: '경기도', city: '고양시' },
+          { no: 5, name: '마루교', province: '경기도', city: '파주시' }
+        ];
       }
     }
 
@@ -281,48 +287,33 @@ async function initCurrentInspector() {
         }
 
         try {
-          const actionUrl = form.getAttribute('action') || '/api/bridge-inspections';
-          const response = await fetch(actionUrl, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers,
-            body: formData
-          });
+        const actionUrl = form.getAttribute('action') || '/api/bridge-inspections';
+        const response = await fetch(actionUrl, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers,
+          body: formData
+        });
 
-          const responseText = await response.text();
-          if (!response.ok) {
-            throw new Error(responseText || `저장 실패 (HTTP ${response.status})`);
-          }
-
-          alert(responseText || '점검 기록이 성공적으로 등록되었습니다.');
-          form.reset();
-          initCurrentInspector();
-          if (bridgeNoHidden) bridgeNoHidden.value = '';
-          renderBridgeOptions(cachedBridges, '');
-          loadReferenceInspections('');
-          if (messageBox) messageBox.hidden = true;
-
-          // 별도 영상 JS 파일의 테이블/플레이어 초기화
-          const videoTableBody = document.getElementById('videoTableBody');
-          if (videoTableBody) {
-            videoTableBody.innerHTML = '<tr id="emptyRow"><td colspan="3" style="text-align: center;">추가된 파일이 없습니다.</td></tr>';
-          }
-          const videoPlayer = document.getElementById('videoPlayer');
-          if (videoPlayer) {
-            videoPlayer.pause();
-            videoPlayer.removeAttribute('src');
-            videoPlayer.load();
-          }
-
-        } catch (error) {
-          console.error('점검 기록 저장 오류:', error);
-          showMessage(`저장 실패: ${error.message}`, true);
-        } finally {
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalBtnText;
-          }
+        const responseText = await response.text();
+        if (!response.ok) {
+          throw new Error(responseText || `저장 실패 (HTTP ${response.status})`);
         }
+
+        alert(responseText || '점검 기록이 성공적으로 등록되었습니다.');
+        
+        // 폼 초기화 코드를 제거하고 점검 목록 페이지로 이동
+        window.location.href = '/inspections';
+
+      } catch (error) {
+        console.error('점검 기록 저장 오류:', error);
+        showMessage(`저장 실패: ${error.message}`, true);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalBtnText;
+        }
+      }
       });
     }
   });

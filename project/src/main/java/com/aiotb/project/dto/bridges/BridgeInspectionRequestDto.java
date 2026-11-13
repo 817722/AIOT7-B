@@ -28,6 +28,17 @@ public class BridgeInspectionRequestDto {
     // 10. 파일 추가 (다중)
     private List<MultipartFile> videoInputMultiple;
 
+   // 기존 videoInputMultiple 아래에 추가
+    private List<MultipartFile> photoInputMultiple; // 현장 사진 다중 업로드
+
+    public List<MultipartFile> getPhotoInputMultiple() {
+        return this.photoInputMultiple;
+    }
+
+    public void setPhotoInputMultiple(List<MultipartFile> photoInputMultiple) {
+        this.photoInputMultiple = photoInputMultiple;
+    }
+
     // 👇 롬복이 안 먹힐 때를 대비해 우리가 직접 만든 겟터 메서드입니다! (이게 있으면 빨간 줄이 절대 안 뜹니다)
     public List<MultipartFile> getVideoInputMultiple() {
         return this.videoInputMultiple;

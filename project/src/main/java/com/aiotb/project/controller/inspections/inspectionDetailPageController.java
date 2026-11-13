@@ -54,6 +54,10 @@ public class inspectionDetailPageController {
         model.addAttribute("recentWork", recentWork);
 
         model.addAttribute("activeMenu", "inspections");
+        model.addAttribute("currentMenuGroup", "inspections");
+        // 공통 서브메뉴의 상세 링크가 현재 교량을 가리키도록 전달합니다.
+        model.addAttribute("bridgeNo", no);
+        model.addAttribute("inspectionNo", no);
 
         return "page/inspections/detail";
     }

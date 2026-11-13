@@ -8,7 +8,7 @@
   <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}" content="X-CSRF-TOKEN">
   <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
   <link rel="stylesheet" th:href="@{/css/auth.css}" href="/css/auth.css">
-  <script th:src="@{/js/signup.js}" src="/js/signup.js" defer></script>
+  <script th:src="@{/js/signup.js(v=2)}" src="/js/signup.js?v=2" defer></script>
 </head>
 <body class="auth-page">
   <div th:replace="~{fragments/header :: header}"></div>
@@ -66,8 +66,11 @@
               </div>
               <div class="auth-field">
                 <label for="openDate">개업일자 <span aria-hidden="true">*</span></label>
-                <input id="openDate" type="date" autocomplete="off"
+                <!-- 날짜는 네이티브 달력으로만 선택: 수기 입력은 signup.js에서 차단 -->
+                <input id="openDate" type="date" autocomplete="off" inputmode="none"
+                       min="1900-01-01" aria-describedby="openDateHelp"
                        th:value="${verifiedBusiness != null ? verifiedBusiness.openDate : ''}">
+                <small id="openDateHelp">달력에서만 선택할 수 있습니다. (1900년부터 오늘까지)</small>
               </div>
             </div>
           </div>
@@ -157,8 +160,11 @@
                   </div>
                   <div class="auth-field">
                     <label class="auth-sr-only" for="signupPhone">작업자 연락망 (필수)</label>
-                    <input type="tel" id="signupPhone" th:field="*{phone}" name="phone" maxlength="100"
-                           required autocomplete="tel" placeholder="작업자 연락망 *">
+                    <input type="tel" id="signupPhone" th:field="*{phone}" name="phone"
+                           inputmode="numeric" minlength="10" maxlength="11" pattern="[0-9]{10,11}"
+                           required autocomplete="tel" aria-describedby="signupPhoneHelp"
+                           placeholder="작업자 연락망 * (숫자만 입력)">
+                    <small id="signupPhoneHelp">'-' 없이 숫자만 10~11자리 입력하세요.</small>
                     <small th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}" class="auth-field-error"></small>
                   </div>
                 </div>

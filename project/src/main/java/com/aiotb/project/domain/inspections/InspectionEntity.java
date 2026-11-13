@@ -1,4 +1,4 @@
-package com.aiotb.project.domain;
+package com.aiotb.project.domain.inspections;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,7 +13,7 @@ import lombok.Setter;
 @Table 
 @Getter 
 @Setter 
-public class BridgeInspectionEntity {
+public class InspectionEntity {
 
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)

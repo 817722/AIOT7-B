@@ -1,7 +1,10 @@
 package com.aiotb.project.service.inspections;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -23,9 +26,8 @@ import com.aiotb.project.service.users.CurrentUserService.Actor;
 import lombok.RequiredArgsConstructor;
 
 /**
- * 점검 기록 REST(/api/inspections) 서비스.
+ * 점검 기록 REST(/api/inspections) 서비스 (파일 업로드 및 통합 관리 버전).
  * 모든 메서드는 Controller가 전달한 로그인 사용자(Actor)의 기업 번호로만 데이터를 다룬다.
- * 요청 DTO의 corpNo / createdBy 값은 사용하지 않는다.
  */
 @Service
 @RequiredArgsConstructor
@@ -34,16 +36,16 @@ public class InspectionService {
 
         private static final List<String> TYPES = List.of("자체 안전점검", "정기 안전점검", "정밀 안전진단", "긴급 안전점검");
         private static final List<String> STATUSES = List.of("진행 대기", "진행 중", "완료");
+        private static final String UPLOAD_DIR = "C:/bridge-uploads/"; // 👈 로컬 파일 저장 경로
 
         private final InspectionRepository inspectionRepository;
         private final BridgeRepository bridgeRepository;
         private final UserRepository userRepository;
-        // 미디어 전용 서비스를 주입받습니다.
         private final MediaService mediaService;
 
-        // 1. 점검 기록 등록 (+ 드론 영상/현장 사진 파일 선택 첨부)
+        // 1. 점검 기록 등록 (+ 드론 영상 및 파일 다중/단일 첨부 통합 처리)
         @Transactional
-        public String createInspection(InspectionDto.Request request, MultipartFile file, Actor actor) {
+        public String createInspection(InspectionDto.Request request, Actor actor) {
                 validate(request);
 
                 // 같은 기업의 교량인지 확인 (다른 기업 교량은 존재 여부도 노출하지 않음)
@@ -54,7 +56,7 @@ public class InspectionService {
 
                 Inspection inspection = Inspection.builder()
                         .bridge(bridge)
-                        .corpNo(actor.corpNo())          // 클라이언트 값 대신 로그인 사용자 기업
+                        .corpNo(actor.corpNo())
                         .title(request.getTitle().strip())
                         .inspectionType(request.getInspectionType())
                         .status(request.getStatus())
@@ -63,16 +65,27 @@ public class InspectionService {
                         .inspectionMemo(request.getMemo())
                         .overallResult(request.getOverallResult())
                         .reviewOpinion(request.getReviewOpinion())
-                        .createdBy(actor.userNo())       // 클라이언트 값 대신 로그인 사용자
+                        .createdBy(actor.userNo())
                         .build();
 
                 Inspection savedInspection = inspectionRepository.save(inspection);
 
-                if (file != null && !file.isEmpty()) {
-                        // media.p_id 는 inspections.no(숫자 PK)를 가리킨다. (기존 코드는 UUID를 Long으로 변환하다 실패)
-                        mediaService.saveFile(file, actor.corpNo(), Media.ParentType.INSPECTION,
+                // A. 기존 MediaService를 통한 파일 연동 저장 (단일 파라미터 파일)
+                if (request.getVideoInputSingle() != null && !request.getVideoInputSingle().isEmpty()) {
+                        mediaService.saveFile(request.getVideoInputSingle(), actor.corpNo(), Media.ParentType.INSPECTION,
                                 savedInspection.getNo(), actor.userNo());
                 }
+
+                // B. 다중 드론 영상/파일 리스트 추가 저장 (BridgeInspectionService 기능 흡수)
+                if (request.getVideoInputMultiple() != null) {
+                        for (MultipartFile file : request.getVideoInputMultiple()) {
+                                if (file != null && !file.isEmpty()) {
+                                        mediaService.saveFile(file, actor.corpNo(), Media.ParentType.INSPECTION,
+                                                savedInspection.getNo(), actor.userNo());
+                                }
+                        }
+                }
+
                 return savedInspection.getId();
         }
 
@@ -89,7 +102,7 @@ public class InspectionService {
                 return new InspectionDto.Response(find(id, actor));
         }
 
-        // 4. 점검 기록 수정 (같은 기업 사용자 모두 가능, 점검 담당자 변경은 하지 않음)
+        // 4. 점검 기록 수정
         @Transactional
         public void updateInspection(String id, InspectionDto.Request request, Actor actor) {
                 validate(request);
@@ -98,39 +111,38 @@ public class InspectionService {
                         throw new IllegalArgumentException("점검 대상 교량은 변경할 수 없습니다.");
                 }
                 inspection.updateInspection(
-                                request.getTitle().strip(),
-                                request.getInspectionType(),
-                                request.getStatus(),
-                                request.getInspectionDate(),
-                                request.getMemo(),
-                                request.getOverallResult(),
-                                request.getReviewOpinion(),
-                                actor.userNo());
+                        request.getTitle().strip(),
+                        request.getInspectionType(),
+                        request.getStatus(),
+                        request.getInspectionDate(),
+                        request.getMemo(),
+                        request.getOverallResult(),
+                        request.getReviewOpinion(),
+                        actor.userNo());
         }
 
-        // 5. 점검 기록 삭제 (ADMIN 권한은 Controller의 @PreAuthorize 및 SecurityConfig에서 검사)
+        // 5. 점검 기록 삭제
         @Transactional
         public void deleteInspection(String id, Actor actor) {
                 Inspection inspection = find(id, actor);
-                // media 는 DB FK가 없으므로, 첨부파일이 남은 기록을 지우면 고아 파일이 생긴다.
-                // 연쇄 삭제하지 않고 첨부파일을 먼저 삭제하도록 안내한다.
                 if (mediaService.countAttached(Media.ParentType.INSPECTION, inspection.getNo(), actor.corpNo()) > 0) {
                         throw new ResponseStatusException(HttpStatus.CONFLICT,
-                                        "첨부파일이 있는 점검 기록은 삭제할 수 없습니다. 첨부파일을 먼저 삭제해 주세요.");
+                                "첨부파일이 있는 점검 기록은 삭제할 수 없습니다. 첨부파일을 먼저 삭제해 주세요.");
                 }
                 inspectionRepository.delete(inspection);
         }
 
         private Inspection find(String id, Actor actor) {
+                // 💡 수정 완료: findByUuidAndCorpNo -> findByIdAndCorpNo
                 return inspectionRepository.findByIdAndCorpNo(id, actor.corpNo())
-                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "점검 기록을 찾을 수 없습니다."));
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "점검 기록을 찾을 수 없습니다."));
         }
 
         private void requireSameCorpActiveUser(Long userNo, Actor actor) {
                 boolean ok = userNo != null && userRepository.findById(userNo)
-                                .filter(u -> Objects.equals(u.getCorp().getNo(), actor.corpNo()))
-                                .filter(u -> u.getStatus() == com.aiotb.project.domain.users.User.Status.ACTIVE)
-                                .isPresent();
+                        .filter(u -> Objects.equals(u.getCorp().getNo(), actor.corpNo()))
+                        .filter(u -> u.getStatus() == com.aiotb.project.domain.users.User.Status.ACTIVE)
+                        .isPresent();
                 if (!ok) throw new IllegalArgumentException("같은 기업의 활성 담당자를 선택해 주세요.");
         }
 

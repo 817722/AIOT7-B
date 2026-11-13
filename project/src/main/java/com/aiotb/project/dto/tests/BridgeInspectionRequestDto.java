@@ -5,6 +5,9 @@ import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
+// 이건 Postman으로 테스트 용 코드라 있어도 무방하고 없어도 상관없는 코드입니다.
+// 신경 안 써도 될 듯.
+
 @Getter 
 @Setter 
 public class BridgeInspectionRequestDto {

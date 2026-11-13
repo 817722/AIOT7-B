@@ -20,16 +20,16 @@ public class inspectionDetailPageController {
 
     // 화면용 BR-2026-xxx 번호는 DDL에 컬럼이 없으며 예시일 뿐입니다.
     private static final List<InspectionView> SAMPLE_BRIDGES = List.of(
-            new InspectionView(1L, "BR-2026-001", "가람교", "경기도", "가평군", "제1종",
-                    "김가람", "경기도 가평군", "국도 46호선", LocalDate.of(2026, 10, 16), "진행 중"),
-            new InspectionView(2L, "BR-2026-002", "나루교", "경기도", "수원시", "제2종",
-                    "박나루", "경기도 수원시", "지방도", LocalDate.of(2026, 10, 1), "진행 중"),
-            new InspectionView(3L, "BR-2026-003", "다온교", "경기도", "성남시", "제3종",
-                    "정다온", "경기도 성남시", "시도", LocalDate.of(2026, 9, 22), "완료"),
-            new InspectionView(4L, "BR-2026-004", "라니교", "경기도", "고양시", "제1종",
-                    "고라니", "경기도 고양시", "국도", LocalDate.of(2026, 9, 10), "완료"),
-            new InspectionView(5L, "BR-2026-005", "마루교", "경기도", "파주시", "제3종",
-                    "김마루", "경기도 파주시", "지방도", LocalDate.of(2026, 8, 28), "완료")
+        //     new InspectionView(1L, "BR-2026-001", "가람교", "경기도", "가평군", "제1종",
+        //             "김가람", "경기도 가평군", "국도 46호선", LocalDate.of(2026, 10, 16), "진행 중"),
+        //     new InspectionView(2L, "BR-2026-002", "나루교", "경기도", "수원시", "제2종",
+        //             "박나루", "경기도 수원시", "지방도", LocalDate.of(2026, 10, 1), "진행 중"),
+        //     new InspectionView(3L, "BR-2026-003", "다온교", "경기도", "성남시", "제3종",
+        //             "정다온", "경기도 성남시", "시도", LocalDate.of(2026, 9, 22), "완료"),
+        //     new InspectionView(4L, "BR-2026-004", "라니교", "경기도", "고양시", "제1종",
+        //             "고라니", "경기도 고양시", "국도", LocalDate.of(2026, 9, 10), "완료"),
+        //     new InspectionView(5L, "BR-2026-005", "마루교", "경기도", "파주시", "제3종",
+        //             "김마루", "경기도 파주시", "지방도", LocalDate.of(2026, 8, 28), "완료")
     );
 
     // 컬럼명은 실제 엔티티 속성명과 다를 수 있습니다. 시연 데이터를 표시하기 위한 전용 record.

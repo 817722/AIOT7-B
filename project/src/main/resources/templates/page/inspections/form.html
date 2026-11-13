@@ -58,7 +58,8 @@
                     </form>
                 </section>
                         
-                <form id="bv-search" th:action="@{/inspections/new}" action="/inspections" method="post" enctype="multipart/form-data">
+                <!-- <form id="bv-search" th:action="@{/inspections/new}" action="/inspections" method="post" enctype="multipart/form-data"> -->
+                <form id="bv-search" th:action="@{/inspections/new}" action="/inspections/new" method="post" enctype="multipart/form-data"> 
                     <div class="bv-form-layout">
                         <section class="bv-panel" aria-labelledby="recent-work-title">
                             <h2 id="recent-work-title" class="bv-panel-title">검측 체크리스트</h2>
@@ -180,13 +181,13 @@
                         <h2 class="bv-panel-title" id="save-title">드론 영상 업로드</h2>
                         <div class="bv-form-layout">
                             <div class="bv-field">
-                                <input type="file" id="videoInputSingle" name="videoFile" accept="video/*" onchange="previewVideo(this)" style="display: none;">
+                                <input type="file" id="videoInputSingle" name="videoFile" accept="video/*" style="display: none;">
                                 <button type="button" id="bv-save-single" class="bv-btn bv-btn-primary" onclick="document.getElementById('videoInputSingle').click()">
                                 영상 검색
                                 </button>
                             </div>
                             <div class="bv-field">
-                                <input type="file" id="videoInputMultiple" name="videoFiles" accept="video/*" multiple onchange="appendVideoToTable(this)" style="display: none;">
+                                <input type="file" id="videoInputMultiple" name="videoFiles" accept="video/*" multiple style="display: none;">
                                 <button type="button" id="bv-save-multiple" class="bv-btn bv-btn-primary" onclick="document.getElementById('videoInputMultiple').click()">
                                 + 파일 추가
                                 </button>

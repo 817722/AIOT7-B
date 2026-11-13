@@ -23,12 +23,13 @@ public class InspectionPageController {
 
     private static final int PAGE_SIZE = 5;
 
-    private static final List<Map<String, Object>> SAMPLE_BRIDGES = List.of();
-//     bridge(1L, "BR-2026-001", "가람교", "경기도", "가평군", "제1종", "김가람", "2026-10-16", "진행 중"),
-//     bridge(2L, "BR-2026-002", "나루교", "경기도", "수원시", "제2종", "박나루", "2026-10-01", "진행 중"),
-//     bridge(3L, "BR-2026-003", "다온교", "경기도", "성남시", "제3종", "정다온", "2026-09-22", "완료"),
-//     bridge(4L, "BR-2026-004", "라니교", "경기도", "고양시", "제1종", "고라니", "2026-09-10", "완료"),
-//     bridge(5L, "BR-2026-005", "마루교", "경기도", "파주시", "제3종", "김마루", "2026-08-28", "완료")
+    private static final List<Map<String, Object>> SAMPLE_BRIDGES = List.of(
+    bridge(1L, "BR-2026-001", "가람교", "경기도", "가평군", "제1종", "김가람", "2026-10-16", "진행 중"),
+    bridge(2L, "BR-2026-002", "나루교", "경기도", "수원시", "제2종", "박나루", "2026-10-01", "진행 중"),
+    bridge(3L, "BR-2026-003", "다온교", "경기도", "성남시", "제3종", "정다온", "2026-09-22", "완료"),
+    bridge(4L, "BR-2026-004", "라니교", "경기도", "고양시", "제1종", "고라니", "2026-09-10", "완료"),
+    bridge(5L, "BR-2026-005", "마루교", "경기도", "파주시", "제3종", "김마루", "2026-08-28", "완료")
+    );
 
     private static Map<String, Object> bridge(long no, String code, String name,
             String province, String city, String facilityType, String manager,

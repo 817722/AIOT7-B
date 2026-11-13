@@ -1,31 +1,31 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>교량점검 시스템</title>
-    <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
-    <link rel="stylesheet" th:href="@{/css/inspection-v2.css}" href="/css/inspection-v2.css">
-</head>
-<body>
-    <div th:replace="~{fragments/header :: header}"></div>
-
-    <div class="app-layout" th:with="activeMenu='inspections'">
-        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-        <main class="app-main inspection-v2" id="main-content">
-            <div class="app-container">
-                <!-- 서브메뉴 -->
-                <div th:replace="~{fragments/submenu :: submenu(activeMenu='/inspections/5')}"></div>
-                <h1 class="bv-title">점검 상세</h1>
-                <p class="app-page-description">점검 상세 기능은 준비 중입니다.</p>
-
-                <section class="app-card" aria-labelledby="inspection-detail-pending">
-                    <h2 class="app-card__title" id="inspection-detail-pending">점검 상세 화면 준비 중</h2>
-                    <p>점검 기록 기능이 완성되면 이곳에서 점검 내용과 첨부 영상을 확인할 수 있습니다.</p>
-                    <p><a th:href="@{/inspections}" href="/inspections">점검 목록으로 돌아가기</a></p>
-                </section>
-            </div>
-        </main>
-    </div>
-</body>
-</html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"><meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+<title>점검 상세 | 교량점검 시스템</title><link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
+<link rel="stylesheet" th:href="@{/css/inspection-v2.css(v=2)}" href="/css/inspection-v2.css?v=2">
+<script defer th:src="@{/js/inspection-detail.js(v=1)}" src="/js/inspection-detail.js?v=1"></script></head><body>
+<div th:replace="~{fragments/header :: header}"></div><div class="app-layout" th:with="activeMenu='inspections'">
+<div th:replace="~{fragments/sidebar :: sidebar}"></div><main class="app-main inspection-v2" id="main-content"
+th:attr="data-inspection-no=${inspectionNo},data-inspection-id=${inspectionId != null ? inspectionId : ''}"><div class="app-container">
+<div th:replace="~{fragments/submenu :: submenu(activeMenu='/inspections')}"></div>
+<h1 class="bv-title">점검 상세</h1><p class="bv-subtitle">점검 기본 정보와 현장 기록, 첨부 영상을 확인합니다.</p>
+<div id="in-detail-message" class="in-message" role="status" aria-live="polite">점검 기록을 불러오고 있습니다.</div>
+<section class="bv-panel"><h2 class="bv-panel-title">기본 정보</h2><div class="bv-detail-fields in-detail-grid">
+<div class="bv-readonly"><span>교량명</span><strong id="detail-bridge-name">Thymeleaf 매핑 대기</strong></div>
+<div class="bv-readonly"><span>교량 번호</span><strong id="detail-bridge-no">-</strong></div>
+<div class="bv-readonly"><span>점검 기록명</span><strong id="detail-title">-</strong></div>
+<div class="bv-readonly"><span>점검 유형</span><strong id="detail-type">-</strong></div>
+<div class="bv-readonly"><span>점검 날짜</span><strong id="detail-date">-</strong></div>
+<div class="bv-readonly"><span>진행 상태</span><strong id="detail-status">-</strong></div>
+<div class="bv-readonly"><span>담당자 번호</span><strong id="detail-inspector">-</strong></div></div></section>
+<section class="bv-panel"><h2 class="bv-panel-title">점검 결과</h2><div class="bv-detail-fields in-detail-grid">
+<div class="bv-readonly"><span>종합 결과</span><strong id="detail-overall-result">-</strong></div>
+<div class="bv-readonly in-detail-full"><span>점검 메모</span><strong id="detail-memo" class="in-preline">-</strong></div></div></section>
+<section class="bv-panel"><h2 class="bv-panel-title">증거 사진</h2><div id="in-detail-photos" class="in-media-grid"><p class="bv-help">사진 정보를 불러오는 중입니다.</p></div></section>
+<section class="bv-panel"><h2 class="bv-panel-title">드론 영상</h2><div class="in-video-detail-grid">
+<ul id="in-detail-videos" class="in-video-list"><li class="bv-help">영상 정보를 불러오는 중입니다.</li></ul>
+<div class="in-player-wrap"><video id="in-detail-player" controls playsinline preload="metadata"></video><p id="in-player-empty" class="bv-help">영상 목록에서 재생할 항목을 선택해 주세요.</p></div></div></section>
+<div class="bv-form-actions in-bottom-actions"><a class="bv-btn bv-btn-primary" id="in-detail-edit" th:href="@{/inspections}">점검 목록에서 기록 선택</a>
+<a class="bv-btn bv-btn-light" th:href="@{/inspections}" href="/inspections">점검 목록</a></div>
+</div></main></div></body></html>

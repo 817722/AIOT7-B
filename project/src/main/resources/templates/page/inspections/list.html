@@ -1,43 +1,44 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>교량점검 시스템</title>
-    <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
-    <link rel="stylesheet" th:href="@{/css/inspection-v2.css}" href="/css/inspection-v2.css">
-</head>
-<body>
-    <div th:replace="~{fragments/header :: header}"></div>
-
-    <div class="app-layout" th:with="activeMenu='inspections'">
-        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-        <main class="app-main inspection-v2" id="main-content">
-            <div class="app-container">
-                <!-- 서브메뉴 -->
-                <div th:replace="~{fragments/submenu :: submenu(activeMenu='/inspections')}"></div>
-                <h1 class="bv-title">점검 목록</h1>
-                <p class="app-page-description">교량별 점검 기록을 조회합니다.</p>
-                <p class="app-page-description">점검 기록 조회 기능은 준비 중입니다. 아래 목록은 화면 예시입니다.</p>
-
-                <section class="bv-panel" aria-labelledby="cards-title">
-        <div class="bv-section-heading"><div><h2 id="cards-title" class="bv-panel-title">점검 목록</h2><p class="bv-help" th:text="|검색 결과 ${resultCount}건 · ${pageNo}/${totalPages}페이지|">검색 결과 5건</p></div><a th:href="@{/inspections/new}" href="/inspections/new" class="bv-btn bv-btn-primary">점검 등록</a></div>
-        <div class="bv-blank" th:if="${totalCount == 0}"><strong>등록된 점검이 없습니다.</strong><p>신규 등록을 통해 등록하여 관리해 보세요.</p></div>
-        <div class="bv-card-grid" th:if="${resultCount > 0}">
-          <a class="bv-inspection-card" th:each="inspection,iter : ${rows}" th:href="@{/inspections/{no}(no=${inspection.no})}" href="/inspections/1">
-            <div class="bv-card-visual" th:classappend="| bv-card-visual--${iter.index % 5}|" aria-hidden="true"><span class="bv-card-inspection"></span><span class="bv-card-deck"></span></div>
-            <div class="bv-card-info"><strong th:text="${inspection.name}">점검1</strong><span th:text="|${inspection.province} ${inspection.city} · ${inspection.facilityType}|">경기도 가평군 · 제1종</span><span class="bv-card-footer"><time th:text="${#temporals.format(inspection.lastInspectionDate,'yyyy-MM-dd')}">2026-10-16</time><em class="bv-state" th:classappend="${inspection.status == '완료'} ? ' bv-state--done' : ''" th:text="${inspection.status}">진행 중</em></span></div>
-          </a>
-        </div>
-        <div class="bv-blank" th:if="${totalCount > 0 and resultCount == 0}"><strong>검색 결과 없음</strong><p>다른 조건으로 검색하거나 필터를 초기화해 주세요.</p><a class="bv-btn bv-btn-light" th:href="@{/inspections}" href="/inspections">검색 초기화</a></div>
-        <nav class="bv-pager" aria-label="교량 페이지 이동" th:if="${resultCount > 0}">
-          <a th:if="${hasPrev}" th:href="@{/inspections(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo - 1})}">이전</a><span th:unless="${hasPrev}" class="bv-disabled">이전</span>
-          <span th:text="|${pageNo} / ${totalPages}|">1 / 1</span>
-          <a th:if="${hasNext}" th:href="@{/inspections(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo + 1})}">다음</a><span th:unless="${hasNext}" class="bv-disabled">다음</span>
-        </nav>
-      </section>
-            </div>
-        </main>
-    </div>
-</body>
-</html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>점검 목록 | 교량점검 시스템</title>
+<link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
+<link rel="stylesheet" th:href="@{/css/inspection-v2.css(v=2)}" href="/css/inspection-v2.css?v=2">
+<script defer th:src="@{/js/inspection-list.js(v=1)}" src="/js/inspection-list.js?v=1"></script></head><body>
+<div th:replace="~{fragments/header :: header}"></div><div class="app-layout" th:with="activeMenu='inspections'">
+<div th:replace="~{fragments/sidebar :: sidebar}"></div><main class="app-main inspection-v2" id="main-content"><div class="app-container">
+<div th:replace="~{fragments/submenu :: submenu(activeMenu='/inspections')}"></div>
+<h1 class="bv-title">점검 목록</h1><p class="bv-subtitle">교량을 선택하면 해당 교량에 등록된 점검 기록을 조회합니다.</p>
+<section class="bv-panel"><div class="bv-section-heading"><div><h2 class="bv-panel-title">점검 기록 조회</h2>
+<p class="bv-help">전체 점검 조회 API가 없어 기존 교량 검색 및 교량별 점검 조회 API를 사용합니다.</p></div>
+<a class="bv-btn bv-btn-primary" th:href="@{/inspections/new}" href="/inspections/new">점검 등록</a></div>
+<div class="bv-lookup-line"><label class="bv-sr-only" for="inspection-bridge-query">교량명 검색</label>
+<input id="inspection-bridge-query" type="search" placeholder="교량명 또는 교량 번호 입력" autocomplete="off">
+<button type="button" id="inspection-bridge-search" class="bv-btn bv-btn-primary">교량 검색</button></div>
+<div id="inspection-bridge-results" class="in-bridge-results" hidden></div>
+<div id="inspection-selected-bridge" class="in-selected-bridge" hidden></div>
+<p id="inspection-list-message" class="bv-help" role="status" aria-live="polite">교량을 검색하고 선택해 주세요.</p></section>
+<section class="bv-panel"><div class="bv-section-heading"><div><h2 class="bv-panel-title">점검 기록</h2>
+<p id="inspection-result-count" class="bv-help">조회 결과 0건</p></div></div>
+<div id="inspection-record-list" class="in-record-list"><div class="bv-blank"><strong>조회할 교량을 선택해 주세요.</strong><p>선택한 교량의 점검 기록이 이곳에 표시됩니다.</p></div></div></section>
+<section id="in-inline-detail" class="bv-panel" hidden aria-labelledby="in-inline-title">
+ <div class="bv-section-heading"><h2 id="in-inline-title" class="bv-panel-title">선택한 점검 상세</h2><button id="in-close-detail" type="button" class="bv-btn bv-btn-light">목록으로 돌아가기</button></div>
+ <p id="in-inline-detail-message" class="bv-help" role="status"></p>
+ <div class="bv-detail-fields in-detail-grid">
+  <div class="bv-readonly"><span>대상 교량</span><strong id="in-detail-bridge">-</strong></div>
+  <div class="bv-readonly"><span>점검 기록명</span><strong id="in-detail-title">-</strong></div>
+  <div class="bv-readonly"><span>점검 유형</span><strong id="in-detail-type">-</strong></div>
+  <div class="bv-readonly"><span>점검 날짜</span><strong id="in-detail-date">-</strong></div>
+  <div class="bv-readonly"><span>상태</span><strong id="in-detail-status">-</strong></div>
+  <div class="bv-readonly"><span>담당자 번호</span><strong id="in-detail-inspector">-</strong></div>
+  <div class="bv-readonly"><span>종합 결과</span><strong id="in-detail-overall">-</strong></div>
+  <div class="bv-readonly in-detail-full"><span>점검 메모</span><strong id="in-detail-memo" class="in-preline">-</strong></div>
+ </div>
+ <h3 class="in-subheading">현장 사진</h3><div id="in-detail-photo-list" class="in-media-grid"></div>
+ <h3 class="in-subheading">드론 영상</h3>
+ <div class="in-video-detail-grid"><ul id="in-detail-video-list" class="in-video-list"></ul>
+ <div class="in-player-wrap"><video id="in-inline-player" controls playsinline preload="metadata" hidden></video><p id="in-inline-player-message" class="bv-help">영상을 선택하면 여기에서 재생됩니다.</p></div></div>
+ <div class="bv-form-actions"><a id="in-detail-edit-link" class="bv-btn bv-btn-primary" href="#" hidden>수정 페이지</a></div>
+ <p class="bv-help">수정 페이지는 기존 GET 컨트롤러의 실제 점검 데이터 매핑이 필요해, 현재는 연결을 보류했습니다.</p>
+</section>
+</div></main></div></body></html>

@@ -24,13 +24,14 @@ import com.aiotb.project.repository.users.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
- * DDL-ALOHA(2).sql 업무용 교량 CRUD 어댑터. 팀원 기존 /api/bridges REST 코드를 변경하지 않음.
+ * DDL-ALOHA(5).sql 업무용 교량 CRUD 어댑터. 팀원 기존 /api/bridges REST 코드를 변경하지 않음.
  * bridge_master의 실제 DB PK(no)만 입력받고 교량 속성은 DB의 원본에서 복사한다.
  */
 @Service
 @RequiredArgsConstructor
 public class BridgeUiWriteService {
     private final JdbcTemplate jdbc;
+    private final BridgeDeletionService bridgeDeletionService;
     private final UserRepository users;
 
     public record CurrentUser(long no, long corpNo) {}
@@ -41,7 +42,7 @@ public class BridgeUiWriteService {
         }
         User user = users.findByUsername(auth.getName())
             .orElseThrow(() -> new AccessDeniedException("사용자가 존재하지 않습니다."));
-        if (!user.canUseService()) {
+        if (user.getCorp() == null || !user.canUseService()) {
             throw new AccessDeniedException("인증된 기업 사용자만 이용할 수 있습니다.");
         }
         return new CurrentUser(user.getNo(), user.getCorp().getNo());
@@ -161,7 +162,7 @@ public class BridgeUiWriteService {
             return no;
         } catch (DataIntegrityViolationException ex) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "이미 우리 기업에 등록된 교량입니다.", ex);
+                "해당 교량이 이미 소속 기업에 등록됐거나 DB 제약조건을 충족하지 못했습니다.", ex);
         }
     }
 
@@ -250,36 +251,11 @@ public class BridgeUiWriteService {
         }, bridgeNo, actor.corpNo());
     }
 
-    /** FK/미디어가 남아있으면 삭제하지 않는다. 별도 업무 기록을 임의로 지우지 않는다. */
+    /** 연결된 점검·유지보수 기록이 없다면 이미지 및 담당자 이력과 함께 교량을 삭제합니다. */
     @Transactional
     public void delete(long bridgeNo, Authentication auth) {
         requireManager(auth);
         CurrentUser actor = actor(auth);
-        ensureOwnership(bridgeNo, actor);
-        // 팀 최신 DDL: manager_history -> bridges FK가 ON DELETE RESTRICT 이므로
-        // 변경 이력이 있는 교량은 삭제하지 않고 명확한 409 오류를 반환한다.
-        Integer historyCount = jdbc.queryForObject("""
-            SELECT COUNT(*) FROM manager_history
-             WHERE bridge_no=? AND corp_no=?
-            """, Integer.class, bridgeNo, actor.corpNo());
-        if (historyCount != null && historyCount > 0) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "담당자 변경 이력이 있는 교량은 삭제할 수 없습니다.");
-        }
-
-        Integer records = jdbc.queryForObject("""
-            SELECT (SELECT COUNT(*) FROM inspections WHERE bridge_no=? AND corp_no=?)
-                 + (SELECT COUNT(*) FROM maintenance_records WHERE bridge_no=? AND corp_no=?)
-                 + (SELECT COUNT(*) FROM media WHERE p_type='BRIDGE' AND p_id=? AND corp_no=?)
-            """, Integer.class, bridgeNo, actor.corpNo(), bridgeNo, actor.corpNo(), bridgeNo, actor.corpNo());
-        if (records != null && records > 0) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "연결된 점검·유지보수 기록 또는 이미지가 있어 삭제할 수 없습니다.");
-        }
-        try {
-            jdbc.update("DELETE FROM bridges WHERE no=? AND corp_no=?", bridgeNo, actor.corpNo());
-        } catch (DataIntegrityViolationException ex) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "다른 업무 데이터에서 참조하는 교량은 삭제할 수 없습니다.", ex);
-        }
+        bridgeDeletionService.delete(bridgeNo, actor.corpNo());
     }
 }

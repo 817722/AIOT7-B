@@ -50,7 +50,7 @@ public class BridgeRepresentativeImageService {
         }
         User user = users.findByUsername(auth.getName())
                 .orElseThrow(() -> new AccessDeniedException("등록되지 않은 사용자입니다."));
-        if (!user.canUseService()) {
+        if (user.getCorp() == null || !user.canUseService()) {
             throw new AccessDeniedException("사용할 수 없는 기업 계정입니다.");
         }
         return new Actor(user.getNo(), user.getCorp().getNo());
@@ -60,6 +60,17 @@ public class BridgeRepresentativeImageService {
         List<Long> rows = jdbc.query("SELECT created_by FROM bridges WHERE no=? AND corp_no=?",
                 (rs, idx) -> rs.getLong("created_by"), bridgeNo, actor.corpNo());
         if (rows.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "교량을 찾을 수 없습니다.");
+        return rows.get(0);
+    }
+
+    /** 교량 삭제와 대표 이미지 업로드가 경합하지 않도록 부모 교량 행을 잠급니다. */
+    private long registeredByForUpdate(long bridgeNo, Actor actor) {
+        List<Long> rows = jdbc.query(
+                "SELECT created_by FROM bridges WHERE no=? AND corp_no=? FOR UPDATE",
+                (rs, idx) -> rs.getLong("created_by"), bridgeNo, actor.corpNo());
+        if (rows.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "교량을 찾을 수 없습니다.");
+        }
         return rows.get(0);
     }
 
@@ -107,7 +118,7 @@ public class BridgeRepresentativeImageService {
     @Transactional
     public void upload(long bridgeNo, MultipartFile file, Authentication auth) {
         Actor actor = actor(auth);
-        long createdBy = registeredBy(bridgeNo, actor);
+        long createdBy = registeredByForUpdate(bridgeNo, actor);
         checkWrite(auth, actor, createdBy);
         if (file == null || file.isEmpty() || file.getSize() > MAX_BYTES) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미지는 5MB 이하로 첨부해 주세요.");

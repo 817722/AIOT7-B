@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * DDL-ALOHA(2).sql 업무용 교량 CRUD 어댑터. 팀원 기존 /api/inspections REST 코드를 변경하지 않음.
- * inspection_master의 실제 DB PK(no)만 입력받고 교량 속성은 DB의 원본에서 복사한다.
+ * bridge_master의 실제 DB PK(no)만 입력받고 교량 속성은 DB의 원본에서 복사한다.
  */
 @Service
 @RequiredArgsConstructor
@@ -74,9 +74,9 @@ public class InspectionUiWriteService {
                    bm.management_agency, bm.source_data_date,
                    b.no AS registered_inspection_no,
                    manager.manager_name AS current_manager_name
-              FROM inspection_master bm
+              FROM bridge_master bm
               LEFT JOIN inspections b
-                ON b.inspection_master_no = bm.no AND b.corp_no = ?
+                ON b.bridge_master_no = bm.no AND b.corp_no = ?
               LEFT JOIN users manager
                 ON manager.no = b.manager_no AND manager.corp_no = b.corp_no
              WHERE bm.name LIKE ? ESCAPE '!'
@@ -121,7 +121,7 @@ public class InspectionUiWriteService {
             """, (rs, idx) -> Map.of("no", rs.getLong("no"), "name", rs.getString("manager_name")), actor.corpNo());
     }
 
-    /** 교량 신규 등록: 원본 컬럼은 클라이언트가 아닌 inspection_master에서 복사한다. */
+    /** 교량 신규 등록: 원본 컬럼은 클라이언트가 아닌 bridge_master에서 복사한다. */
     @Transactional
     public long create(long masterNo, Authentication auth) {
         CurrentUser actor = actor(auth);
@@ -130,7 +130,7 @@ public class InspectionUiWriteService {
         try {
             int inserted = jdbc.update("""
                 INSERT INTO inspections (
-                  id, inspection_master_no, corp_no, source_data_date,
+                  id, bridge_master_no, corp_no, source_data_date,
                   inspection_name, facility_type, road_type, road_name, road_number,
                   road_direction, province, city, city_code, address,
                   start_latitude, start_longitude, end_latitude, end_longitude,
@@ -153,7 +153,7 @@ public class InspectionUiWriteService {
                        bm.repair_cost, bm.design_live_load, bm.allowable_traffic_load,
                        bm.underpass_height_limit, bm.management_agency, bm.management_phone,
                        ?, ?
-                  FROM inspection_master bm WHERE bm.no = ?
+                  FROM bridge_master bm WHERE bm.no = ?
                 """, id, actor.corpNo(), actor.no(), actor.no(), masterNo);
             if (inserted == 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "원본 교량을 찾을 수 없습니다.");
             Long no = jdbc.queryForObject("SELECT no FROM inspections WHERE id=? AND corp_no=?", Long.class, id, actor.corpNo());

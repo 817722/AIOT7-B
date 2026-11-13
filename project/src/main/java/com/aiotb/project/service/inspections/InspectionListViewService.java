@@ -34,16 +34,16 @@ public class InspectionListViewService {
     private final UserRepository userRepository;
 
     private static final String BRIDGE_SQL = """
-        SELECT b.no, b.id, b.inspection_name AS inspection_name, b.manager_no,
+        SELECT b.no, b.id, b.bridge_name AS inspection_name, b.manager_no,
                b.province, b.city, b.facility_type, b.address,
                b.road_name, b.last_inspection_date, b.created_at,
                manager.manager_name AS manager_name,
                (SELECT 1 FROM media img WHERE img.p_type='BRIDGE' AND img.p_id=b.no
                      AND img.corp_no=b.corp_no AND img.is_main=1 LIMIT 1) AS has_main_image,
                (SELECT i.status FROM inspections i
-                WHERE i.inspection_no = b.no AND i.corp_no = b.corp_no
+                WHERE i.bridge_no = b.no AND i.corp_no = b.corp_no
                 ORDER BY i.inspection_date DESC, i.no DESC LIMIT 1) AS inspection_status
-          FROM inspections b
+          FROM bridges b
           LEFT JOIN users manager ON manager.no = b.manager_no
                                      AND manager.corp_no = b.corp_no
          WHERE b.corp_no = ?

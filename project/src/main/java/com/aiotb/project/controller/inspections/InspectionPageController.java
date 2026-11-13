@@ -1,69 +1,127 @@
 package com.aiotb.project.controller.inspections;
 
-import com.aiotb.project.domain.BridgeInspectionEntity;
-import com.aiotb.project.repository.BridgeInspectionRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import com.aiotb.project.service.inspections.InspectionListViewService;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
 public class InspectionPageController {
 
-    private final BridgeInspectionRepository inspectionRepository;
-    private static final int PAGE_SIZE = 5;
+    private final InspectionListViewService inspectionListViewService;
 
     @GetMapping("/inspections")
     public String list(
+            Authentication authentication,
             @RequestParam(name = "keyword", defaultValue = "") String keyword,
-            @RequestParam(name = "status", defaultValue = "") String status,
+            @RequestParam(name = "year", defaultValue = "") String year,
+            @RequestParam(name = "month", defaultValue = "") String month,
+            @RequestParam(name = "province", defaultValue = "") String province,
+            @RequestParam(name = "city", defaultValue = "") String city,
+            @RequestParam(name = "facilityType", defaultValue = "") String facilityType,
+            @RequestParam(name = "sort", defaultValue = "nameAsc") String sort,
             @RequestParam(name = "page", defaultValue = "1") int page,
             Model model) {
 
-        String query = keyword.trim();
-        PageRequest pageable = PageRequest.of(Math.max(0, page - 1), PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id"));
+        // 1. 로그인한 기업의 교량 목록 조회
+        List<Map<String, Object>> rows =
+                inspectionListViewService.list(authentication.getName());
 
-        // 실제 DB에서 조건에 맞게 조회
-        Page<BridgeInspectionEntity> inspectionPage;
-        if (StringUtils.hasText(status)) {
-            inspectionPage = inspectionRepository.findByKeywordContainingAndStatus(query, status, pageable);
+        // 2. 검색 조건 적용
+        List<Map<String, Object>> filtered = rows.stream()
+                .filter(item -> {
+                    String name = String.valueOf(item.get("name"));
+                    String address = String.valueOf(item.get("address"));
+
+                    return keyword.isBlank()
+                            || name.contains(keyword)
+                            || address.contains(keyword);
+                })
+                .filter(item -> province.isBlank()
+                        || province.equals(item.get("province")))
+                .filter(item -> city.isBlank()
+                        || city.equals(item.get("city")))
+                .filter(item -> facilityType.isBlank()
+                        || facilityType.equals(item.get("facilityType")))
+                .filter(item -> {
+                    LocalDate date = (LocalDate) item.get("lastInspectionDate");
+
+                    if (date == null) return year.isBlank() && month.isBlank();
+
+                    return (year.isBlank()
+                            || String.valueOf(date.getYear()).equals(year))
+                            && (month.isBlank()
+                            || String.valueOf(date.getMonthValue()).equals(month));
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        // 3. 정렬
+        Comparator<Map<String, Object>> comparator;
+
+        if ("dateDesc".equals(sort)) {
+            comparator = Comparator.comparing(
+                    (Map<String, Object> item) ->
+                            (LocalDate) item.get("lastInspectionDate"),
+                    Comparator.nullsLast(Comparator.reverseOrder()));
         } else {
-            inspectionPage = inspectionRepository.findByKeywordContaining(query, pageable);
+            comparator = Comparator.comparing(
+                    item -> String.valueOf(item.get("name")),
+                    java.text.Collator.getInstance(Locale.KOREAN));
+
+            if ("nameDesc".equals(sort)) {
+                comparator = comparator.reversed();
+            }
         }
 
-        // 상태별 카운트 (HTML의 progressCount, completedCount, pendingCount와 일치)
-        long totalCount = inspectionRepository.count();
-        long progressCount = inspectionRepository.countByStatus("진행 중");
-        long completedCount = inspectionRepository.countByStatus("완료");
-        long pendingCount = inspectionRepository.countByStatus("진행 대기");
+        filtered.sort(comparator);
 
-        int totalPages = Math.max(1, inspectionPage.getTotalPages());
-        int currentPage = Math.max(1, Math.min(page, totalPages));
+        // 4. 페이지 처리 (한 페이지당 9개)
+        int pageSize = 9;
+        int totalCount = filtered.size();
+        int totalPages = Math.max(1,
+                (int) Math.ceil((double) totalCount / pageSize));
 
-        // HTML 템플릿에 데이터 전달
-        model.addAttribute("rows", inspectionPage.getContent());
+        int pageNo = Math.max(1, Math.min(page, totalPages));
+
+        int start = (pageNo - 1) * pageSize;
+        int end = Math.min(start + pageSize, totalCount);
+
+        List<Map<String, Object>> pageRows =
+                filtered.subList(start, end);
+
+        // 5. Thymeleaf 화면에 데이터 전달
+        model.addAttribute("rows", pageRows);
         model.addAttribute("totalCount", totalCount);
-        model.addAttribute("progressCount", progressCount);
-        model.addAttribute("completedCount", completedCount);
-        model.addAttribute("pendingCount", pendingCount);
-        model.addAttribute("resultCount", inspectionPage.getTotalElements());
-
-        model.addAttribute("keyword", query);
-        model.addAttribute("status", status);
-        model.addAttribute("pageNo", currentPage);
+        model.addAttribute("resultCount", pageRows.size());
         model.addAttribute("totalPages", totalPages);
-        model.addAttribute("hasPrev", inspectionPage.hasPrevious());
-        model.addAttribute("hasNext", inspectionPage.hasNext());
+        model.addAttribute("pageNo", pageNo);
 
-        // 레이아웃 메뉴 활성화 유지
-        model.addAttribute("currentMenuGroup", "inspections");
-        model.addAttribute("activeMenu", "/inspections/list");
+        model.addAttribute("hasPrev", pageNo > 1);
+        model.addAttribute("hasNext", pageNo < totalPages);
+
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("year", year);
+        model.addAttribute("month", month);
+        model.addAttribute("province", province);
+        model.addAttribute("city", city);
+        model.addAttribute("facilityType", facilityType);
+        model.addAttribute("sort", sort);
+
+        model.addAttribute("activeMenu", "inspections");
 
         return "page/inspections/list";
     }

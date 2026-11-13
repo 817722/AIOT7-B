@@ -7,21 +7,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.aiotb.project.dto.inspections.InspectionDto;
 import com.aiotb.project.service.inspections.InspectionService;
 import com.aiotb.project.service.users.CurrentUserService;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper; // JSON 문자열 변환용
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,20 +36,14 @@ public class InspectionController {
 
     private final InspectionService inspectionService;
     private final CurrentUserService currentUserService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
+    // 점검 기록 및 드론 파일 등록 API (Multipart 형태의 DTO 직접 바인딩)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> createInspection(
-            @RequestParam("request") String requestJson,
-            @RequestPart(value = "file", required = false) MultipartFile file) {
-        InspectionDto.Request request;
-        try {
-            // String으로 넘어온 JSON 데이터를 DTO 객체로 변환
-            request = objectMapper.readValue(requestJson, InspectionDto.Request.class);
-        } catch (JacksonException e) {
-            throw new IllegalArgumentException("점검 등록 요청 형식이 올바르지 않습니다.");
-        }
-        String inspectionId = inspectionService.createInspection(request, file, currentUserService.current());
+            @ModelAttribute @Valid InspectionDto.Request request) {
+
+        // 통합된 서비스 호출 (request 객체 안에 단일/다중 파일과 텍스트 데이터가 모두 들어있음)
+        String inspectionId = inspectionService.createInspection(request, currentUserService.current());
         return ResponseEntity.ok(inspectionId);
     }
 

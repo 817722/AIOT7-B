@@ -1,8 +1,9 @@
 package com.aiotb.project.repository;
 
-import com.aiotb.project.domain.BridgeInspectionEntity; // 밑에서 만들 엔티티
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import com.aiotb.project.domain.BridgeInspectionEntity; // 밑에서 만들 엔티티
 
 @Repository 
 public interface BridgeInspectionRepository extends JpaRepository<BridgeInspectionEntity, Long> {

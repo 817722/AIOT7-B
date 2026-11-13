@@ -45,23 +45,34 @@ public class BusinessVerificationController {
         String company = request.corpName() == null ? "" : request.corpName().trim();
         LocalDate date;
         try {
-            date = LocalDate.parse(request.openDate());
-        } catch (DateTimeParseException | NullPointerException e) {
-            return result(HttpStatus.BAD_REQUEST, false, "개업일자를 올바르게 입력해 주세요.");
+            String openDate = request.openDate();
+
+            // YYYY-MM-DD 형식(연도 4자리) 검사
+            if (openDate == null || !openDate.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
+                return result(HttpStatus.BAD_REQUEST, false, "개업일자는 YYYY-MM-DD 형식으로 입력해 주세요.");
+            }
+
+            // 실제 존재하는 날짜인지 검사
+            date = LocalDate.parse(openDate);
+
+        } catch (DateTimeParseException e) {
+            return result(HttpStatus.BAD_REQUEST, false, "실제 존재하는 개업일자를 입력해 주세요.");
         }
         if (!businessNo.matches("\\d{10}") || ceo.isBlank() || ceo.length() > 100
-                || company.isBlank() || company.length() > 100 || date.isAfter(LocalDate.now())) {
+                || company.isBlank() || company.length() > 100
+                || date.isBefore(LocalDate.of(1900, 1, 1))
+                || date.isAfter(LocalDate.now())) {
             return result(HttpStatus.BAD_REQUEST, false, "사업자번호·대표자명·기업명·개업일자를 확인해 주세요.");
         }
         // [개발·테스트용 임시 비활성화]
         // 기존 기업의 사업자등록번호로 추가 작업자를 가입시키기 위해 중복 차단을 주석 처리했습니다.
         // 운영 환경에서는 관리자 초대/승인 흐름을 구현하고 이 차단 정책을 재검토해야 합니다.
         /*
-        if (corpRepository.findByBisNo(businessNo).isPresent()) {
-            return result(HttpStatus.CONFLICT, false,
-                    "이미 등록된 기업입니다. 기업 관리자에게 작업자 계정 등록을 요청해 주세요.");
-        }
-        */
+         * if (corpRepository.findByBisNo(businessNo).isPresent()) {
+         * return result(HttpStatus.CONFLICT, false,
+         * "이미 등록된 기업입니다. 기업 관리자에게 작업자 계정 등록을 요청해 주세요.");
+         * }
+         */
         try {
             Map<?, ?> response = verificationService.verify(businessNo, date.toString(), ceo);
             Object data = response == null ? null : response.get("data");

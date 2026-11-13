@@ -74,11 +74,16 @@ public class BridgeRepresentativeImageService {
         return rows.get(0);
     }
 
-    private void checkWrite(Authentication auth, Actor actor, long createdBy) {
-        boolean admin = auth.getAuthorities().stream().anyMatch(a ->
-                "ROLE_ADMIN".equals(a.getAuthority()) || "ROLE_SUPER_ADMIN".equals(a.getAuthority()));
-        if (!admin && actor.no() != createdBy) {
-            throw new AccessDeniedException("교량 등록자 또는 관리자만 대표 이미지를 변경할 수 있습니다.");
+    /** 기업 내 승인된 작업자도 대표 이미지를 등록·교체·삭제할 수 있습니다.
+     *  담당자 변경 및 교량 삭제의 ADMIN 제한에는 영향을 주지 않습니다.
+     */
+    private void requireImageEditor(Authentication auth) {
+        boolean allowed = auth != null && auth.getAuthorities().stream().anyMatch(a ->
+                "ROLE_ADMIN".equals(a.getAuthority())
+                || "ROLE_INSPECTOR".equals(a.getAuthority())
+                || "ROLE_SUPER_ADMIN".equals(a.getAuthority()));
+        if (!allowed) {
+            throw new AccessDeniedException("승인된 작업자 또는 관리자만 교량 대표 이미지를 변경·삭제할 수 있습니다.");
         }
     }
 
@@ -118,8 +123,8 @@ public class BridgeRepresentativeImageService {
     @Transactional
     public void upload(long bridgeNo, MultipartFile file, Authentication auth) {
         Actor actor = actor(auth);
-        long createdBy = registeredByForUpdate(bridgeNo, actor);
-        checkWrite(auth, actor, createdBy);
+        requireImageEditor(auth);
+        registeredByForUpdate(bridgeNo, actor);
         if (file == null || file.isEmpty() || file.getSize() > MAX_BYTES) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미지는 5MB 이하로 첨부해 주세요.");
         }
@@ -147,7 +152,16 @@ public class BridgeRepresentativeImageService {
             if (!existing.isEmpty()) {
                 Map<String, Object> old = existing.get(0);
                 String oldFilename = String.valueOf(old.get("path"));
-                if (STORED_NAME.matcher(oldFilename).matches()) previous = root().resolve(oldFilename);
+                if (!STORED_NAME.matcher(oldFilename).matches()) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT,
+                            "기존 대표 이미지 저장 경로를 확인할 수 없어 변경하지 않았습니다.");
+                }
+                Path oldPath = root().resolve(oldFilename).normalize();
+                if (!oldPath.startsWith(root()) || Files.isSymbolicLink(oldPath)) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT,
+                            "기존 대표 이미지 경로가 안전하지 않아 변경하지 않았습니다.");
+                }
+                previous = oldPath;
                 jdbc.update("""
                     UPDATE media SET path=?, origin_name=?, mime_type=?, file_size=?, uploaded_by=? WHERE no=?
                     """, name, safeOriginalName(file.getOriginalFilename()), mime(ext), (long) bytes.length,
@@ -174,6 +188,61 @@ public class BridgeRepresentativeImageService {
             throw ex;
         }
     }
+
+    /** 대표 이미지만 삭제합니다. 교량·점검·유지보수·담당자 이력은 유지됩니다. */
+    @Transactional
+    public void delete(long bridgeNo, Authentication auth) {
+        Actor actor = actor(auth);
+        requireImageEditor(auth);
+        registeredByForUpdate(bridgeNo, actor); // 교량 전체 삭제·이미지 변경과 동시 실행 차단
+
+        List<StoredImage> images = jdbc.query("""
+                SELECT no, path FROM media
+                 WHERE p_type='BRIDGE' AND p_id=? AND corp_no=?
+                   AND type='IMAGE' AND is_main=1 FOR UPDATE
+                """, (rs, idx) -> new StoredImage(rs.getLong("no"), rs.getString("path")),
+                bridgeNo, actor.corpNo());
+        if (images.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "삭제할 교량 대표 이미지가 없습니다.");
+        }
+        if (images.size() != 1) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "대표 이미지 데이터가 중복되어 삭제할 수 없습니다.");
+        }
+        StoredImage image = images.get(0);
+        if (image.filename() == null || !STORED_NAME.matcher(image.filename()).matches()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "관리하지 않는 대표 이미지 저장 경로여서 삭제를 중단했습니다.");
+        }
+        Path path = root().resolve(image.filename()).normalize();
+        if (!path.startsWith(root()) || Files.isSymbolicLink(path)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "대표 이미지 경로가 안전하지 않습니다.");
+        }
+        Integer referenced = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM media WHERE path=? AND no<>?", Integer.class,
+                image.filename(), image.no());
+        if (referenced != null && referenced > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "다른 업무 기록에서 사용하는 파일이므로 삭제할 수 없습니다.");
+        }
+        int removed = jdbc.update("""
+                DELETE FROM media WHERE no=? AND corp_no=? AND p_type='BRIDGE'
+                  AND p_id=? AND type='IMAGE' AND is_main=1
+                """, image.no(), actor.corpNo(), bridgeNo);
+        if (removed != 1) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "대표 이미지 정보 삭제에 실패했습니다.");
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override public void afterCommit() {
+                try { Files.deleteIfExists(path); }
+                catch (IOException ex) {
+                    org.slf4j.LoggerFactory.getLogger(BridgeRepresentativeImageService.class)
+                            .warn("대표 이미지 DB 삭제 후 파일 정리 실패: {}", path, ex);
+                }
+            }
+        });
+    }
+
+    private record StoredImage(long no, String filename) {}
 
     @Transactional(readOnly = true)
     public ImageData read(long bridgeNo, Authentication auth) {

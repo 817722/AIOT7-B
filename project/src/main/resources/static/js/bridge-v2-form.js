@@ -178,19 +178,36 @@
   const placeholder = document.getElementById('bv-preview-placeholder');
   const imageMessage = document.getElementById('bv-image-message');
   let objectUrl = null;
-  file?.addEventListener('change', () => {
+  const storedImageSrc = preview?.getAttribute('src') || '';
+  const showStoredImage = () => {
     if (objectUrl) URL.revokeObjectURL(objectUrl);
     objectUrl = null;
-    preview.hidden = true; preview.removeAttribute('src'); placeholder.hidden = false;
-    const image = file.files?.[0];
-    if (!image) { imageMessage.textContent = '대표 이미지를 선택해 미리볼 수 있습니다.'; return; }
-    if (!['image/jpeg','image/png','image/webp'].includes(image.type) || image.size > 5 * 1024 * 1024) {
-      imageMessage.textContent = 'JPG·PNG·WebP 형식, 5MB 이하의 파일만 선택할 수 있습니다.';
-      file.value = ''; return;
+    if (preview) {
+      if (storedImageSrc) preview.src = storedImageSrc;
+      else preview.removeAttribute('src');
+      preview.hidden = !storedImageSrc;
     }
+    if (placeholder) placeholder.hidden = Boolean(storedImageSrc);
+  };
+  file?.addEventListener('change', () => {
+    const image = file.files?.[0];
+    if (!image) {
+      showStoredImage();
+      if (imageMessage) imageMessage.textContent = '새 대표 이미지를 선택해 미리볼 수 있습니다.';
+      return;
+    }
+    if (!['image/jpeg','image/png','image/webp'].includes(image.type)
+        || image.size === 0 || image.size > 5 * 1024 * 1024) {
+      file.value = '';
+      showStoredImage();
+      if (imageMessage) imageMessage.textContent = 'JPG·PNG·WebP 형식, 5MB 이하의 파일만 선택할 수 있습니다.';
+      return;
+    }
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
     objectUrl = URL.createObjectURL(image);
-    preview.src = objectUrl; preview.hidden = false; placeholder.hidden = true;
-    imageMessage.textContent = `${image.name} — 저장 버튼을 누르면 서버에 업로드됩니다.`;
+    if (preview) { preview.src = objectUrl; preview.hidden = false; }
+    if (placeholder) placeholder.hidden = true;
+    if (imageMessage) imageMessage.textContent = `${image.name} — 이미지 변경 저장 버튼을 누르면 업로드됩니다.`;
   });
 
   const main = document.getElementById('main-content');
@@ -245,8 +262,60 @@
     const response = await fetch(`/api/bridge-ui/${no}/image`, {
       method: 'POST', credentials: 'same-origin', headers, body: formData
     });
-    if (!response.ok) throw new Error(`이미지 업로드 HTTP ${response.status}`);
+    if (!response.ok) {
+      let detail = '';
+      try { const error = await response.json(); detail = error.message || error.detail || ''; } catch (_) {}
+      throw new Error(detail || `이미지 업로드 실패 (HTTP ${response.status})`);
+    }
   }
+
+  // 관리자/작업자 공통: 교량 삭제와 무관하게 대표 이미지만 변경합니다.
+  document.getElementById('bv-image-save')?.addEventListener('click', async e => {
+    if (!isEdit || !validNo(bridgeNo)) return;
+    if (!file?.files?.[0]) {
+      if (imageMessage) imageMessage.textContent = '먼저 변경할 이미지를 선택해 주세요.';
+      return;
+    }
+    const button = e.currentTarget;
+    button.disabled = true;
+    if (imageMessage) imageMessage.textContent = '대표 이미지를 저장하는 중입니다.';
+    try {
+      await uploadRepresentativeImage(bridgeNo);
+      window.location.assign(`/bridges/${bridgeNo}/edit?imageUpdated=1`);
+    } catch (error) {
+      if (imageMessage) imageMessage.textContent = `이미지 저장 실패: ${error.message}`;
+      button.disabled = false;
+    }
+  });
+
+  // 관리자/작업자 공통: DB의 대표 이미지 정보 + 실제 파일만 삭제합니다.
+  document.getElementById('bv-image-delete')?.addEventListener('click', async e => {
+    if (!isEdit || !validNo(bridgeNo)) return;
+    if (!window.confirm('이 교량의 대표 이미지만 삭제하시겠습니까? 교량 및 점검·유지보수 기록은 유지됩니다.')) return;
+    const button = e.currentTarget;
+    button.disabled = true;
+    if (imageMessage) imageMessage.textContent = '대표 이미지를 삭제하는 중입니다.';
+    const headers = { Accept: 'application/json' };
+    if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
+    try {
+      const response = await fetch(`/api/bridge-ui/${bridgeNo}/image`, {
+        method: 'DELETE', credentials: 'same-origin', headers
+      });
+      if (!response.ok) {
+        let detail = '';
+        try { const error = await response.json(); detail = error.message || error.detail || ''; } catch (_) {}
+        throw new Error(detail || `대표 이미지 삭제 실패 (HTTP ${response.status})`);
+      }
+      window.location.assign(`/bridges/${bridgeNo}/edit?imageDeleted=1`);
+    } catch (error) {
+      if (imageMessage) imageMessage.textContent = `이미지 삭제 실패: ${error.message}`;
+      button.disabled = false;
+    }
+  });
+
+  const imageResult = new URLSearchParams(window.location.search);
+  if (imageMessage && imageResult.get('imageUpdated') === '1') imageMessage.textContent = '대표 이미지가 변경되었습니다.';
+  if (imageMessage && imageResult.get('imageDeleted') === '1') imageMessage.textContent = '대표 이미지를 삭제했습니다.';
 
   document.getElementById('bv-save')?.addEventListener('click', async e => {
     const button = e.currentTarget;

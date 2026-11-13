@@ -166,8 +166,9 @@ public class MaintenanceVideoService {
         Actor actor = actor(auth);
         requireRecord(actor, maintenanceNo);
         Map<String, Object> row = requireMedia(actor, maintenanceNo, mediaNo);
-        Path file = resolveStored(row.get("path"));
-        if (!Files.isRegularFile(file) || !Files.isReadable(file)) {
+        // 공통 /api/media 업로드 영상(media 폴더)과 기존 영상 폴더 모두 지원합니다.
+        Path file = safeAttachedPath("VIDEO", row.get("path"));
+        if (file == null || !Files.isRegularFile(file) || !Files.isReadable(file)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "영상 파일을 찾을 수 없습니다.");
         }
         String mime = String.valueOf(row.get("mime_type"));
@@ -182,8 +183,13 @@ public class MaintenanceVideoService {
         Actor actor = actor(auth);
         requireEdit(actor, requireRecordForUpdate(actor, maintenanceNo));
         Map<String, Object> row = requireMedia(actor, maintenanceNo, mediaNo);
-        // 레거시 파일 경로의 경우 파일 삭제는 건너뛰고 메타데이터만 삭제합니다.
-        Path file = safeStoredPath(row.get("path"));
+        // 공통 미디어 저장소와 기존 영상 저장소 중 실제 파일 위치를 확인합니다.
+        // 두 폴더에 동일 파일명이 중복되거나 저장 경로가 잘못된 경우 삭제를 보류합니다.
+        Path file = safeAttachedPath("VIDEO", row.get("path"));
+        if (file == null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "영상 저장 경로가 잘못되었거나 중복되어 삭제를 보류했습니다.");
+        }
         int count = jdbc.update("""
                 DELETE FROM media WHERE no = ? AND p_type = 'MAINTENANCE'
                  AND type = 'VIDEO' AND p_id = ? AND corp_no = ?
@@ -251,11 +257,6 @@ public class MaintenanceVideoService {
         return result.get(0);
     }
 
-    private Path resolveStored(Object name) {
-        Path candidate = safeStoredPath(name);
-        if (candidate == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "지원하지 않는 영상 저장 경로입니다.");
-        return candidate;
-    }
 
     /** 새 공통 media 폴더와 이전 maintenance-videos 폴더를 함께 인정합니다. */
     private Path safeAttachedPath(String type, Object name) {
@@ -276,13 +277,6 @@ public class MaintenanceVideoService {
         return Files.isRegularFile(media) ? media : legacy;
     }
 
-    private Path safeStoredPath(Object name) {
-        if (name == null) return null;
-        String value = String.valueOf(name);
-        if (!value.matches("[0-9a-f-]{36}\\.(mp4|webm)")) return null;
-        Path candidate = root.resolve(value).normalize();
-        return candidate.startsWith(root) ? candidate : null;
-    }
 
     private static String safeOriginalName(String raw) {
         if (raw == null || raw.isBlank()) return "video.mp4";

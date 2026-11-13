@@ -50,6 +50,15 @@ public class BridgeInspectionService {
                 }
             }
         }
+
+        // 현장 사진 다중 저장
+        if (requestDto.getPhotoInputMultiple() != null) {
+            for (MultipartFile photo : requestDto.getPhotoInputMultiple()) {
+                if (!photo.isEmpty()) {
+                    saveFileToFolder(photo);
+                }
+            }
+        }
     }
 
     // 파일을 컴퓨터 폴더에 저장해 주는 하부 메서드

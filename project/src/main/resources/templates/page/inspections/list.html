@@ -6,6 +6,7 @@
     <title>교량점검 시스템</title>
     <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
     <link rel="stylesheet" th:href="@{/css/inspection-v2.css}" href="/css/inspection-v2.css">
+    <script th:src="@{/js/inspection-v2-form.js}" src="/js/inspection-v2-list.js" defer></script>>
 </head>
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
@@ -18,26 +19,83 @@
                 <div th:replace="~{fragments/submenu :: submenu(activeMenu='/inspections')}"></div>
                 <h1 class="bv-title">점검 목록</h1>
                 <p class="app-page-description">교량별 점검 기록을 조회합니다.</p>
-                <p class="app-page-description">점검 기록 조회 기능은 준비 중입니다. 아래 목록은 화면 예시입니다.</p>
 
-                <section class="bv-panel" aria-labelledby="cards-title">
-        <div class="bv-section-heading"><div><h2 id="cards-title" class="bv-panel-title">점검 목록</h2><p class="bv-help" th:text="|검색 결과 ${resultCount}건 · ${pageNo}/${totalPages}페이지|">검색 결과 5건</p></div><a th:href="@{/inspections/new}" href="/inspections/new" class="bv-btn bv-btn-primary">점검 등록</a></div>
-        <div class="bv-blank" th:if="${totalCount == 0}"><strong>등록된 점검이 없습니다.</strong><p>신규 등록을 통해 등록하여 관리해 보세요.</p></div>
-        <div class="bv-card-grid" th:if="${resultCount > 0}">
-          <a class="bv-inspection-card" th:each="inspection,iter : ${rows}" th:href="@{/inspections/{no}(no=${inspection.no})}" href="/inspections/1">
-            <div class="bv-card-visual" th:classappend="| bv-card-visual--${iter.index % 5}|" aria-hidden="true"><span class="bv-card-inspection"></span><span class="bv-card-deck"></span></div>
-            <div class="bv-card-info"><strong th:text="${inspection.name}">점검1</strong><span th:text="|${inspection.province} ${inspection.city} · ${inspection.facilityType}|">경기도 가평군 · 제1종</span><span class="bv-card-footer"><time th:text="${#temporals.format(inspection.lastInspectionDate,'yyyy-MM-dd')}">2026-10-16</time><em class="bv-state" th:classappend="${inspection.status == '완료'} ? ' bv-state--done' : ''" th:text="${inspection.status}">진행 중</em></span></div>
-          </a>
-        </div>
-        <div class="bv-blank" th:if="${totalCount > 0 and resultCount == 0}"><strong>검색 결과 없음</strong><p>다른 조건으로 검색하거나 필터를 초기화해 주세요.</p><a class="bv-btn bv-btn-light" th:href="@{/inspections}" href="/inspections">검색 초기화</a></div>
-        <nav class="bv-pager" aria-label="교량 페이지 이동" th:if="${resultCount > 0}">
-          <a th:if="${hasPrev}" th:href="@{/inspections(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo - 1})}">이전</a><span th:unless="${hasPrev}" class="bv-disabled">이전</span>
-          <span th:text="|${pageNo} / ${totalPages}|">1 / 1</span>
-          <a th:if="${hasNext}" th:href="@{/inspections(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo + 1})}">다음</a><span th:unless="${hasNext}" class="bv-disabled">다음</span>
-        </nav>
-      </section>
+                <section class="bv-panel bv-figma-panel" aria-labelledby="bv-overview-title">
+                  <div class="bv-section-heading bv-figma-section-heading">
+                      <h2 id="bv-overview-title" class="bv-panel-title">점검 현황</h2>
+                      <!-- 점검 등록 페이지 이동 -->
+                      <a class="bv-btn bv-btn-primary" th:href="@{/inspections/new}">점검 등록</a>
+                  </div>
+
+                  <!-- 점검 상태별 탭 (경로를 /inspections 로 통일) -->
+                  <nav class="bv-tabs bv-figma-tabs" aria-label="점검 상태별 목록">
+                      <a th:classappend="${#strings.isEmpty(status)} ? ' is-active' : ''"
+                        th:href="@{/inspections(keyword=${keyword})}">
+                          전체 <strong th:text="${totalCount}">0</strong>
+                      </a>
+                      <a th:classappend="${status == '진행 중'} ? ' is-active' : ''"
+                        th:href="@{/inspections(keyword=${keyword}, status='진행 중')}">
+                          진행 중 <strong th:text="${progressCount}">0</strong>
+                      </a>
+                      <a th:classappend="${status == '완료'} ? ' is-active' : ''"
+                        th:href="@{/inspections(keyword=${keyword}, status='완료')}">
+                          완료 <strong th:text="${completedCount}">0</strong>
+                      </a>
+                      <a th:classappend="${status == '진행 대기'} ? ' is-active' : ''"
+                        th:href="@{/inspections(keyword=${keyword}, status='진행 대기')}">
+                          진행 대기 <strong th:text="${pendingCount}">0</strong>
+                      </a>
+                  </nav>
+
+                  <!-- 결과 없음 화면 -->
+                  <div class="bv-blank bv-figma-empty" th:if="${resultCount == 0}">
+                      <strong th:text="${totalCount == 0} ? '등록된 점검 내역이 없습니다.' : '검색 결과가 없습니다.'">검색 결과 없음</strong>
+                      <p th:text="${totalCount == 0} ? '신규 점검 항목을 등록하여 관리해 보세요.' : '검색 조건을 바꾸거나 필터를 초기화해 주세요.'">안내</p>
+                      <a class="bv-btn bv-btn-light" th:if="${totalCount > 0}" th:href="@{/inspections}">검색 초기화</a>
+                  </div>
+
+                  <!-- 점검 목록 카드 그리드 -->
+                  <div class="bv-card-grid bv-figma-card-grid" th:if="${resultCount > 0}">
+                      <a class="bv-maintenance-card" th:each="inspection, iter : ${rows}"
+                        th:href="@{/inspections/{id}(id=${inspection.id})}">
+                          
+                          <div class="bv-card-visual" th:classappend="| bv-card-visual--${iter.index % 5}|">
+                              <span class="bv-card-maintenance" aria-hidden="true"></span>
+                              <span class="bv-card-deck" aria-hidden="true"></span>
+                          </div>
+
+                          <div class="bv-card-info">
+                              <strong th:text="${inspection.keyword}">교량명</strong>
+                              <span class="bv-card-type" th:text="${inspection.inspectionType}">정기점검</span>
+                              <span class="bv-card-title" th:text="${#strings.isEmpty(inspection.safetyMemo) ? '상세 메모 없음' : inspection.safetyMemo}">점검 기록 내용</span>
+                              <span class="bv-card-meta" th:text="|담당 ${inspection.inspector}|">담당자</span>
+                              
+                              <span class="bv-card-footer">
+                                  <span class="bv-card-risk" th:text="|위험도: ${inspection.risk ?: '미평가'}|">위험도: 보통</span>
+                                  <em class="bv-state" th:classappend="${inspection.status == '완료'} ? ' bv-state--done' : ''"
+                                      th:text="${inspection.status}">진행 중</em>
+                              </span>
+                          </div>
+                      </a>
+                  </div>
+
+                  <!-- 페이징 네비게이션 (경로를 /inspections 로 통일) -->
+                  <nav class="bv-pager" aria-label="점검 목록 페이지 이동" th:if="${resultCount > 0}">
+                      <a th:if="${hasPrev}"
+                        th:href="@{/inspections(keyword=${keyword}, status=${status}, page=${pageNo - 1})}">이전</a>
+                      <span th:unless="${hasPrev}" class="bv-disabled">이전</span>
+
+                      <span th:text="|${pageNo} / ${totalPages}|">1 / 1</span>
+
+                      <a th:if="${hasNext}"
+                        th:href="@{/inspections(keyword=${keyword}, status=${status}, page=${pageNo + 1})}">다음</a>
+                      <span th:unless="${hasNext}" class="bv-disabled">다음</span>
+                  </nav>
+              </section>
             </div>
         </main>
+
+        <!-- <script src="/js/maintenance-list.js"></script> -->
     </div>
 </body>
 </html>

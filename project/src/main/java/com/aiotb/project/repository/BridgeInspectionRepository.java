@@ -1,6 +1,5 @@
 package com.aiotb.project.repository;
 
-<<<<<<< HEAD
 import com.aiotb.project.domain.BridgeInspectionEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -8,14 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-=======
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import com.aiotb.project.domain.BridgeInspectionEntity; // 밑에서 만들 엔티티
-
-@Repository 
->>>>>>> origin/hsj
 public interface BridgeInspectionRepository extends JpaRepository<BridgeInspectionEntity, Long> {
     long countByStatus(String status);
     Page<BridgeInspectionEntity> findByKeywordContainingAndStatus(String keyword, String status, Pageable pageable);

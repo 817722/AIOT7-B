@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 @Controller
 @RequiredArgsConstructor
 public class InspectionPageController {
-
+    private static final int PAGE_SIZE = 8;
     private final InspectionListViewService inspectionListViewService;
 
     @GetMapping("/inspections")
@@ -38,8 +38,7 @@ public class InspectionPageController {
             Model model) {
 
         // 1. 로그인한 기업의 교량 목록 조회
-        List<Map<String, Object>> rows =
-                inspectionListViewService.list(authentication.getName());
+        List<Map<String, Object>> rows = inspectionListViewService.list(authentication.getName());
 
         // 2. 검색 조건 적용
         List<Map<String, Object>> filtered = rows.stream()
@@ -60,12 +59,13 @@ public class InspectionPageController {
                 .filter(item -> {
                     LocalDate date = (LocalDate) item.get("lastInspectionDate");
 
-                    if (date == null) return year.isBlank() && month.isBlank();
+                    if (date == null)
+                        return year.isBlank() && month.isBlank();
 
                     return (year.isBlank()
                             || String.valueOf(date.getYear()).equals(year))
                             && (month.isBlank()
-                            || String.valueOf(date.getMonthValue()).equals(month));
+                                    || String.valueOf(date.getMonthValue()).equals(month));
                 })
                 .collect(Collectors.toCollection(ArrayList::new));
 
@@ -74,8 +74,7 @@ public class InspectionPageController {
 
         if ("dateDesc".equals(sort)) {
             comparator = Comparator.comparing(
-                    (Map<String, Object> item) ->
-                            (LocalDate) item.get("lastInspectionDate"),
+                    (Map<String, Object> item) -> (LocalDate) item.get("lastInspectionDate"),
                     Comparator.nullsLast(Comparator.reverseOrder()));
         } else {
             comparator = Comparator.comparing(
@@ -89,29 +88,31 @@ public class InspectionPageController {
 
         filtered.sort(comparator);
 
-        // 4. 페이지 처리 (한 페이지당 9개)
-        int pageSize = 9;
-        int totalCount = filtered.size();
-        int totalPages = Math.max(1,
-                (int) Math.ceil((double) totalCount / pageSize));
+        // 4. 페이지 처리
+        int resultCount = filtered.size();
+        int totalPages = Math.max(
+                1,
+                (resultCount + PAGE_SIZE - 1) / PAGE_SIZE);
+        int currentPage = Math.max(
+                1,
+                Math.min(page, totalPages));
+        int from = (currentPage - 1) * PAGE_SIZE;
+        int to = Math.min(from + PAGE_SIZE, resultCount);
 
-        int pageNo = Math.max(1, Math.min(page, totalPages));
-
-        int start = (pageNo - 1) * pageSize;
-        int end = Math.min(start + pageSize, totalCount);
-
-        List<Map<String, Object>> pageRows =
-                filtered.subList(start, end);
+        List<Map<String, Object>> pageRows = filtered.subList(from, to);
 
         // 5. Thymeleaf 화면에 데이터 전달
         model.addAttribute("rows", pageRows);
-        model.addAttribute("totalCount", totalCount);
-        model.addAttribute("resultCount", pageRows.size());
+        // 전체 점검 대상 교량 개수
+        model.addAttribute("totalCount", rows.size());
+        // 검색 조건에 해당하는 전체 결과 개수
+        model.addAttribute("resultCount", resultCount);
+        // 페이지 정보
         model.addAttribute("totalPages", totalPages);
-        model.addAttribute("pageNo", pageNo);
-
-        model.addAttribute("hasPrev", pageNo > 1);
-        model.addAttribute("hasNext", pageNo < totalPages);
+        model.addAttribute("pageNo", currentPage);
+        // 이전 / 다음 페이지
+        model.addAttribute("hasPrev", currentPage > 1);
+        model.addAttribute("hasNext", currentPage < totalPages);
 
         model.addAttribute("keyword", keyword);
         model.addAttribute("year", year);
@@ -122,6 +123,8 @@ public class InspectionPageController {
         model.addAttribute("sort", sort);
 
         model.addAttribute("activeMenu", "inspections");
+        // submenu.html은 currentMenuGroup 값으로 메뉴를 분기하므로 반드시 전달합니다.
+        model.addAttribute("currentMenuGroup", "inspections");
 
         return "page/inspections/list";
     }

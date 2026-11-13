@@ -22,6 +22,7 @@ import com.aiotb.project.service.inspections.InspectionListViewService;
 import com.aiotb.project.service.inspections.InspectionService;
 import com.aiotb.project.service.inspections.InspectionUiWriteService;
 import com.aiotb.project.service.inspections.InspectionVideoService;
+import com.aiotb.project.service.bridges.BridgeListViewService;
 import com.aiotb.project.service.users.CurrentUserService;
 
 import lombok.RequiredArgsConstructor;
@@ -35,11 +36,19 @@ public class InspectionFormPageController {
     private final InspectionService inspectionService;
     private final InspectionVideoService inspectionVideoService;
     private final CurrentUserService currentUserService;
+    private final BridgeListViewService bridgeListViewService;
 
     /** 1. 등록 폼 화면을 열어주는 메서드 (GET) */
     @GetMapping("/inspections/new")
-    public String create(Authentication authentication, Model model) {
+    public String create(
+            Authentication authentication,
+            @RequestParam(name = "bridgeNo", required = false) Long bridgeNo,
+            Model model) {
         setup(model, false, blank(), isAdmin(authentication));
+        String username = authentication == null ? null : authentication.getName();
+        model.addAttribute("bridgeOptions", bridgeListViewService.list(username));
+        model.addAttribute("managers", inspectionUiWriteService.managers(authentication));
+        model.addAttribute("selectedBridgeNo", bridgeNo);
         return "page/inspections/form";
     }
 

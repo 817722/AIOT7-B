@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.aiotb.project.service.common.WorkDatePolicy;
+
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -279,8 +281,10 @@ public class MaintenanceUiWriteService {
         if (!VALID_STATUSES.contains(payload.status())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효한 진행 상태를 선택해 주세요.");
         }
-        if (payload.maintenanceDate() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유지보수 작업일을 입력해 주세요.");
+        // 유지보수 진행 날짜: 필수, 1900-01-01 ~ 오늘(한국 시간). 미래 날짜·5자리 이상 연도 차단
+        String dateProblem = WorkDatePolicy.problem(payload.maintenanceDate(), "유지보수 진행 날짜");
+        if (dateProblem != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, dateProblem);
         }
         if (payload.managerNo() == null || payload.managerNo() <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "작업 담당자를 선택해 주세요.");

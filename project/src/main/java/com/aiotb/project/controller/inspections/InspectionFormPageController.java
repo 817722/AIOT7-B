@@ -111,7 +111,6 @@ public class InspectionFormPageController {
     @GetMapping("/inspections/{no}/edit")
     public String edit(@PathVariable("no") Long no, Authentication authentication, Model model) {
         setup(model, true, inspectionListViewService.detail(authentication.getName(), no), isAdmin(authentication));
-        model.addAttribute("managerHistory", inspectionUiWriteService.managerHistory(no, authentication));
         return "page/inspections/form";
     }
 

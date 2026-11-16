@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.aiotb.project.domain.media.Media; // 👈 Media 엔티티/enum 임포트 추가
+import com.aiotb.project.domain.media.Media;
 import com.aiotb.project.service.media.MediaService;
 import com.aiotb.project.service.media.MediaService.MediaInfo;
 import com.aiotb.project.service.users.CurrentUserService.Actor;
@@ -31,15 +31,17 @@ public class InspectionVideoService {
                 mediaService.saveFile(
                         file,
                         actor.corpNo(),
-                        Media.ParentType.INSPECTION, // 👈 Media.ParentType 으로 수정
+                        Media.ParentType.INSPECTION, // Media.ParentType 으로 수정
                         inspectionNo,
-                        actor.userNo()
+                        actor.userNo(),
+                        Media.MediaType.VIDEO // 드론 영상 업로드에는 영상(MP4·WebM)만 허용
                 );
             }
         }
     }
 
     public List<MediaInfo> getVideos(Long inspectionNo, Actor actor) {
-        return mediaService.getMediaList(Media.ParentType.INSPECTION, inspectionNo, actor); // 👈 Media.ParentType 으로 수정
+        // 영상 목록에는 영상만 반환 (사진 제외)
+        return mediaService.getMediaList(Media.ParentType.INSPECTION, inspectionNo, actor, Media.MediaType.VIDEO);
     }
 }

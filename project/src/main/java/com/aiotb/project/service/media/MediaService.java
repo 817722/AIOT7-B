@@ -57,11 +57,10 @@ public class MediaService {
     private long maxPhotoBytes;
     private static final int MAX_MAINTENANCE_PHOTOS = 20;
 
-
     /** 화면/API 응답용. 서버 저장 경로는 포함하지 않는다. */
     public record MediaInfo(Long no, String id, String parentType, Long parentId, String type,
-                            String originName, String mimeType, Long fileSize, Long uploadedBy,
-                            LocalDateTime createdAt) {
+            String originName, String mimeType, Long fileSize, Long uploadedBy,
+            LocalDateTime createdAt) {
         static MediaInfo of(Media m) {
             return new MediaInfo(m.getNo(), m.getId(), m.getParentType().name(), m.getParentId(),
                     m.getType().name(), m.getOriginName(), m.getMimeType(), m.getFileSize(),
@@ -69,9 +68,11 @@ public class MediaService {
         }
     }
 
-    public record StoredFile(Path path, String mimeType, String originName) { }
+    public record StoredFile(Path path, String mimeType, String originName) {
+    }
 
-    private record Detected(String ext, String mime, Media.MediaType type) { }
+    private record Detected(String ext, String mime, Media.MediaType type) {
+    }
 
     /**
      * 파일 저장 + media 레코드 등록.
@@ -79,6 +80,17 @@ public class MediaService {
      */
     @Transactional
     public Long saveFile(MultipartFile file, Long corpNo, Media.ParentType parentType, Long parentId, Long uploadedBy) {
+        return saveFile(file, corpNo, parentType, parentId, uploadedBy, null);
+    }
+
+    /**
+     * 파일 저장 + media 레코드 등록 (허용 종류 지정).
+     * expectedType 이 IMAGE 면 사진만, VIDEO 면 영상만 저장한다. null 이면 종류 제한 없음(공통 첨부 API).
+     * 종류는 확장자·Content-Type 이 아닌 실제 파일 헤더(시그니처)로 판별한다.
+     */
+    @Transactional
+    public Long saveFile(MultipartFile file, Long corpNo, Media.ParentType parentType, Long parentId, Long uploadedBy,
+            Media.MediaType expectedType) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("업로드할 파일을 선택해 주세요.");
         }
@@ -95,6 +107,12 @@ public class MediaService {
         }
 
         Detected detected = detect(file);
+        if (expectedType != null && detected.type() != expectedType) {
+            throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    expectedType == Media.MediaType.IMAGE
+                            ? "사진은 JPG·PNG·WebP 이미지 파일만 등록할 수 있습니다."
+                            : "드론 영상은 MP4·WebM 영상 파일만 등록할 수 있습니다.");
+        }
         if (parentType == Media.ParentType.MAINTENANCE
                 && detected.type() == Media.MediaType.IMAGE && file.getSize() > maxPhotoBytes) {
             throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "이미지는 5MB 이하로 업로드해 주세요.");
@@ -123,8 +141,10 @@ public class MediaService {
         // DB 저장이 실패(롤백)하면 방금 저장한 파일도 지운다.
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override public void afterCompletion(int status) {
-                    if (status != STATUS_COMMITTED) deleteQuietly(target);
+                @Override
+                public void afterCompletion(int status) {
+                    if (status != STATUS_COMMITTED)
+                        deleteQuietly(target);
                 }
             });
         }
@@ -189,7 +209,15 @@ public class MediaService {
         }
     }
 
-    /** 특정 기록의 첨부파일 목록 (소속 기업 기록만) */
+    /** 특정 기록의 첨부파일 목록 중 지정한 종류만 (소속 기업 기록만, type 이 null 이면 전체) */
+    @Transactional(readOnly = true)
+    public List<MediaInfo> getMediaList(Media.ParentType parentType, Long parentId, Actor actor, Media.MediaType type) {
+        return getMediaList(parentType, parentId, actor).stream()
+                .filter(media -> type == null || type.name().equals(media.type()))
+                .toList();
+    }
+
+    /** 특정 기록의 첨부파일 목록 (사진·영상 전체) */
     @Transactional(readOnly = true)
     public List<MediaInfo> getMediaList(Media.ParentType parentType, Long parentId, Actor actor) {
         requireParent(parentType, parentId, actor.corpNo());
@@ -202,7 +230,8 @@ public class MediaService {
     public StoredFile getFile(Long mediaNo, Actor actor) {
         Media media = find(mediaNo, actor);
         Path path = resolveExisting(media.getPath());
-        if (path == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "파일을 찾을 수 없습니다.");
+        if (path == null)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "파일을 찾을 수 없습니다.");
         return new StoredFile(path, media.getMimeType(), media.getOriginName());
     }
 
@@ -217,7 +246,10 @@ public class MediaService {
         mediaRepository.delete(media);
         if (file != null && TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override public void afterCommit() { deleteQuietly(file); }
+                @Override
+                public void afterCommit() {
+                    deleteQuietly(file);
+                }
             });
         }
     }
@@ -279,25 +311,33 @@ public class MediaService {
 
     /** media.path 를 실제 파일로 해석. 관리 중인 저장 폴더 안의 UUID 파일명만 허용한다. */
     private Path resolveExisting(String storedName) {
-        if (storedName == null || !STORED_NAME.matcher(storedName).matches()) return null;
+        if (storedName == null || !STORED_NAME.matcher(storedName).matches())
+            return null;
         for (String dir : List.of(storageDir, maintenanceVideoDir)) {
             Path base = Path.of(dir).toAbsolutePath().normalize();
             Path candidate = base.resolve(storedName).normalize();
-            if (candidate.startsWith(base) && Files.isRegularFile(candidate)) return candidate;
+            if (candidate.startsWith(base) && Files.isRegularFile(candidate))
+                return candidate;
         }
         return null;
     }
 
     private static String safeOriginalName(String name) {
-        if (name == null || name.isBlank()) return "upload";
+        if (name == null || name.isBlank())
+            return "upload";
         String normalized = name.replace('\\', '/');
         normalized = normalized.substring(normalized.lastIndexOf('/') + 1).replaceAll("[\\p{Cntrl}]", "").strip();
-        if (normalized.isBlank()) return "upload";
+        if (normalized.isBlank())
+            return "upload";
         return normalized.length() > 255 ? normalized.substring(normalized.length() - 255) : normalized;
     }
 
     private static void deleteQuietly(Path path) {
-        if (path == null) return;
-        try { Files.deleteIfExists(path); } catch (IOException ignored) { }
+        if (path == null)
+            return;
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException ignored) {
+        }
     }
 }

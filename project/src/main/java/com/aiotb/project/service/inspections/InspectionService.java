@@ -69,9 +69,10 @@ public class InspectionService {
 
                 // A. 기존 MediaService를 통한 파일 연동 저장 (단일 파라미터 파일)
                 if (request.getVideoInputSingle() != null && !request.getVideoInputSingle().isEmpty()) {
+                        // 드론 영상 칸에는 영상(MP4·WebM)만 허용
                         mediaService.saveFile(request.getVideoInputSingle(), actor.corpNo(),
                                         Media.ParentType.INSPECTION,
-                                        savedInspection.getNo(), actor.userNo());
+                                        savedInspection.getNo(), actor.userNo(), Media.MediaType.VIDEO);
                 }
 
                 // B. 다중 드론 영상/파일 리스트 추가 저장 (BridgeInspectionService 기능 흡수)
@@ -79,7 +80,7 @@ public class InspectionService {
                         for (MultipartFile file : request.getVideoInputMultiple()) {
                                 if (file != null && !file.isEmpty()) {
                                         mediaService.saveFile(file, actor.corpNo(), Media.ParentType.INSPECTION,
-                                                        savedInspection.getNo(), actor.userNo());
+                                                        savedInspection.getNo(), actor.userNo(), Media.MediaType.VIDEO);
                                 }
                         }
                 }

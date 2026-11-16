@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.aiotb.project.controller.inspections.InspectionController;
+import com.aiotb.project.controller.inspections.InspectionPhotoController;
+import com.aiotb.project.controller.inspections.InspectionVideoController;
 import com.aiotb.project.controller.maintenances.MaintenanceController;
 import com.aiotb.project.controller.media.MediaApiController;
 
@@ -26,7 +28,8 @@ import com.aiotb.project.controller.media.MediaApiController;
  * 인증/권한 예외(401/403)는 Spring Security가 처리하도록 여기서 잡지 않는다.
  */
 @RestControllerAdvice(assignableTypes = {
-        InspectionController.class, MaintenanceController.class, MediaApiController.class })
+        InspectionController.class, InspectionPhotoController.class, InspectionVideoController.class,
+        MaintenanceController.class, MediaApiController.class })
 public class ApiExceptionAdvice {
 
     @ExceptionHandler(IllegalArgumentException.class)

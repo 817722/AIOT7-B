@@ -13,16 +13,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.aiotb.project.dto.inspections.InspectionDto;
 import com.aiotb.project.service.inspections.InspectionService;
 import com.aiotb.project.service.users.CurrentUserService;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper; // JSON 문자열 변환용
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

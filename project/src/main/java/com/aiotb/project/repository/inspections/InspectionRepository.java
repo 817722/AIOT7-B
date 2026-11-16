@@ -25,4 +25,7 @@ public interface InspectionRepository extends JpaRepository<Inspection, Long> {
 
     // 5. 특정 교량의 점검 목록을 날짜 최신순으로 조회
     List<Inspection> findByBridgeNoAndCorpNoOrderByInspectionDateDesc(Long bridgeNo, Long corpNo);
+
+    // 6. 전체 점검 조회
+    List<Inspection> findByCorpNoOrderByInspectionDateDesc(Long corpNo);
 }

@@ -1,0 +1,1 @@
+(() => { 'use strict'; const form=document.querySelector('#in-filter-form'); if(!form)return; form.addEventListener('submit',()=>{const y=form.elements.year;if(y&&y.value && (+y.value<1900||+y.value>2100)){y.setCustomValidity('올바른 연도를 입력하세요.');}else if(y)y.setCustomValidity('');}); })();

@@ -18,7 +18,12 @@ import org.springframework.web.multipart.MultipartFile;
 import com.aiotb.project.service.bridges.BridgeRepresentativeImageService;
 import lombok.RequiredArgsConstructor;
 
-/** 승인된 동일 기업 사용자 대상 대표 이미지 전용 API. 교량 전체 삭제 API와 분리. */
+/**
+ * 교량 대표 이미지 API (/api/bridge-ui/{bridgeNo}/image).
+ * - 조회·등록·변경·삭제: 같은 기업의 승인된 사용자 모두 가능 (권한 종류 무관)
+ * - 기업 소유 확인은 BridgeRepresentativeImageService 에서 수행 (다른 기업 교량은 404)
+ * - 교량 자체 삭제(DELETE /api/bridge-ui/{no})는 BridgeUiWriteController 에서 ADMIN 전용으로 유지
+ */
 @RestController
 @RequestMapping("/api/bridge-ui/{bridgeNo}/image")
 @RequiredArgsConstructor
@@ -44,9 +49,10 @@ public class BridgeRepresentativeImageController {
                 .body(image.bytes());
     }
 
+    /** 대표 이미지만 삭제 (교량은 삭제하지 않음). CSRF 토큰 필요. */
     @DeleteMapping
-    public ResponseEntity<Void> delete(@PathVariable("bridgeNo") long bridgeNo, Authentication auth) {
-        images.delete(bridgeNo, auth);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    public ResponseEntity<Void> delete(@PathVariable("bridgeNo") long bridgeNo, Authentication authentication) {
+        images.delete(bridgeNo, authentication);
+        return ResponseEntity.noContent().build();
     }
 }

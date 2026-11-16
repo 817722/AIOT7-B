@@ -162,7 +162,7 @@ public class BridgeUiWriteService {
             return no;
         } catch (DataIntegrityViolationException ex) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "해당 교량이 이미 소속 기업에 등록됐거나 DB 제약조건을 충족하지 못했습니다.", ex);
+                "이미 우리 기업에 등록된 교량입니다.", ex);
         }
     }
 

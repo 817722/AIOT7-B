@@ -34,27 +34,27 @@ public class BridgeListViewService {
     private final UserRepository userRepository;
 
     private static final String BRIDGE_SQL = """
-        SELECT b.no, b.id, b.bridge_name AS bridge_name, b.manager_no,
-               b.province, b.city, b.facility_type, b.address,
-               b.road_name, b.last_inspection_date, b.created_at,
-               manager.manager_name AS manager_name,
-               (SELECT 1 FROM media img WHERE img.p_type='BRIDGE' AND img.p_id=b.no
-                     AND img.corp_no=b.corp_no AND img.is_main=1 LIMIT 1) AS has_main_image,
-               (SELECT i.status FROM inspections i
-                WHERE i.bridge_no = b.no AND i.corp_no = b.corp_no
-                ORDER BY i.inspection_date DESC, i.no DESC LIMIT 1) AS inspection_status
-          FROM bridges b
-          LEFT JOIN users manager ON manager.no = b.manager_no
-                                     AND manager.corp_no = b.corp_no
-         WHERE b.corp_no = ?
-        """;
+            SELECT b.no, b.id, b.bridge_name AS bridge_name, b.manager_no,
+                   b.province, b.city, b.facility_type, b.address,
+                   b.road_name, b.last_inspection_date, b.created_at,
+                   manager.manager_name AS manager_name,
+                   (SELECT 1 FROM media img WHERE img.p_type='BRIDGE' AND img.p_id=b.no
+                         AND img.corp_no=b.corp_no AND img.is_main=1 LIMIT 1) AS has_main_image,
+                   (SELECT i.status FROM inspections i
+                    WHERE i.bridge_no = b.no AND i.corp_no = b.corp_no
+                    ORDER BY i.inspection_date DESC, i.no DESC LIMIT 1) AS inspection_status
+              FROM bridges b
+              LEFT JOIN users manager ON manager.no = b.manager_no
+                                         AND manager.corp_no = b.corp_no
+             WHERE b.corp_no = ?
+            """;
 
     private long currentCorpNo(String username) {
         if (username == null || username.isBlank()) {
             throw new AccessDeniedException("로그인이 필요합니다.");
         }
         User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new AccessDeniedException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new AccessDeniedException("사용자를 찾을 수 없습니다."));
         if (!user.canUseService()) {
             throw new AccessDeniedException("기업 인증이 완료된 사용자만 접근할 수 있습니다.");
         }
@@ -66,7 +66,8 @@ public class BridgeListViewService {
     }
 
     private static String normalizeFacility(String raw) {
-        if (raw == null || raw.isBlank()) return "미분류";
+        if (raw == null || raw.isBlank())
+            return "미분류";
         return switch (raw.trim()) {
             case "01", "1", "제1종" -> "제1종";
             case "02", "2", "제2종" -> "제2종";
@@ -78,7 +79,7 @@ public class BridgeListViewService {
 
     private List<Map<String, Object>> findBridges(long corpNo, Long no) {
         String sql = BRIDGE_SQL + (no == null ? " ORDER BY b.no DESC" : " AND b.no = ?");
-        Object[] args = no == null ? new Object[] {corpNo} : new Object[] {corpNo, no};
+        Object[] args = no == null ? new Object[] { corpNo } : new Object[] { corpNo, no };
         return jdbcTemplate.query(sql, (rs, index) -> {
             Map<String, Object> row = new LinkedHashMap<>();
             long number = rs.getLong("no");
@@ -87,7 +88,8 @@ public class BridgeListViewService {
             String manager = rs.getString("manager_name");
             row.put("no", number);
             row.put("representativeImageUrl", rs.getObject("has_main_image") == null
-                    ? null : "/api/bridge-ui/" + number + "/image");
+                    ? null
+                    : "/api/bridge-ui/" + number + "/image");
             row.put("id", rs.getString("id"));
             row.put("code", String.valueOf(number));
             row.put("displayCode", "#" + number);
@@ -120,66 +122,96 @@ public class BridgeListViewService {
         return rows.get(0);
     }
 
-    public List<Map<String, Object>> inspections(String username, long bridgeNo) {
+    public List<Map<String, Object>> inspections(
+            String username, long bridgeNo) {
+
         long corpNo = currentCorpNo(username);
-        // 먼저 기업 소유 여부를 검사합니다.
+
+        // 먼저 기업 소유 여부 확인
         detail(username, bridgeNo);
+
         return jdbcTemplate.query("""
-            SELECT i.no, i.title, i.inspection_type, i.inspection_date, i.status,
-                   inspector.manager_name
-              FROM inspections i
-              LEFT JOIN users inspector ON inspector.no=i.inspector_no AND inspector.corp_no=i.corp_no
-             WHERE i.corp_no=? AND i.bridge_no=?
-             ORDER BY i.inspection_date DESC, i.no DESC
-            """, (rs, index) -> {
+                SELECT i.no, i.title, i.inspection_type,
+                       i.inspection_date, i.status,
+                       inspector.manager_name
+                  FROM inspections i
+                  LEFT JOIN users inspector
+                    ON inspector.no = i.inspector_no
+                   AND inspector.corp_no = i.corp_no
+                 WHERE i.corp_no = ?
+                   AND i.bridge_no = ?
+                 ORDER BY i.inspection_date DESC, i.no DESC
+                """, (rs, index) -> {
+
             Map<String, Object> item = new LinkedHashMap<>();
+
             long no = rs.getLong("no");
+
             item.put("displayCode", "#" + no);
             item.put("type", nonNull(rs.getString("inspection_type")));
+
             Date d = rs.getDate("inspection_date");
+
             item.put("date", d == null ? null : d.toLocalDate());
             item.put("inspector", nonNull(rs.getString("manager_name")));
             item.put("status", nonNull(rs.getString("status")));
             item.put("description", nonNull(rs.getString("title")));
             item.put("category", "점검");
+
             return item;
+
         }, corpNo, bridgeNo);
     }
 
-    public List<Map<String, Object>> maintenances(String username, long bridgeNo) {
+    public List<Map<String, Object>> maintenances(
+            String username, long bridgeNo) {
+
         long corpNo = currentCorpNo(username);
+
+        // 먼저 기업 소유 여부 확인
         detail(username, bridgeNo);
+
         return jdbcTemplate.query("""
-            SELECT m.no, m.title, m.maintenance_type, m.maintenance_date, m.status,
-                   manager.manager_name
-              FROM maintenance_records m
-              LEFT JOIN users manager ON manager.no=m.manager_no AND manager.corp_no=m.corp_no
-             WHERE m.corp_no=? AND m.bridge_no=?
-             ORDER BY m.maintenance_date DESC, m.no DESC
-            """, (rs, index) -> {
+                SELECT m.no, m.title, m.maintenance_type,
+                       m.maintenance_date, m.status,
+                       manager.manager_name
+                  FROM maintenance_records m
+                  LEFT JOIN users manager
+                    ON manager.no = m.manager_no
+                   AND manager.corp_no = m.corp_no
+                 WHERE m.corp_no = ?
+                   AND m.bridge_no = ?
+                 ORDER BY m.maintenance_date DESC, m.no DESC
+                """, (rs, index) -> {
+
             Map<String, Object> item = new LinkedHashMap<>();
+
             long no = rs.getLong("no");
-            item.put("no", no); // 유지보수 상세 화면 링크용
+
             item.put("displayCode", "#" + no);
             item.put("type", nonNull(rs.getString("maintenance_type")));
+
             Date d = rs.getDate("maintenance_date");
+
             item.put("date", d == null ? null : d.toLocalDate());
             item.put("manager", nonNull(rs.getString("manager_name")));
             item.put("status", nonNull(rs.getString("status")));
             item.put("description", nonNull(rs.getString("title")));
             item.put("category", "유지보수");
+
             return item;
+
         }, corpNo, bridgeNo);
     }
 
-    public List<Map<String, Object>> recentWork(List<Map<String,Object>> inspections,
-                                                   List<Map<String,Object>> maintenances) {
-        List<Map<String,Object>> list = new ArrayList<>();
+    public List<Map<String, Object>> recentWork(List<Map<String, Object>> inspections,
+            List<Map<String, Object>> maintenances) {
+        List<Map<String, Object>> list = new ArrayList<>();
         list.addAll(inspections);
         list.addAll(maintenances);
         list.sort(Comparator.comparing(
-            (Map<String,Object> row) -> (LocalDate) row.get("date"),
-            Comparator.nullsLast(Comparator.reverseOrder())));
+                (Map<String, Object> row) -> (LocalDate) row.get("date"),
+                Comparator.nullsLast(Comparator.reverseOrder())));
         return list.stream().limit(5).toList();
     }
 }

@@ -1,69 +1,12 @@
 (() => {
-  'use strict';
-  const main = document.getElementById('main-content');
-  if (!main) return;
-  const params = new URLSearchParams(location.search);
-  const id = main.dataset.inspectionId || params.get('id') || '';
-  const no = main.dataset.inspectionNo || location.pathname.split('/').filter(Boolean).pop();
-  const message = document.getElementById('in-detail-message');
-  const photoWrap = document.getElementById('in-detail-photos');
-  const videoList = document.getElementById('in-detail-videos');
-  const player = document.getElementById('in-detail-player');
-  const playerEmpty = document.getElementById('in-player-empty');
-  const editLink = document.getElementById('in-detail-edit');
-  function setText(id, value) { const node = document.getElementById(id); if (node) node.textContent = value == null || value === '' ? '-' : String(value); }
-  async function getJson(url) {
-    const response = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
-    if (!response.ok) throw new Error(`조회 실패 (${response.status})`);
-    return response.json();
-  }
-  function mediaUrl(item) { return `/api/media/file/${encodeURIComponent(item.no)}`; }
-  async function load() {
-    if (!id) {
-      message.textContent = '점검 UUID가 연결되지 않았습니다. 상세 페이지 컨트롤러에서 inspectionId를 Thymeleaf 모델로 전달해야 합니다.';
-      message.classList.add('is-error'); return;
-    }
-    try {
-      const record = await getJson(`/api/inspections/${encodeURIComponent(id)}`);
-      setText('detail-bridge-name', record.bridgeName);
-      setText('detail-bridge-no', record.bridgeNo);
-      setText('detail-title', record.title);
-      setText('detail-type', record.inspectionType);
-      setText('detail-date', record.inspectionDate);
-      setText('detail-status', record.status);
-      setText('detail-inspector', record.inspectorNo);
-      setText('detail-overall-result', record.overallResult);
-      setText('detail-memo', record.memo);
-      if (editLink) editLink.href = `/inspections?inspectionId=${encodeURIComponent(id)}`;
-      message.textContent = '점검 상세 정보를 불러왔습니다.';
-      const [photos, videos] = await Promise.all([
-        getJson(`/api/inspections/photos/${encodeURIComponent(record.no)}`).catch(() => []),
-        getJson(`/api/inspections/videos/${encodeURIComponent(record.no)}`).catch(() => [])
-      ]);
-      photoWrap.replaceChildren();
-      if (!photos.length) photoWrap.textContent = '등록된 증거 사진이 없습니다.';
-      photos.filter(photo => photo.type === 'IMAGE' || (photo.mimeType || '').startsWith('image/')).forEach(photo => {
-        const link = document.createElement('a'); link.className = 'in-photo-card'; link.href = mediaUrl(photo); link.target = '_blank'; link.rel = 'noopener';
-        const img = document.createElement('img'); img.src = mediaUrl(photo); img.alt = photo.originName || '점검 증거 사진';
-        const caption = document.createElement('span'); caption.textContent = photo.originName || `사진 #${photo.no}`;
-        link.append(img, caption); photoWrap.append(link);
-      });
-      videoList.replaceChildren();
-      if (!videos.length) videoList.append(Object.assign(document.createElement('li'), { textContent: '등록된 영상이 없습니다.' }));
-      videos.forEach(video => {
-        const li = document.createElement('li');
-        const button = document.createElement('button'); button.type = 'button'; button.className = 'in-video-choice';
-        button.textContent = video.originName || `영상 #${video.no}`;
-        button.addEventListener('click', () => {
-          player.src = mediaUrl(video); player.hidden = false; playerEmpty.hidden = true;
-          player.load(); player.play().catch(() => {});
-        });
-        li.append(button); videoList.append(li);
-      });
-    } catch (error) {
-      message.textContent = `${error.message}. 점검 페이지 URL의 id 파라미터와 API 응답을 확인해 주세요.`;
-      message.classList.add('is-error');
-    }
-  }
-  load();
+'use strict';const main=document.querySelector('#main-content');if(!main)return;const bridge=main.dataset.bridgeNo,$=id=>document.getElementById(id);let current=null;const csrf=document.querySelector('meta[name="_csrf"]')?.content, csrfHeader=document.querySelector('meta[name="_csrf_header"]')?.content;
+async function json(url,opts={}){const h={Accept:'application/json',...(opts.headers||{})};if(opts.method&&csrf&&csrfHeader)h[csrfHeader]=csrf;const r=await fetch(url,{credentials:'same-origin',...opts,headers:h});if(!r.ok)throw Error(`요청 처리 실패 (${r.status})`);return r.status===204?null:r.json();}
+function text(id,value){const e=$(id);if(e)e.textContent=value||'-';}
+function mediaUrl(no){return `/api/media/file/${encodeURIComponent(no)}`;}
+function addMedia(m,target){const a=document.createElement('a');a.className='in-photo-card';a.href=mediaUrl(m.no);a.target='_blank';a.rel='noopener';const img=document.createElement('img');img.src=a.href;img.alt=m.originName||'점검 사진';img.loading='lazy';const name=document.createElement('span');name.textContent=m.originName||`사진 #${m.no}`;a.append(img,name);target.append(a);}
+async function select(no){const panel=$('in-record-detail');panel.hidden=false;text('in-detail-message','기록 조회 중...');document.querySelectorAll('.in-record-row').forEach(x=>x.classList.toggle('is-selected',x.dataset.recordNo===String(no)));try{const all=await json(`/api/inspections/bridge/${encodeURIComponent(bridge)}`);const found=all.find(r=>String(r.no)===String(no));if(!found)throw Error('선택한 점검 기록을 찾을 수 없습니다.');const record=await json(`/api/inspections/${encodeURIComponent(found.id)}`);current=record;text('detail-title',record.title);text('detail-type',record.inspectionType);text('detail-date',record.inspectionDate);text('detail-status',record.status);text('detail-inspector',String(record.inspectorNo||''));text('detail-overall-result',record.overallResult);text('detail-memo',record.memo);$('in-detail-edit').href=`/inspections/new?id=${encodeURIComponent(record.id)}`;history.replaceState(null,'',`/inspections/${bridge}?inspectionId=${encodeURIComponent(record.id)}`);
+const [photos,videos]=await Promise.all([json(`/api/inspections/photos/${no}`).catch(()=>[]),json(`/api/inspections/videos/${no}`).catch(()=>[])]);const gallery=$('in-detail-photos'),videoList=$('in-detail-videos'),player=$('in-detail-player');gallery.replaceChildren();videoList.replaceChildren();player.pause();player.removeAttribute('src');player.load();player.hidden=true;$('in-player-empty').hidden=false;const images=photos.filter(m=>m.type==='IMAGE'||(m.mimeType||'').startsWith('image/'));if(!images.length)gallery.textContent='등록된 현장 사진이 없습니다.';else images.forEach(m=>addMedia(m,gallery));if(!videos.length){const li=document.createElement('li');li.textContent='등록된 드론 영상이 없습니다.';videoList.append(li);}for(const v of videos){const li=document.createElement('li'),button=document.createElement('button');button.type='button';button.className='in-video-choice';button.textContent=v.originName||`영상 #${v.no}`;button.addEventListener('click',()=>{player.src=mediaUrl(v.no);player.hidden=false;$('in-player-empty').hidden=true;player.load();});li.append(button);videoList.append(li);}text('in-detail-message','점검 기록 및 첨부 자료');panel.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){text('in-detail-message',e.message);}}
+document.querySelectorAll('.in-record-row').forEach(b=>b.addEventListener('click',()=>select(b.dataset.recordNo)));
+$('in-detail-delete')?.addEventListener('click',async()=>{if(!current||!confirm(`'${current.title}' 점검 기록을 삭제하시겠습니까? 첨부파일이 있으면 먼저 삭제해야 합니다.`))return;try{await json(`/api/inspections/${encodeURIComponent(current.id)}`,{method:'DELETE'});location.assign('/inspections');}catch(e){const m=$('in-delete-message');m.textContent=`삭제 실패: ${e.message}. 첨부파일이 있다면 관리자 권한으로 먼저 정리해야 합니다.`;m.hidden=false;}});
+(async()=>{const id=new URLSearchParams(location.search).get('inspectionId');if(!id)return;try{const list=await json(`/api/inspections/bridge/${encodeURIComponent(bridge)}`);const r=list.find(x=>x.id===id);if(r)await select(r.no);}catch(e){text('in-detail-message',e.message);}})();
 })();

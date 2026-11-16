@@ -495,6 +495,49 @@
   if (!editMode && !bridgeNoInput.value) findBridges();
   if (bridgeNoInput.value && !editMode) loadInspections(bridgeNoInput.value);
 
+  // v9: 등록·수정 공통 '진행 날짜' 입력은 달력으로만 선택합니다.
+  const maintenanceDateInput = document.getElementById('mv-date');
+  if (maintenanceDateInput) {
+    const openDatePicker = () => {
+      if (typeof maintenanceDateInput.showPicker === 'function') {
+        try { maintenanceDateInput.showPicker(); }
+        catch (_) { /* 미지원 브라우저에서는 기본 달력 아이콘 이용 */ }
+      }
+    };
+    maintenanceDateInput.addEventListener('keydown', event => {
+      if (['Tab', 'Escape', 'Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) return;
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openDatePicker();
+        return;
+      }
+      // 연도·월·일 직접 입력과 방향키를 이용한 숫자 변경 차단.
+      event.preventDefault();
+    });
+    maintenanceDateInput.addEventListener('beforeinput', event => {
+      if (event.cancelable && event.inputType && (
+          event.inputType === 'insertText' ||
+          event.inputType === 'insertFromPaste' ||
+          event.inputType.startsWith('delete'))) event.preventDefault();
+    });
+    maintenanceDateInput.addEventListener('paste', event => event.preventDefault());
+    maintenanceDateInput.addEventListener('drop', event => event.preventDefault());
+    maintenanceDateInput.addEventListener('click', openDatePicker);
+  }
+
+  // DB를 수정하지 않고 클라이언트에서 4자리 연도와 날짜 유효성을 추가 검증.
+  function validMaintenanceDate(input) {
+    if (!input || input.validity.badInput || !input.validity.valid) return false;
+    const value = input.value;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    if (value < '1900-01-01' || value > '9999-12-31') return false;
+    const [year, month, day] = value.split('-').map(Number);
+    const parsed = new Date(Date.UTC(year, month - 1, day));
+    return parsed.getUTCFullYear() === year &&
+           parsed.getUTCMonth() === month - 1 &&
+           parsed.getUTCDate() === day;
+  }
+
   form.addEventListener('submit', async event => {
     event.preventDefault();
     if (!form.checkValidity()) { form.reportValidity(); return; }
@@ -505,6 +548,11 @@
     }
     if (!Number.isSafeInteger(managerNo) || managerNo <= 0) {
       showMessage('담당자를 선택해 주세요.'); return;
+    }
+    if (!validMaintenanceDate(maintenanceDateInput)) {
+      showMessage('진행 날짜는 달력에서 올바른 날짜를 선택해 주세요. (연도 4자리)');
+      maintenanceDateInput?.focus();
+      return;
     }
     const compiledMemo = packMemo();
     if (compiledMemo.length > 20000) { showMessage('현장 일지와 추가정보는 합쳐서 20,000자 이하여야 합니다.'); return; }

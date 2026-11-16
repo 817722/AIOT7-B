@@ -88,6 +88,7 @@ public class InspectionDto {
             this.inspectorNo = inspection.getInspectorNo();
             this.memo = inspection.getInspectionMemo();
             this.overallResult = inspection.getOverallResult();
+            this.reviewOpinion = inspection.getReviewOpinion();
         }
     }
 }

@@ -1,52 +1,113 @@
-<!doctype html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
-    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
-    <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
-    <link rel="stylesheet" th:href="@{/css/inspection-v2.css(v=5)}" href="/css/inspection-v2.css?v=5">
-    <title>점검 목록 | 교량 점검 시스템</title>
-    <script defer th:src="@{/js/inspection-list.js(v=5)}" src="/js/inspection-list.js?v=5"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>점검 목록 | 교량점검 시스템</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
+  <link rel="stylesheet" th:href="@{/css/inspection-v2.css(v=10)}" href="/css/inspection-v2.css?v=10">
+  <script defer th:src="@{/js/inspection-list.js(v=5)}" src="/js/inspection-list.js?v=5"></script>
 </head>
-
 <body>
-    <div th:replace="~{fragments/header :: header}"></div>
-    <div class="app-layout" th:with="activeMenu='inspections'">
-        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-        <main class="app-main inspection-v2">
-            <div class="app-container">
-                <div th:replace="~{fragments/submenu :: submenu(activeMenu='/inspections')}"></div>
-                <header class="in-hero">
-                    <div><span class="in-eyebrow">INSPECTION ARCHIVE</span>
-                        <h1>점검 기록 관리</h1>
-                        <p>우리 기업의 점검 대상 교량과 과거 안전점검 이력을 한곳에서 관리합니다.</p>
-                    </div><a class="bv-btn bv-btn-primary" th:href="@{/inspections/new}">+ 점검 기록 작성</a>
-                </header>
-                <div class="in-stats">
-                    <div><span>등록된 점검 대상 교량</span><strong th:text="${totalCount}">0</strong></div>
-                    <div><span>현재 검색 결과</span><strong th:text="${resultCount}">0</strong></div>
-                    <div><span>현재 페이지</span><strong th:text="|${pageNo} / ${totalPages}|">1 / 1</strong></div>
-                </div>
-                <section class="bv-panel">
-                    <div class="in-section-head">
-                        <div>
-                            <h2>점검 대상 검색</h2>
-                            <p>교량명·소재지와 최근 점검일 기준으로 찾을 수 있습니다.</p>
-                        </div>
-                    </div>
-                    <form id="in-filter-form" class="in-filters" method="get" th:action="@{/inspections}"><label>교량명 /
-                            주소<input name="keyword" placeholder="예: 한강대교, 서울"
-                                th:value="${keyword}"></label><label>시·도<input name="province" placeholder="시·도"
-                                th:value="${province}"></label><label>시·군·구<input name="city" placeholder="시·군·구"
-                                th:value="${city}"></label><label>점검 연도<input name="year" type="number" min="1900"
-                                max="2100" placeholder="전체" th:value="${year}"></label><label>점검 월<select name="month">
-                                <option value="">전체</option>
-                                <option
-                                    th:each="m : ${#numbers.sequence(1,12)}" th:value="${m}" th:text="|${m}월|" th:selected="${month == m.toString()}"></option></select></label><label>정렬<select name="sort"><option value="nameAsc" th:selected="${sort == 'nameAsc'}">교량명 오름차순</option><option value="nameDesc" th:selected="${sort == 'nameDesc'}">교량명 내림차순</option><option value="dateDesc" th:selected="${sort == 'dateDesc'}">최근 점검일순</option></select></label><div class="in-filter-actions"><button class="bv-btn bv-btn-primary" type="submit">검색</button><a class="bv-btn bv-btn-light" th:href="@{/inspections}">초기화</a></div></form></section>
-<section class="bv-panel"><div class="in-section-head"><div><h2>점검 교량 목록</h2><p>교량을 열어 점검 기록별 상세와 증거 자료를 확인하세요.</p></div><small th:text="|${resultCount}건 검색됨|">0건</small></div>
-<div class="in-bridge-grid" th:if="${!#lists.isEmpty(rows)}"><a class="in-bridge-card" th:each="row : ${rows}" th:href="@{/inspections/{no}(no=${row.no})}"><div class="in-bridge-art"><img th:if="${row.representativeImageUrl != null}" th:src="${row.representativeImageUrl}" alt="교량 대표 사진" loading="lazy"><span th:unless="${row.representativeImageUrl != null}" class="in-bridge-icon">▱</span><span class="in-image-chip" th:text="${row.facilityType}">시설 분류</span></div><div class="in-bridge-body"><div class="in-card-head"><h3 th:text="${row.name}">교량명</h3><span th:text="${row.displayCode}">#1</span></div><p th:text="|${row.province} ${row.city}|">지역</p><dl><dt>최근 점검</dt><dd th:text="${row.lastInspectionDate != null ? row.lastInspectionDate : '기록 없음'}">-</dd><dt>담당자</dt><dd th:text="${row.manager}">-</dd></dl><span class="in-view-detail">점검 이력 보기 →</span></div></a></div>
-<div class="bv-blank" th:if="${#lists.isEmpty(rows)}"><strong>검색 조건에 맞는 교량이 없습니다.</strong><p>다른 검색어를 입력하거나 검색 조건을 초기화해 주세요.</p></div>
-<nav class="in-pagination" aria-label="페이지 이동" th:if="${totalPages > 1}"><a th:if="${hasPrev}" th:href="@{/inspections(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo - 1})}">← 이전</a><span th:text="|${pageNo} / ${totalPages}|">1 / 1</span><a th:if="${hasNext}" th:href="@{/inspections(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo + 1})}">다음 →</a></nav></section></div></main></div></body></html>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="app-layout" th:with="activeMenu='inspections'">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="app-main inspection-v2 in-list-figma" id="main-content">
+    <div class="app-container">
+      <div th:replace="~{fragments/submenu :: submenu(activeMenu='/inspections')}"></div>
+      <h1 class="bv-title">점검 목록</h1>
+      <p class="bv-subtitle">소속 기업의 교량과 점검 이력을 조회합니다.</p>
+
+      <section class="bv-panel in-list-panel" aria-labelledby="in-list-filter-heading">
+        <h2 class="bv-panel-title" id="in-list-filter-heading">점검 조회</h2>
+        <form id="in-filter-form" method="get" th:action="@{/inspections}" class="in-list-filter-form">
+          <div class="in-list-filter-grid">
+            <label class="bv-field" for="in-keyword">
+              <span>교량명 / 주소</span>
+              <input id="in-keyword" type="search" name="keyword" th:value="${keyword}" placeholder="교량명 또는 주소 검색">
+            </label>
+            <label class="bv-field" for="in-province">
+              <span>시·도</span>
+              <input id="in-province" type="text" name="province" th:value="${province}" placeholder="전체 지역">
+            </label>
+            <label class="bv-field" for="in-city">
+              <span>시·군·구</span>
+              <input id="in-city" type="text" name="city" th:value="${city}" placeholder="전체 시·군·구">
+            </label>
+            <label class="bv-field" for="in-year">
+              <span>최근 점검 연도</span>
+              <input id="in-year" type="number" name="year" min="1900" max="2100" step="1" th:value="${year}" placeholder="전체 연도">
+            </label>
+            <label class="bv-field" for="in-month">
+              <span>최근 점검 월</span>
+              <select id="in-month" name="month">
+                <option value="">전체</option>
+                <option th:each="m : ${#numbers.sequence(1,12)}" th:value="${m}" th:text="|${m}월|" th:selected="${month == m.toString()}">1월</option>
+              </select>
+            </label>
+            <label class="bv-field" for="in-sort">
+              <span>정렬</span>
+              <select id="in-sort" name="sort">
+                <option value="nameAsc" th:selected="${sort == 'nameAsc'}">교량명 오름차순</option>
+                <option value="nameDesc" th:selected="${sort == 'nameDesc'}">교량명 내림차순</option>
+                <option value="dateDesc" th:selected="${sort == 'dateDesc'}">최근 점검일순</option>
+              </select>
+            </label>
+          </div>
+          <input type="hidden" name="facilityType" th:value="${facilityType}">
+          <div class="bv-form-actions in-list-filter-actions">
+            <button class="bv-btn bv-btn-primary" type="submit">조회</button>
+            <a class="bv-btn bv-btn-light" th:href="@{/inspections}">초기화</a>
+          </div>
+        </form>
+      </section>
+
+      <section class="bv-panel in-list-panel" aria-labelledby="in-list-overview-heading">
+        <div class="bv-section-heading in-list-heading">
+          <h2 class="bv-panel-title" id="in-list-overview-heading">점검 교량 현황</h2>
+          <a class="bv-btn bv-btn-primary" th:href="@{/inspections/new}">점검 기록 등록</a>
+        </div>
+        <div class="in-list-summary" aria-label="점검 교량 조회 현황">
+          <div><span>등록된 점검 대상 교량</span><strong th:text="${totalCount}">0</strong></div>
+          <div><span>검색 결과</span><strong th:text="${resultCount}">0</strong></div>
+        </div>
+        <div class="bv-blank in-list-empty" th:if="${#lists.isEmpty(rows)}">
+          <strong th:text="${totalCount == 0} ? '등록된 점검 대상 교량이 없습니다.' : '검색 결과가 없습니다.'">검색 결과가 없습니다.</strong>
+          <p th:text="${totalCount == 0} ? '교량 관리에서 교량을 등록한 후 점검 기록을 작성해 보세요.' : '검색 조건을 변경하거나 필터를 초기화해 주세요.'">조회 안내</p>
+          <a class="bv-btn bv-btn-light" th:if="${totalCount > 0}" th:href="@{/inspections}">검색 초기화</a>
+        </div>
+        <div class="bv-card-grid in-list-card-grid" th:unless="${#lists.isEmpty(rows)}">
+          <a class="bv-inspection-card in-list-card" th:each="bridge, iter : ${rows}"
+             th:href="@{/inspections/{no}(no=${bridge.no})}">
+            <div class="bv-card-visual" th:classappend="| bv-card-visual--${iter.index % 5}|">
+              <img class="in-list-cover" th:if="${bridge.representativeImageUrl != null and !#strings.isEmpty(bridge.representativeImageUrl)}"
+                   th:src="${bridge.representativeImageUrl}" th:alt="|${bridge.name} 대표 이미지|" loading="lazy">
+              <span class="bv-card-inspection" th:unless="${bridge.representativeImageUrl != null and !#strings.isEmpty(bridge.representativeImageUrl)}" aria-hidden="true"></span>
+              <span class="bv-card-deck" th:unless="${bridge.representativeImageUrl != null and !#strings.isEmpty(bridge.representativeImageUrl)}" aria-hidden="true"></span>
+            </div>
+            <div class="bv-card-info">
+              <strong th:text="${bridge.name}">교량명</strong>
+              <span class="in-list-card-type" th:text="${bridge.facilityType}">교량</span>
+              <span class="in-list-card-location" th:text="|${bridge.province} ${bridge.city}|">소재지</span>
+              <span class="in-list-card-manager" th:text="|담당 ${bridge.manager == null ? '-' : bridge.manager}|">담당 -</span>
+              <span class="bv-card-footer">
+                <time th:text="${bridge.lastInspectionDate == null ? '점검 기록 없음' : #temporals.format(bridge.lastInspectionDate, 'yyyy-MM-dd')}">최근 점검일</time>
+                <em class="in-list-card-link">이력 보기</em>
+              </span>
+            </div>
+          </a>
+        </div>
+        <nav class="bv-pager in-list-pager" aria-label="점검 교량 목록 페이지 이동" th:if="${totalPages > 1}">
+          <a th:if="${hasPrev}" th:href="@{/inspections(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo - 1})}">이전</a>
+          <span th:unless="${hasPrev}" class="bv-disabled">이전</span>
+          <span th:text="|${pageNo} / ${totalPages}|">1 / 1</span>
+          <a th:if="${hasNext}" th:href="@{/inspections(keyword=${keyword},year=${year},month=${month},province=${province},city=${city},facilityType=${facilityType},sort=${sort},page=${pageNo + 1})}">다음</a>
+          <span th:unless="${hasNext}" class="bv-disabled">다음</span>
+        </nav>
+      </section>
+      <p class="in-list-footnote">소속 기업의 교량과 점검 기록만 조회할 수 있습니다.</p>
+    </div>
+  </main>
+</div>
+</body>
+</html>

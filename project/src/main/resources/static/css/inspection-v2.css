@@ -156,3 +156,24 @@
 
 .inspection-v2 .in-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.inspection-v2 .in-detail-grid .in-full{grid-column:1/-1}.inspection-v2 .in-preline{white-space:pre-line}.inspection-v2 .in-record-row:focus-visible{outline:3px solid #2a9198;outline-offset:2px}.inspection-v2 #in-detail-player[hidden]{display:none}
 @media(max-width:600px){.inspection-v2 .in-detail-grid{grid-template-columns:1fr}.inspection-v2 .in-detail-grid .in-full{grid-column:auto}}
+
+/* 점검 필수항목 표시: label의 별표가 별도 flex 행을 차지하지 않도록 고정 */
+.inspection-v2 .in-field-label{display:inline-flex;align-items:baseline;gap:5px;line-height:1.5;min-height:18px}
+.inspection-v2 .in-field-label em{display:inline;font-weight:700}
+.inspection-v2 .in-video-entry{display:flex;align-items:center;gap:8px;min-width:0}
+.inspection-v2 .in-video-entry .in-video-choice{flex:1;min-width:0;overflow-wrap:anywhere}
+.inspection-v2 .in-media-delete{flex:none;border:1px solid #e4b6b6;background:#fff;color:#9c3535;border-radius:5px;padding:9px 11px;cursor:pointer;font-size:12px}
+.inspection-v2 .in-media-delete:hover{background:#fff3f3}
+.inspection-v2 .in-data-unavailable{color:#9b6742;font-weight:500}
+
+/* Pending photo selections in inspection create/edit forms */
+.inspection-v2 .in-file-item-removable{display:inline-flex;align-items:center;gap:8px;max-width:100%}
+.inspection-v2 .in-file-item-removable>span{overflow-wrap:anywhere}
+.inspection-v2 .in-queued-remove{border:1px solid #b6cbd1;border-radius:4px;background:#fff;padding:3px 7px;cursor:pointer;color:#365c66;flex-shrink:0;font:inherit}
+.inspection-v2 .in-queued-remove:hover{background:#e7f1f3}
+
+/* Inspection photo deletion: separate action from the image preview link. */
+.inspection-v2 .in-photo-entry{display:flex;flex-direction:column;gap:7px;min-width:0}
+.inspection-v2 .in-photo-entry .in-photo-card{flex:1}
+.inspection-v2 .in-photo-delete{align-self:flex-start;padding:6px 10px}
+.inspection-v2 .in-media-delete:disabled{opacity:.55;cursor:wait}

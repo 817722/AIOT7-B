@@ -7,9 +7,9 @@
     <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
     <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
     <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
-    <link rel="stylesheet" th:href="@{/css/inspection-v2.css(v=5)}" href="/css/inspection-v2.css?v=5">
+    <link rel="stylesheet" th:href="@{/css/inspection-v2.css(v=7)}" href="/css/inspection-v2.css?v=7">
     <title th:text="${editMode} ? '점검 기록 수정' : '점검 기록 등록'">점검 기록 등록</title>
-    <script defer th:src="@{/js/inspection-form.js(v=5)}" src="/js/inspection-form.js?v=5"></script>
+    <script defer th:src="@{/js/inspection-form.js(v=7)}" src="/js/inspection-form.js?v=7"></script>
 </head>
 
 <body>
@@ -35,7 +35,7 @@
                         </div>
                     </div>
                     <section class="bv-panel">
-                        <div class="in-form-grid"><label class="in-field in-wide">대상 교량 <em>*</em>
+                        <div class="in-form-grid"><label class="in-field in-wide"><span class="in-field-label">대상 교량 <em aria-label="필수">*</em></span>
                                 <div class="in-bridge-picker"><select id="in-bridge-no" name="bridgeNo" required
                                         th:disabled="${editMode}">
                                         <option value="">등록된 교량 선택</option>
@@ -44,22 +44,21 @@
                                             th:selected="${selectedBridgeNo != null and selectedBridgeNo == b.no}">교량
                                         </option>
                                     </select></div><small>소속 기업에 등록된 교량만 선택할 수 있습니다.</small>
-                            </label><label class="in-field in-wide">점검 기록명 <em>*</em><input id="in-title" name="title"
+                            </label><label class="in-field in-wide"><span class="in-field-label">점검 기록명 <em aria-label="필수">*</em></span><input id="in-title" name="title"
                                     maxlength="255" required placeholder="예: 2026년 하반기 정기 안전점검"></label><label
-                                class="in-field">점검 유형 <em>*</em><select id="in-type" name="inspectionType" required>
+                                class="in-field"><span class="in-field-label">점검 유형 <em aria-label="필수">*</em></span><select id="in-type" name="inspectionType" required>
                                     <option value="">점검 유형 선택</option>
                                     <option>자체 안전점검</option>
                                     <option>정기 안전점검</option>
                                     <option>정밀 안전진단</option>
                                     <option>긴급 안전점검</option>
-                                </select></label><label class="in-field">점검 일자 <em>*</em><input id="in-date"
-                                    name="inspectionDate" type="date" required></label><label class="in-field">담당자
-                                <em>*</em><select id="in-inspector-no" name="inspectorNo" required>
+                                </select></label><label class="in-field"><span class="in-field-label">점검 일자 <em aria-label="필수">*</em></span><input id="in-date"
+                                    name="inspectionDate" type="date" min="1900-01-01" required></label><label class="in-field"><span class="in-field-label">담당자 <em aria-label="필수">*</em></span><select id="in-inspector-no" name="inspectorNo" required>
                                     <option value="">담당자 선택</option>
                                     <option th:each="m : ${managers}" th:value="${m.no}" th:text="${m.name}">담당자
                                     </option>
                                 </select><small
                                     th:if="${#lists.isEmpty(managers)}">활성 사용자 목록을 확인할 수 없습니다. 담당자 등록 상태를 확인해 주세요.</small></label><label class="in-field">진행 상태<select id="in-status" name="status"><option>진행 대기</option><option>진행 중</option><option>완료</option></select></label></div></section>
 <div class="in-form-step"><span>02</span><div><h2>점검 결과 · 현장 기록</h2><p>확인된 사실과 후속 조치 의견을 작성합니다.</p></div></div><section class="bv-panel"><div class="in-form-grid"><label class="in-field in-wide">종합 점검 결과<textarea id="in-overall-result" name="overallResult" rows="4" placeholder="시설물 상태와 주요 발견 사항을 요약해 주세요."></textarea></label><label class="in-field in-wide">현장 점검 메모<textarea id="in-memo" name="memo" rows="5" placeholder="균열, 파손, 부식 등 관찰 내용을 기록해 주세요."></textarea></label><label class="in-field in-wide">검토 의견 / 후속 조치<textarea id="in-review-opinion" name="reviewOpinion" rows="4" placeholder="추가 점검 필요 여부 및 권고 사항"></textarea></label></div></section>
-<div class="in-form-step"><span>03</span><div><h2>현장 자료 첨부</h2><p>파일은 실제 저장 API에 연결됩니다.</p></div></div><section class="bv-panel"><div class="in-attachment-grid"><label class="in-file-drop">📷 <strong>현장 사진</strong><span>여러 이미지 선택 가능</span><input id="in-photo-files" type="file" multiple accept="image/jpeg,image/png,image/webp"></label><label class="in-file-drop">▶ <strong>대표 드론 영상</strong><span>영상 파일 1개 선택</span><input id="in-video-single" name="videoInputSingle" type="file" accept="video/mp4,video/webm"></label><label class="in-file-drop">▤ <strong>추가 드론 영상</strong><span>여러 영상 선택 가능</span><input id="in-video-multiple" name="videoInputMultiple" type="file" multiple accept="video/mp4,video/webm"></label></div><div id="in-video-preview-list" class="in-file-list" aria-live="polite">선택된 파일이 없습니다.</div><p class="bv-help">기록 생성 후 사진은 공통 미디어 API로 등록됩니다. 수정 시 영상도 별도 API로 추가합니다. 첨부파일은 이 화면에서 삭제되지 않습니다.</p></section>
+<div class="in-form-step"><span>03</span><div><h2>현장 자료 첨부</h2><p>파일은 실제 저장 API에 연결됩니다.</p></div></div><section class="bv-panel"><div class="in-attachment-grid"><label class="in-file-drop">📷 <strong>현장 사진</strong><span>여러 장을 한 번에 선택하거나 추가 선택 가능</span><input id="in-photo-files" type="file" multiple accept="image/jpeg,image/png,image/webp"></label><label class="in-file-drop">▶ <strong>대표 드론 영상</strong><span>영상 파일 1개 선택</span><input id="in-video-single" name="videoInputSingle" type="file" accept="video/mp4,video/webm"></label><label class="in-file-drop">▤ <strong>추가 드론 영상</strong><span>여러 영상 선택 가능</span><input id="in-video-multiple" name="videoInputMultiple" type="file" multiple accept="video/mp4,video/webm"></label></div><div id="in-video-preview-list" class="in-file-list" aria-live="polite">선택된 파일이 없습니다.</div><p class="bv-help">사진은 여러 차례 선택해도 목록에 누적됩니다. 잘못 고른 사진은 ‘제외’를 누르세요. 기록 생성 후 사진은 공통 미디어 API로 등록됩니다. 수정 시 영상도 별도 API로 추가합니다. 첨부파일은 이 화면에서 삭제되지 않습니다.</p></section>
 <div id="in-form-message" class="in-message" role="status" aria-live="polite" hidden></div><div class="in-form-footer"><a class="bv-btn bv-btn-light" th:href="@{/inspections}">취소</a><button class="bv-btn bv-btn-primary" id="in-submit" type="submit" th:text="${editMode} ? '변경사항 저장' : '점검 기록 등록'">점검 기록 등록</button></div></form></div></main></div></body></html>

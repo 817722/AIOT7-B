@@ -17,6 +17,7 @@ import com.aiotb.project.dto.maintenance.MaintenanceDto;
 import com.aiotb.project.repository.bridges.BridgeRepository;
 import com.aiotb.project.repository.maintenance.MaintenanceRepository;
 import com.aiotb.project.repository.users.UserRepository;
+import com.aiotb.project.service.common.WorkDatePolicy;
 import com.aiotb.project.service.media.MediaService;
 import com.aiotb.project.service.users.CurrentUserService.Actor;
 
@@ -36,18 +37,19 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     @Transactional
     public String create(MaintenanceDto.Request r, Actor actor) {
         validateType(r.getMaintenanceType());
+        WorkDatePolicy.require(r.getMaintenanceDate(), "유지보수 진행 날짜");
         requireBridge(r.getBridgeNo(), actor);
         requireSameCorpActiveUser(r.getManagerNo(), actor);
 
         Maintenance m = new Maintenance(
-                r.getBridgeNo(),       // bridgeNo (같은 기업 교량 확인 완료)
-                actor.corpNo(),        // corpNo  (로그인 사용자 기업)
+                r.getBridgeNo(), // bridgeNo (같은 기업 교량 확인 완료)
+                actor.corpNo(), // corpNo (로그인 사용자 기업)
                 r.getTitle().strip(),
                 r.getMaintenanceType(),
                 r.getMemo(),
                 r.getMaintenanceDate(),
                 r.getManagerNo(),
-                actor.userNo()         // createdBy (로그인 사용자)
+                actor.userNo() // createdBy (로그인 사용자)
         );
         return repository.save(m).getId();
     }
@@ -74,13 +76,15 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     @Transactional
     public void update(String id, MaintenanceDto.Request r, Actor actor) {
         validateType(r.getMaintenanceType());
+        WorkDatePolicy.require(r.getMaintenanceDate(), "유지보수 진행 날짜");
         Maintenance m = find(id, actor);
         if (!Objects.equals(m.getBridgeNo(), r.getBridgeNo())) {
             throw new IllegalArgumentException("유지보수 대상 교량은 변경할 수 없습니다.");
         }
         // 담당자 변경은 기업 관리자(ADMIN)만 가능
         if (!Objects.equals(m.getManagerNo(), r.getManagerNo())) {
-            if (!actor.admin()) throw new AccessDeniedException("담당자 변경은 기업 관리자만 할 수 있습니다.");
+            if (!actor.admin())
+                throw new AccessDeniedException("담당자 변경은 기업 관리자만 할 수 있습니다.");
             requireSameCorpActiveUser(r.getManagerNo(), actor);
         }
         m.update(r.getTitle().strip(), r.getMaintenanceType(), r.getMemo(), r.getMaintenanceDate(),
@@ -107,7 +111,8 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     private void requireBridge(Long bridgeNo, Actor actor) {
         boolean ok = bridgeNo != null && bridgeRepository.findById(bridgeNo)
                 .filter(b -> Objects.equals(b.getCorpNo(), actor.corpNo())).isPresent();
-        if (!ok) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "교량을 찾을 수 없습니다.");
+        if (!ok)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "교량을 찾을 수 없습니다.");
     }
 
     private void requireSameCorpActiveUser(Long userNo, Actor actor) {
@@ -115,7 +120,8 @@ public class MaintenanceServiceImpl implements MaintenanceService {
                 .filter(u -> Objects.equals(u.getCorp().getNo(), actor.corpNo()))
                 .filter(u -> u.getStatus() == User.Status.ACTIVE)
                 .isPresent();
-        if (!ok) throw new IllegalArgumentException("같은 기업의 활성 담당자를 선택해 주세요.");
+        if (!ok)
+            throw new IllegalArgumentException("같은 기업의 활성 담당자를 선택해 주세요.");
     }
 
     private void validateType(String type) {

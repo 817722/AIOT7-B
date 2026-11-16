@@ -188,6 +188,7 @@ public class BridgeListViewService {
 
             long no = rs.getLong("no");
 
+            item.put("no", no); // 교량 상세 화면의 유지보수 '상세 보기' 링크(/maintenances/{no})에서 사용
             item.put("displayCode", "#" + no);
             item.put("type", nonNull(rs.getString("maintenance_type")));
 

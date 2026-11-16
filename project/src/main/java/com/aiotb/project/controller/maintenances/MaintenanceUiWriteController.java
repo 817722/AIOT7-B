@@ -4,10 +4,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -58,6 +59,16 @@ public class MaintenanceUiWriteController {
     public ResponseEntity<Void> delete(@PathVariable("no") long no, Authentication auth) {
         service.delete(auth, no);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * JSON 본문을 읽지 못함 (예: "maintenanceDate":"202612-05-01", "2026-02-30") → 개발자용 오류
+     * 문구 대신 안내
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> unreadable(HttpMessageNotReadableException ex) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "message", "입력값 형식이 올바르지 않습니다. 날짜는 YYYY-MM-DD 형식(연도 4자리)으로 입력해 주세요."));
     }
 
     @ExceptionHandler(ResponseStatusException.class)

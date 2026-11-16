@@ -43,19 +43,12 @@ public class InspectionDto {
 
         // 기존 메모 및 상세 평가 필드 통합
         private String memo;
-        private String safetyMemo;   // 안전 점검 메모
-        private String opinion;      // 검토 의견
-        private String risk;         // 위험도
-        private String summary;      // 결과 요약
         private String overallResult;
         private String reviewOpinion;
 
         // 🎥 드론 영상 업로드 필드 통합 (단일 & 다중)
         private MultipartFile videoInputSingle;
         private List<MultipartFile> videoInputMultiple;
-
-        // 서버에서 로그인 사용자 번호로 대체 (클라이언트 값 무시)
-        private Long createdBy;
 
         // 롬복이 혹시 인식하지 못할 경우를 대비한 안전망 겟터
         public MultipartFile getVideoInputSingle() {
@@ -81,6 +74,7 @@ public class InspectionDto {
         private Long inspectorNo;
         private String memo;
         private String overallResult;
+        private String reviewOpinion;
 
         public Response(Inspection inspection) {
             this.no = inspection.getNo();

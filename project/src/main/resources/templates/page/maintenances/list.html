@@ -6,6 +6,7 @@
   <title>유지보수 목록 | 교량점검 시스템</title>
   <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
   <link rel="stylesheet" th:href="@{/css/maintenance-v2.css(v=5)}" href="/css/maintenance-v2.css?v=5">
+  <script defer th:src="@{/js/maintenance-list-date.js(v=1)}" src="/js/maintenance-list-date.js?v=1"></script>
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
@@ -32,7 +33,7 @@
 
       <section class="bv-panel mv-figma-panel" aria-labelledby="mv-filters-title">
         <h2 id="mv-filters-title" class="bv-panel-title">유지보수 조회</h2>
-        <form method="get" th:action="@{/maintenances}" class="mv-filter-form">
+        <form id="mv-maintenance-search-form" method="get" th:action="@{/maintenances}" class="mv-filter-form">
           <div class="mv-figma-filter-grid">
             <label class="bv-field" for="mv-filter-keyword">
               <span>교량명</span>
@@ -41,9 +42,13 @@
             <div class="bv-field">
               <span id="mv-filter-range-title">진행 날짜</span>
               <div class="mv-date-range" role="group" aria-labelledby="mv-filter-range-title">
-                <input type="date" name="startDate" aria-label="진행 시작일" th:value="${startDate}">
+                <input id="mv-filter-start-date" type="date" name="startDate"
+                       aria-label="진행 시작일" th:value="${startDate}"
+                       min="1900-01-01" max="9999-12-31" data-calendar-only>
                 <span aria-hidden="true">~</span>
-                <input type="date" name="endDate" aria-label="진행 종료일" th:value="${endDate}">
+                <input id="mv-filter-end-date" type="date" name="endDate"
+                       aria-label="진행 종료일" th:value="${endDate}"
+                       min="1900-01-01" max="9999-12-31" data-calendar-only>
               </div>
             </div>
             <label class="bv-field" for="mv-filter-manager">
@@ -55,6 +60,7 @@
               </select>
             </label>
           </div>
+          <p id="mv-filter-date-error" class="mv-form-message is-error" role="alert" aria-live="polite" hidden></p>
           <!-- Figma의 상태 탭은 아래 현황 영역에서 제공합니다. 현재 탭 상태는 조회 시 유지됩니다. -->
           <input type="hidden" name="status" th:value="${status}">
           <div class="bv-form-actions mv-figma-filter-actions">
@@ -116,7 +122,7 @@
           <span th:unless="${hasNext}" class="bv-disabled">다음</span>
         </nav>
       </section>
-      <p class="mv-figma-footnote">소속 기업의 유지보수 기록만 표시됩니다.</p>
+      <p class="mv-figma-footnote">조회 결과는 로그인한 소속 기업의 실제 유지보수 기록을 기준으로 표시됩니다.</p>
     </div>
   </main>
 </div>

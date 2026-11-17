@@ -52,10 +52,12 @@ public class SecurityConfig {
                     "/api/inspections/photos/**", "/api/inspections/videos/**")
             .hasAnyRole("ADMIN", "INSPECTOR", "SUPER_ADMIN")
 
-            // 3. 기존 REST API: 기록/첨부파일 삭제는 기업 관리자(ADMIN)만 가능
-            // (Controller의 @PreAuthorize와 Service의 기업 소유권 검사로 한 번 더 확인)
+            // 3. 삭제 요청은 서비스에서 자료 유형별 소유권/기업 권한을 최종 검증한다.
+            // 점검 기록·점검 첨부: 본인 또는 같은 기업 ADMIN, 유지보수 기록은 기존 ADMIN 정책
             .requestMatchers(HttpMethod.DELETE,
-                    "/api/inspections/**", "/api/maintenance/**", "/api/media/**")
+                    "/api/inspections/**", "/api/media/**")
+            .hasAnyRole("ADMIN", "INSPECTOR", "SUPER_ADMIN")
+            .requestMatchers(HttpMethod.DELETE, "/api/maintenance/**")
             .hasRole("ADMIN")
 
             // 4. 그 외 API는 권한을 부여받은 사용자만 사용 가능

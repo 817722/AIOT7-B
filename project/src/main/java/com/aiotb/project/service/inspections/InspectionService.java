@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -92,13 +93,14 @@ public class InspectionService {
         public List<InspectionDto.Response> getInspectionsByBridge(Long bridgeNo, Actor actor) {
                 return inspectionRepository.findByBridgeNoAndCorpNoOrderByInspectionDateDesc(bridgeNo, actor.corpNo())
                                 .stream()
-                                .map(InspectionDto.Response::new)
+                                .map(i -> new InspectionDto.Response(i, actor.admin() || Objects.equals(i.getCreatedBy(), actor.userNo())))
                                 .collect(Collectors.toList());
         }
 
         // 3. 점검 상세 조회
         public InspectionDto.Response getInspectionById(String id, Actor actor) {
-                return new InspectionDto.Response(find(id, actor));
+                Inspection inspection = find(id, actor);
+                return new InspectionDto.Response(inspection, actor.admin() || Objects.equals(inspection.getCreatedBy(), actor.userNo()));
         }
 
         // 4. 점검 기록 수정
@@ -124,6 +126,9 @@ public class InspectionService {
         @Transactional
         public void deleteInspection(String id, Actor actor) {
                 Inspection inspection = find(id, actor);
+                if (!actor.admin() && !Objects.equals(inspection.getCreatedBy(), actor.userNo())) {
+                        throw new AccessDeniedException("본인이 작성한 점검 기록 또는 같은 기업 관리자만 삭제할 수 있습니다.");
+                }
                 if (mediaService.countAttached(Media.ParentType.INSPECTION, inspection.getNo(), actor.corpNo()) > 0) {
                         throw new ResponseStatusException(HttpStatus.CONFLICT,
                                         "첨부파일이 있는 점검 기록은 삭제할 수 없습니다. 첨부파일을 먼저 삭제해 주세요.");

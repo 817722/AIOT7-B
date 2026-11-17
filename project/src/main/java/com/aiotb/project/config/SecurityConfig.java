@@ -33,14 +33,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-    http
-    .authorizeHttpRequests(auth -> auth
+        http.authorizeHttpRequests(auth -> auth
             .requestMatchers(
-                "/", "/login", "/join", "/users/join",
-                "/users/login", "/api/business/verify", "/error",
-                "/css/**", "/js/**", "/img/**", "/images/**",
-                "/favicon.ico"
-            ).permitAll()
+                    "/", "/login", "/join", "/users/join",
+                    "/users/login", "/api/business/verify", "/error",
+                    "/css/**", "/js/**", "/img/**", "/images/**",
+                    "/favicon.ico")
+            .permitAll()
 
             // 2. 웹 관리자(SUPER_ADMIN) 전용 페이지
             .requestMatchers("/admin/**").hasRole("SUPER_ADMIN")
@@ -48,46 +47,47 @@ public class SecurityConfig {
             // 2-1. 기업 관리자(ADMIN) 전용 페이지: 소속 기업 담당자 승인·관리
             .requestMatchers("/corps/**").hasRole("ADMIN")
 
-            // 3. 기존 REST API: 기록/첨부파일 삭제는 기업 관리자(ADMIN)만 가능
-            //    (Controller의 @PreAuthorize와 Service의 기업 소유권 검사로 한 번 더 확인)
+            // 3-1. 점검 현장 사진·드론 영상 삭제: 같은 기업의 승인된 사용자라면 권한(ADMIN/INSPECTOR)과 관계없이 가능
             .requestMatchers(HttpMethod.DELETE,
-                "/api/inspections/**", "/api/maintenance/**", "/api/media/**").hasRole("ADMIN")
+                    "/api/inspections/photos/**", "/api/inspections/videos/**")
+            .hasAnyRole("ADMIN", "INSPECTOR", "SUPER_ADMIN")
+
+            // 3. 기존 REST API: 기록/첨부파일 삭제는 기업 관리자(ADMIN)만 가능
+            // (Controller의 @PreAuthorize와 Service의 기업 소유권 검사로 한 번 더 확인)
+            .requestMatchers(HttpMethod.DELETE,
+                    "/api/inspections/**", "/api/maintenance/**", "/api/media/**")
+            .hasRole("ADMIN")
 
             // 4. 그 외 API는 권한을 부여받은 사용자만 사용 가능
             .requestMatchers("/api/**").hasAnyRole("ADMIN", "INSPECTOR", "SUPER_ADMIN")
 
             // 5. 그 외 모든 요청은 반드시 로그인을 해야만 접근 가능
-            .anyRequest().authenticated()
-        );
+            .anyRequest().authenticated());
 
-    // API 요청은 로그인 페이지로 리다이렉트하지 않고 401(미로그인) / 403(권한 없음) 상태 코드로 응답
-    http.exceptionHandling(ex -> ex.defaultAuthenticationEntryPointFor(
-        new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-        request -> request.getServletPath().startsWith("/api/")
-    ));
+        // API 요청은 로그인 페이지로 리다이렉트하지 않고 401(미로그인) / 403(권한 없음) 상태 코드로 응답
+        http.exceptionHandling(ex -> ex.defaultAuthenticationEntryPointFor(
+            new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+            request -> request.getServletPath().startsWith("/api/")));
 
-    http.authenticationProvider(authenticationProvider());
+        http.authenticationProvider(authenticationProvider());
 
-    http.formLogin(login -> login
-        .loginPage("/login")
-        .loginProcessingUrl("/users/login")
-        .usernameParameter("username")
-        .passwordParameter("password")
-        .successHandler(loginSuccessHandler())
-        .failureHandler(loginFailureHandler())
-        .permitAll()
-    );
+        http.formLogin(login -> login
+            .loginPage("/login")
+            .loginProcessingUrl("/users/login")
+            .usernameParameter("username")
+            .passwordParameter("password")
+            .successHandler(loginSuccessHandler())
+            .failureHandler(loginFailureHandler())
+            .permitAll());
 
-    http.logout(logout -> logout
-        .logoutUrl("/users/logout")
-        .logoutSuccessUrl("/login?logout=true")
-        .invalidateHttpSession(true)
-        .deleteCookies("JSESSIONID")
-    );
+        http.logout(logout -> logout
+            .logoutUrl("/users/logout")
+            .logoutSuccessUrl("/login?logout=true")
+            .invalidateHttpSession(true)
+            .deleteCookies("JSESSIONID"));
 
-    return http.build();
+        return http.build();
     }
-
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -121,8 +121,8 @@ public class SecurityConfig {
         return (request, response, exception) -> {
             String code = "true";
             if (exception instanceof AccountStatusException
-                    && exception.getMessage() != null
-                    && exception.getMessage().matches("(CORP|USER)_[A-Z]+")) {
+                && exception.getMessage() != null
+                && exception.getMessage().matches("(CORP|USER)_[A-Z]+")) {
                 code = exception.getMessage();
             }
             response.sendRedirect(request.getContextPath() + "/login?error=" + code);

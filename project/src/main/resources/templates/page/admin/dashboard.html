@@ -154,50 +154,6 @@
                         </table>
                     </div>
                 </section>
-
-                <section class="bv-panel" aria-labelledby="ad-history-title">
-                    <h2 id="ad-history-title" class="bv-panel-title">
-                        <svg th:replace="~{fragments/admin :: icon('history')}"></svg>
-                        최근 관리자 작업 이력
-                    </h2>
-                    <p class="ad-alert ad-alert--info" th:unless="${historyAvailable}">
-                        <svg th:replace="~{fragments/admin :: icon('alert')}"></svg>
-                        <span>작업 이력 기록 기능이 아직 준비되지 않았습니다. 시스템 담당자에게 문의해 주세요.</span>
-                    </p>
-                    <div class="bv-blank" th:if="${historyAvailable and #lists.isEmpty(recentHistory)}">
-                        <strong>아직 기록된 작업이 없습니다.</strong>
-                    </div>
-                    <div class="bv-table-scroll" th:if="${historyAvailable and !#lists.isEmpty(recentHistory)}">
-                        <table class="bv-table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">처리 일시</th>
-                                    <th scope="col">대상 기업</th>
-                                    <th scope="col">작업 유형</th>
-                                    <th scope="col">처리 결과</th>
-                                    <th scope="col">처리 관리자</th>
-                                    <th scope="col">사유</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="h : ${recentHistory}">
-                                    <td class="ad-nowrap" th:text="${#temporals.format(h.changedAt, 'yyyy-MM-dd HH:mm')}">
-                                        2026-11-01 10:00
-                                    </td>
-                                    <td><a th:href="@{/admin/corps/{no}(no=${h.corpNo})}" th:text="${h.corpName}">기업명</a></td>
-                                    <td th:text="${h.actionLabel}">가입 승인</td>
-                                    <td>
-                                        <span class="ad-badge" th:classappend="|ad-badge--${h.newStatus}|" th:text="|${h.previousStatusLabel} → ${h.newStatusLabel}|">
-                                        승인 대기 → 정상 이용
-                                        </span>
-                                    </td>
-                                    <td th:text="${h.changedBy}">웹 관리자</td>
-                                    <td th:text="${h.reason != null ? h.reason : '-'}">-</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
             </div>
         </main>
     </div>

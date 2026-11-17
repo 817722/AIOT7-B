@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * 점검 기록 REST API.
  * - 접근: 로그인 + 승인된 사용자(ADMIN / INSPECTOR / SUPER_ADMIN) — SecurityConfig
- * - 삭제: ADMIN 전용 — SecurityConfig + @PreAuthorize
+ * - 삭제: 같은 기업 ADMIN 또는 작성자 — InspectionService에서 소유권 확인
  * - 데이터 범위: 로그인 사용자의 소속 기업 — InspectionService
  */
 @RestController
@@ -67,8 +67,7 @@ public class InspectionController {
         return ResponseEntity.ok().build();
     }
 
-    // 점검 기록 삭제 API (기업 관리자 전용)
-    @PreAuthorize("hasRole('ADMIN')")
+    // 점검 기록 삭제 API (같은 기업 관리자 또는 본인 작성 기록)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteInspection(@PathVariable("id") String id) {
         inspectionService.deleteInspection(id, currentUserService.current());

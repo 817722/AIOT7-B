@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * 첨부파일(media) REST API.
  * - 접근: 로그인 + 승인된 사용자 — SecurityConfig / @PreAuthorize
- * - 삭제: ADMIN 전용
+ * - 점검 첨부파일 삭제: 같은 기업 관리자 또는 업로더 본인 (유지보수 첨부는 기존 ADMIN 정책 유지)
  * - 데이터 범위: 로그인 사용자의 소속 기업 — MediaService
  */
 @RestController
@@ -67,8 +67,7 @@ public class MediaApiController {
                 .body(new UrlResource(stored.path().toUri()));
     }
 
-    // [DELETE] 첨부파일 삭제 (기업 관리자 전용, DB 기록 삭제 후 커밋되면 실제 파일 삭제)
-    @PreAuthorize("hasRole('ADMIN')")
+    // [DELETE] 첨부파일 삭제 (소유권은 MediaService에서 유형별 검증)
     @DeleteMapping("/{mediaNo}")
     public ResponseEntity<Map<String, String>> deleteMedia(@PathVariable("mediaNo") Long mediaNo) {
         mediaService.deleteMedia(mediaNo, currentUserService.current());

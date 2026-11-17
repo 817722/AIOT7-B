@@ -75,8 +75,13 @@ public class InspectionDto {
         private String memo;
         private String overallResult;
         private String reviewOpinion;
+        private boolean canDelete;
 
         public Response(Inspection inspection) {
+            this(inspection, false);
+        }
+
+        public Response(Inspection inspection, boolean canDelete) {
             this.no = inspection.getNo();
             this.id = inspection.getId();
             this.bridgeNo = inspection.getBridge().getNo();
@@ -89,6 +94,7 @@ public class InspectionDto {
             this.memo = inspection.getInspectionMemo();
             this.overallResult = inspection.getOverallResult();
             this.reviewOpinion = inspection.getReviewOpinion();
+            this.canDelete = canDelete;
         }
     }
 }

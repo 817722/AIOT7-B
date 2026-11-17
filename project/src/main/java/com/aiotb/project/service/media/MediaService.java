@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,11 +61,13 @@ public class MediaService {
     /** 화면/API 응답용. 서버 저장 경로는 포함하지 않는다. */
     public record MediaInfo(Long no, String id, String parentType, Long parentId, String type,
             String originName, String mimeType, Long fileSize, Long uploadedBy,
-            LocalDateTime createdAt) {
-        static MediaInfo of(Media m) {
+            LocalDateTime createdAt, boolean canDelete) {
+        static MediaInfo of(Media m, Actor actor) {
+            boolean allowed = actor.admin() || (m.getParentType() == Media.ParentType.INSPECTION
+                    && java.util.Objects.equals(m.getUploadedBy(), actor.userNo()));
             return new MediaInfo(m.getNo(), m.getId(), m.getParentType().name(), m.getParentId(),
                     m.getType().name(), m.getOriginName(), m.getMimeType(), m.getFileSize(),
-                    m.getUploadedBy(), m.getCreatedAt());
+                    m.getUploadedBy(), m.getCreatedAt(), allowed);
         }
     }
 
@@ -182,7 +185,9 @@ public class MediaService {
                 || photo.getType() != Media.MediaType.IMAGE) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "이 유지보수에 등록된 사진을 찾을 수 없습니다.");
         }
-        deleteMedia(photoNo, actor);
+        // 전용 유지보수 사진 API는 기존 작성자/담당자/관리자 권한 검사를 통과했으므로
+        // 공통 API의 ADMIN 전용 정책을 다시 적용하지 않고 실제 삭제만 수행한다.
+        deleteMediaRecord(photo);
     }
 
     /** 부모 레코드를 잠가 전체 기록 삭제와 이미지 업로드/개별 삭제 충돌을 방지합니다. */
@@ -222,7 +227,7 @@ public class MediaService {
     public List<MediaInfo> getMediaList(Media.ParentType parentType, Long parentId, Actor actor) {
         requireParent(parentType, parentId, actor.corpNo());
         return mediaRepository.findByParentTypeAndParentIdAndCorpNoOrderByNoDesc(parentType, parentId, actor.corpNo())
-                .stream().map(MediaInfo::of).toList();
+                .stream().map(m -> MediaInfo.of(m, actor)).toList();
     }
 
     /** 첨부파일 내려받기/재생용 파일 위치 (소속 기업 파일만) */
@@ -239,6 +244,20 @@ public class MediaService {
     @Transactional
     public void deleteMedia(Long mediaNo, Actor actor) {
         Media media = find(mediaNo, actor);
+        // 점검 첨부는 업로더 본인 또는 같은 기업 ADMIN만 삭제할 수 있다.
+        // 유지보수 등 다른 유형은 기존 ADMIN 전용 정책을 유지한다.
+        if (media.getParentType() == Media.ParentType.INSPECTION) {
+            if (!actor.admin() && !java.util.Objects.equals(media.getUploadedBy(), actor.userNo())) {
+                throw new AccessDeniedException("본인이 업로드한 점검 첨부파일 또는 같은 기업 관리자만 삭제할 수 있습니다.");
+            }
+        } else if (!actor.admin()) {
+            throw new AccessDeniedException("유지보수 및 기타 첨부파일은 기업 관리자만 삭제할 수 있습니다.");
+        }
+        deleteMediaRecord(media);
+    }
+
+    /** 권한 검증을 마친 Media 엔티티의 DB/실파일 삭제 처리 */
+    private void deleteMediaRecord(Media media) {
         if (media.isMain()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "교량 대표 이미지는 교량 수정 화면에서 변경해 주세요.");
         }

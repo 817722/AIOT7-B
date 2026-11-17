@@ -264,3 +264,18 @@
 .inspection-v2.in-list-figma .in-list-footnote{font-size:11px;color:#879da5;text-align:right;margin:7px 0 0}
 @media(max-width:960px){.inspection-v2.in-list-figma .in-list-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.inspection-v2.in-list-figma .in-list-filter-grid{grid-template-columns:1fr}.inspection-v2.in-list-figma .in-list-summary{grid-template-columns:1fr}.inspection-v2.in-list-figma .in-list-heading{flex-wrap:wrap}}
+
+/* 점검 목록 v11: 교량/유지보수 목록과 같은 최근 확인한 교량 카드 */
+.inspection-v2.in-list-figma .in-list-recent{padding:18px 23px}
+.inspection-v2.in-list-figma .in-list-recent .bv-panel-title{margin:0 0 9px}
+.inspection-v2.in-list-figma .in-list-recent-message{margin:0;font-size:13px;line-height:1.65;color:#6c858e}
+.inspection-v2.in-list-figma .in-list-recent-lines{display:flex;flex-direction:column}
+.inspection-v2.in-list-figma .in-list-recent-lines[hidden]{display:none}
+.inspection-v2.in-list-figma .in-list-recent-line{display:flex;flex-wrap:wrap;align-items:baseline;min-width:0;padding:8px 0;font-size:13px;font-weight:600;line-height:1.65;color:#4f8490;text-decoration:none;overflow-wrap:anywhere}
+.inspection-v2.in-list-figma .in-list-recent-line+.in-list-recent-line{border-top:1px solid #e7eff2}
+.inspection-v2.in-list-figma .in-list-recent-line:hover{color:#087f87;background:#f2f9f9}
+.inspection-v2.in-list-figma .in-list-recent-line:focus-visible{outline:2px solid #07858a;outline-offset:2px;border-radius:3px}
+.inspection-v2.in-list-figma .in-list-recent-name{color:#267887;font-size:13px;font-weight:800}
+.inspection-v2.in-list-figma .in-list-recent-segment{min-width:0}
+.inspection-v2.in-list-figma .in-list-recent-segment::before{content:' / ';white-space:pre;color:#93abb1}
+@media(max-width:600px){.inspection-v2.in-list-figma .in-list-recent{padding:15px 16px}.inspection-v2.in-list-figma .in-list-recent-line,.inspection-v2.in-list-figma .in-list-recent-name{font-size:12px}}

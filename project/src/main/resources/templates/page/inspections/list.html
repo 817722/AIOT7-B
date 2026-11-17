@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>점검 목록 | 교량점검 시스템</title>
   <link rel="stylesheet" th:href="@{/css/common.css}" href="/css/common.css">
-  <link rel="stylesheet" th:href="@{/css/inspection-v2.css(v=10)}" href="/css/inspection-v2.css?v=10">
-  <script defer th:src="@{/js/inspection-list.js(v=5)}" src="/js/inspection-list.js?v=5"></script>
+  <link rel="stylesheet" th:href="@{/css/inspection-v2.css(v=11)}" href="/css/inspection-v2.css?v=11">
+  <script defer th:src="@{/js/inspection-list.js(v=6)}" src="/js/inspection-list.js?v=6"></script>
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
@@ -17,6 +17,13 @@
       <div th:replace="~{fragments/submenu :: submenu(activeMenu='/inspections')}"></div>
       <h1 class="bv-title">점검 목록</h1>
       <p class="bv-subtitle">소속 기업의 교량과 점검 이력을 조회합니다.</p>
+
+      <!-- 최근 확인한 교량: 교량 목록에서 서버가 반환하는 사용자별 최근 5건과 동일한 데이터 -->
+      <section class="bv-panel in-list-panel in-list-recent" aria-labelledby="in-list-recent-heading">
+        <h2 class="bv-panel-title" id="in-list-recent-heading">최근 확인한 교량</h2>
+        <p class="in-list-recent-message" id="in-list-recent-message" role="status" aria-live="polite">최근 확인한 교량을 불러오는 중입니다.</p>
+        <div class="in-list-recent-lines" id="in-list-recent-lines" hidden></div>
+      </section>
 
       <section class="bv-panel in-list-panel" aria-labelledby="in-list-filter-heading">
         <h2 class="bv-panel-title" id="in-list-filter-heading">점검 조회</h2>
